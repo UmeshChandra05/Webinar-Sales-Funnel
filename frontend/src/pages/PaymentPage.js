@@ -7,6 +7,17 @@ const PaymentPage = () => {
   const navigate = useNavigate()
   const [userEmail, setUserEmail] = useState("")
   const [loadingButton, setLoadingButton] = useState(null) // Track which button is loading
+  const [couponCode, setCouponCode] = useState("")
+  const [couponApplied, setCouponApplied] = useState(false)
+  const [couponDiscount, setCouponDiscount] = useState(0)
+  const [couponError, setCouponError] = useState("")
+  const [couponLoading, setCouponLoading] = useState(false)
+  const [toastMessage, setToastMessage] = useState(null)
+
+  const showToast = (message, type = "info") => {
+    setToastMessage({ message, type })
+    setTimeout(() => setToastMessage(null), 4000) // Auto-hide after 4 seconds
+  }
 
   useEffect(() => {
     // Get user email from localStorage
@@ -36,6 +47,78 @@ const PaymentPage = () => {
     testBackendConnection()
   }, [navigate])
 
+  const validateCouponCode = async () => {
+    const trimmedCode = couponCode.trim()
+    
+    // Only validate if coupon code is entered
+    if (!trimmedCode) {
+      showToast("Please enter a coupon code", "warning")
+      return
+    }
+
+    setCouponLoading(true)
+    setCouponError("")
+
+    try {
+      const response = await fetch("/api/validate-coupon", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          couponCode: trimmedCode,
+          email: userEmail,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setCouponApplied(true)
+        setCouponDiscount(result.discount || 0)
+        setCouponError("")
+        showToast(`🎉 Coupon applied! ${result.discount}% discount`, "success")
+        console.log(`✅ Coupon ${trimmedCode} applied: ${result.discount}% discount`)
+      } else {
+        setCouponApplied(false)
+        setCouponDiscount(0)
+        showToast(result.message || "Invalid coupon code", "error")
+        console.log(`❌ Coupon ${trimmedCode} invalid: ${result.message}`)
+      }
+    } catch (error) {
+      console.error("Coupon validation error:", error)
+      
+      setCouponApplied(false)
+      setCouponDiscount(0)
+      
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        showToast("Cannot connect to server. Please check your connection.", "error")
+      } else if (error.message.includes('timeout')) {
+        showToast("Request timeout. Please try again.", "error")
+      } else {
+        showToast("Unable to validate coupon. Please try again.", "error")
+      }
+    } finally {
+      setCouponLoading(false)
+    }
+  }
+
+  const removeCoupon = () => {
+    setCouponCode("")
+    setCouponApplied(false)
+    setCouponDiscount(0)
+    setCouponError("")
+    showToast("Coupon removed", "info")
+  }
+
+  const calculateFinalPrice = () => {
+    const originalPrice = 4999
+    if (couponApplied && couponDiscount > 0) {
+      return originalPrice - (originalPrice * couponDiscount / 100)
+    }
+    return originalPrice
+  }
+
   const handlePaymentSimulation = async (status) => {
     setLoadingButton(status) // Set which button is loading
 
@@ -46,6 +129,12 @@ const PaymentPage = () => {
         email: userEmail,
         status: status,
         transaction_id: `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      }
+
+      // Only add coupon data if a coupon is applied
+      if (couponApplied && couponCode.trim()) {
+        requestBody.couponCode = couponCode.trim()
+        requestBody.discount = couponDiscount
       }
       
       console.log('Request body:', requestBody) // Debug log
@@ -113,7 +202,48 @@ const PaymentPage = () => {
   }
 
   return (
-    <div className="min-h-screen section">
+    <>
+      <style>
+        {`
+          @keyframes slideIn {
+            from {
+              transform: translateX(100%);
+              opacity: 0;
+            }
+            to {
+              transform: translateX(0);
+              opacity: 1;
+            }
+          }
+        `}
+      </style>
+      
+      <div className="min-h-screen section">
+        {/* Toast Notification */}
+        {toastMessage && (
+          <div 
+            style={{
+              position: 'fixed',
+              top: '20px',
+              right: '20px',
+              zIndex: 1000,
+              padding: '12px 20px',
+              borderRadius: '8px',
+              color: 'white',
+              fontSize: '14px',
+              fontWeight: '500',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+              backgroundColor: toastMessage.type === 'success' ? '#10b981' : 
+                               toastMessage.type === 'error' ? '#ef4444' :
+                               toastMessage.type === 'warning' ? '#f59e0b' : '#6b7280',
+              animation: 'slideIn 0.3s ease-out',
+              maxWidth: '350px'
+            }}
+          >
+            {toastMessage.message}
+          </div>
+        )}
+      
       <div className="container max-w-2xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-3xl md:text-4xl font-bold mb-4">
@@ -124,8 +254,18 @@ const PaymentPage = () => {
 
         <div className="card">
           <div className="text-center mb-6">
-            <div className="text-4xl font-bold gradient-text mb-2">₹4,999</div>
+            <div className="text-4xl font-bold gradient-text mb-2">
+              ₹{calculateFinalPrice().toLocaleString()}
+              {couponApplied && couponDiscount > 0 && (
+                <span className="text-lg text-gray-400 line-through ml-2">₹4,999</span>
+              )}
+            </div>
             <p className="text-gray-400">One-time payment (INR)</p>
+            {couponApplied && couponDiscount > 0 && (
+              <p className="text-green-400 text-sm mt-1">
+                🎉 {couponDiscount}% discount applied!
+              </p>
+            )}
           </div>
 
           <div className="mb-6">
@@ -156,6 +296,64 @@ const PaymentPage = () => {
                 Certificate of completion
               </li>
             </ul>
+          </div>
+
+          {/* Coupon Code Section */}
+          <div className="border border-purple-500/20 rounded-lg p-4 mb-6">
+            <h3 className="font-semibold mb-2 text-purple-400">Have a Coupon Code?</h3>
+            <p className="text-sm text-gray-400 mb-4">Enter your coupon code to apply available discounts</p>
+            
+            {!couponApplied ? (
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                  placeholder="Enter coupon code"
+                  className="form-input flex-1"
+                  style={{
+                    padding: '12px',
+                    border: '1px solid #374151',
+                    borderRadius: '6px',
+                    backgroundColor: '#1a1a1a',
+                    color: '#ffffff',
+                    fontSize: '14px'
+                  }}
+                />
+                <button
+                  onClick={validateCouponCode}
+                  disabled={couponLoading || !couponCode.trim()}
+                  className="btn btn-outline px-6"
+                  style={{
+                    minWidth: '100px',
+                    opacity: couponLoading || !couponCode.trim() ? 0.6 : 1
+                  }}
+                >
+                  {couponLoading ? (
+                    <>
+                      <div className="spinner mr-1" style={{ width: '16px', height: '16px' }}></div>
+                      Applying...
+                    </>
+                  ) : (
+                    "Apply"
+                  )}
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between bg-green-900/20 border border-green-500/30 rounded-lg p-3">
+                <div className="flex items-center">
+                  <span className="text-green-400 mr-2">✓</span>
+                  <span className="text-green-400 font-medium">Coupon "{couponCode}" applied</span>
+                  <span className="ml-2 text-sm text-gray-400">({couponDiscount}% off)</span>
+                </div>
+                <button
+                  onClick={removeCoupon}
+                  className="text-red-400 hover:text-red-300 text-sm"
+                >
+                  Remove
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="text-center mb-6">
@@ -218,7 +416,8 @@ const PaymentPage = () => {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   )
 }
 

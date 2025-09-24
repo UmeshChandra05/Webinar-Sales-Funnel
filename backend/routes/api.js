@@ -32,11 +32,21 @@ const paymentValidation = [
   body("email").isEmail().normalizeEmail().withMessage("Valid email is required"),
   body("status").isIn(["success", "failed", "need_time_to_confirm"]).withMessage("Status must be success, failed, or need_time_to_confirm"),
   body("transaction_id").optional().isString().trim(),
+  // Only validate coupon fields if they exist in the request
+  body("couponCode").optional().isString().trim().isLength({ min: 1 }).withMessage("Coupon code must be a non-empty string"),
+  body("discount").optional().isNumeric().isFloat({ min: 0, max: 100 }).withMessage("Discount must be a number between 0-100"),
+]
+
+// Coupon validation
+const couponValidation = [
+  body("couponCode").trim().isLength({ min: 1, max: 20 }).withMessage("Coupon code is required"),
+  body("email").isEmail().normalizeEmail().withMessage("Valid email is required"),
 ]
 
 // Routes
 router.post("/capture-lead", leadValidation, handleValidationErrors, leadController.captureLeadAsync)
 router.post("/simulate-payment", paymentValidation, handleValidationErrors, paymentController.simulatePaymentAsync)
+router.post("/validate-coupon", couponValidation, handleValidationErrors, paymentController.validateCouponAsync)
 
 // Additional utility routes
 router.get("/webinar-info", webinarController.getWebinarInfo)
