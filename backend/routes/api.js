@@ -34,21 +34,9 @@ const paymentValidation = [
   body("transaction_id").optional().isString().trim(),
 ]
 
-// Attendance validation
-const attendanceValidation = [
-  body("email").isEmail().normalizeEmail().withMessage("Valid email is required"),
-  body("attended").isBoolean().withMessage("Attended must be a boolean"),
-]
-
 // Routes
 router.post("/capture-lead", leadValidation, handleValidationErrors, leadController.captureLeadAsync)
 router.post("/simulate-payment", paymentValidation, handleValidationErrors, paymentController.simulatePaymentAsync)
-router.post(
-  "/webinar-attendance",
-  attendanceValidation,
-  handleValidationErrors,
-  webinarController.recordAttendanceAsync,
-)
 
 // Additional utility routes
 router.get("/webinar-info", webinarController.getWebinarInfo)

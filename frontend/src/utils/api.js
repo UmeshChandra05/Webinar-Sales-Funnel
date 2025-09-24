@@ -57,17 +57,6 @@ class ApiClient {
     })
   }
 
-  // Webinar attendance API
-  async recordAttendanceAsync(attendanceData) {
-    return this.request("/webinar-attendance", {
-      method: "POST",
-      body: JSON.stringify({
-        email: attendanceData.email,
-        attended: attendanceData.attended,
-      }),
-    })
-  }
-
   // Contact form API
   async submitContactForm(contactData) {
     return this.request("/contact", {

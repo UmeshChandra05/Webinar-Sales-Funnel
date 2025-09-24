@@ -4,10 +4,10 @@ A full-stack React + Node.js application for managing webinar registrations, pay
 
 ## 📋 Project Overview
 
-This application handles the complete customer journey from landing page to webinar attendance:
+This application handles the complete customer journey from landing page to webinar registration:
 - **Lead Capture**: Interest-based registration forms
 - **Payment Processing**: Simulated payment flow ($97 webinar fee)
-- **Webinar Management**: Registration and attendance tracking
+- **Webinar Management**: Registration and information display
 - **Contact Forms**: Customer support integration
 - **n8n Integration**: Automated workflow triggers
 
@@ -81,13 +81,12 @@ Access at: `http://localhost:3000`
 |----------|---------|-------------|
 | `POST /api/capture-lead` | Lead registration | `/capture-lead` |
 | `POST /api/simulate-payment` | Payment processing | `/simulate-payment` |
-| `POST /api/webinar-attendance` | Attendance tracking | `/webinar-attendance` |
 | `POST /api/contact` | Contact forms | `/contact-form` |
 | `GET /api/webinar-info` | Webinar details | - |
 
 ## 🔧 n8n Integration
 
-The app sends data to 4 n8n webhook endpoints:
+The app sends data to 3 n8n webhook endpoints:
 
 **Lead Capture Data:**
 ```json
