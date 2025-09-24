@@ -142,7 +142,7 @@ const LandingPage = () => {
             Join thousands of developers who have already mastered full-stack development
           </p>
           <button className="btn btn-lg bg-white text-purple-600 hover:bg-gray-100" onClick={handleRegisterClick}>
-            � Show Interest Now
+            💡 Show Interest Now
           </button>
         </div>
       </section>
