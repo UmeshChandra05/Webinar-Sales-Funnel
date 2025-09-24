@@ -6,10 +6,12 @@ A full-stack React + Node.js application for managing webinar registrations, pay
 
 This application handles the complete customer journey from landing page to webinar registration:
 - **Lead Capture**: Interest-based registration forms
-- **Payment Processing**: Simulated payment flow ($97 webinar fee)
+- **Payment Processing**: Simulated payment flow (₹4999 webinar fee) with coupon system
+- **Coupon Validation**: Dynamic coupon code validation through n8n integration
+- **Interactive UI**: Toast notifications, accordion FAQs, and responsive design
 - **Webinar Management**: Registration and information display
-- **Contact Forms**: Customer support integration
-- **n8n Integration**: Automated workflow triggers
+- **Contact Forms**: Customer support integration with interactive FAQ section
+- **n8n Integration**: Automated workflow triggers for payments and coupons
 
 ## 🗂️ Project Structure
 
@@ -39,10 +41,12 @@ Contact/About Pages
 
 **Key Pages:**
 - **Landing**: Hero section with countdown timer
+- **About**: Team showcase with 2x2 instructor grid and professional layout
 - **Register**: Interest capture form (name, email, phone)
-- **Payment**: $97 payment simulation
+- **Payment**: ₹4999 payment simulation with coupon code system and toast notifications
 - **Success**: Payment confirmation + WhatsApp link
-- **Contact**: Support form
+- **Contact**: Support form with interactive FAQ accordion (8-10 questions)
+- **Thank You**: Confirmation page for various user actions
 
 ## 🚀 Quick Start
 
@@ -81,12 +85,13 @@ Access at: `http://localhost:3000`
 |----------|---------|-------------|
 | `POST /api/capture-lead` | Lead registration | `/capture-lead` |
 | `POST /api/simulate-payment` | Payment processing | `/simulate-payment` |
+| `POST /api/validate-coupon` | Coupon validation | `/validate-coupon` |
 | `POST /api/contact` | Contact forms | `/contact-form` |
 | `GET /api/webinar-info` | Webinar details | - |
 
 ## 🔧 n8n Integration
 
-The app sends data to 3 n8n webhook endpoints:
+The app sends data to 4 n8n webhook endpoints:
 
 **Lead Capture Data:**
 ```json
@@ -106,9 +111,22 @@ The app sends data to 3 n8n webhook endpoints:
   "email": "john@example.com",
   "status": "success",
   "transaction_id": "txn_123456789",
-  "amount": 97,
-  "currency": "USD",
+  "amount": 3999,
+  "originalAmount": 4999,
+  "couponCode": "SAVE20",
+  "discount": 20,
+  "currency": "INR",
   "timestamp": "2025-09-24T10:30:00Z"
+}
+```
+
+**Coupon Validation Data:**
+```json
+{
+  "couponCode": "SAVE20",
+  "email": "john@example.com",
+  "timestamp": "2025-09-24T10:30:00Z",
+  "action": "validate_coupon"
 }
 ```
 
@@ -122,11 +140,22 @@ npm run install:all      # Install all dependencies
 npm run build            # Production build
 ```
 
-## 🛠️ Tech Stack
+## ✨ Key Features
 
-- **Frontend**: React 18.2.0, React Router, Axios
-- **Backend**: Node.js, Express 4.18.2, CORS, Helmet
-- **Integration**: n8n webhooks for automation
+- **🎟️ Smart Coupon System**: Dynamic coupon validation with real-time discount calculation
+- **🍞 Toast Notifications**: User-friendly feedback for all coupon and payment actions
+- **📋 Interactive FAQ**: Accordion-style FAQ section with 8-10 webinar-specific questions
+- **👥 Professional Team Display**: 2x2 instructor grid layout with skill specialties
+- **💰 Dynamic Pricing**: Real-time price updates based on applied coupons
+- **🔄 Conditional Validation**: Coupon validation only when codes are entered
+- **� Responsive Design**: Clean, professional UI across all devices
+
+## �🛠️ Tech Stack
+
+- **Frontend**: React 18.2.0, React Router, Axios, CSS Grid & Flexbox
+- **Backend**: Node.js, Express 4.18.2, express-validator, CORS, Helmet
+- **Integration**: n8n webhooks for automation and coupon validation
+- **UI/UX**: Toast notifications, accordion components, inline styling for reliability
 
 ## 🔧 Troubleshooting
 
