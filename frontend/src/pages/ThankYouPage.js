@@ -5,10 +5,14 @@ import { Link } from "react-router-dom"
 
 const ThankYouPage = () => {
   const [userEmail, setUserEmail] = useState("")
+  const [paymentStatus, setPaymentStatus] = useState("")
 
   useEffect(() => {
     const email = localStorage.getItem("userEmail")
+    const status = localStorage.getItem("paymentStatus")
+    
     setUserEmail(email || "")
+    setPaymentStatus(status || "")
   }, [])
 
   const handleAttendanceRecord = async (attended) => {
@@ -28,6 +32,67 @@ const ThankYouPage = () => {
     } catch (error) {
       console.error("Attendance recording error:", error)
     }
+  }
+
+  // Show different content for "need_time_to_confirm" status
+  if (paymentStatus === "need_time_to_confirm") {
+    return (
+      <div className="min-h-screen section">
+        <div className="container max-w-3xl mx-auto">
+          <div className="text-center mb-12">
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">
+              We <span className="gradient-text">Understand!</span>
+            </h1>
+            <p className="text-xl text-gray-400">Take your time to decide - we'll keep your spot available</p>
+          </div>
+
+          <div className="card text-center">
+            <div className="text-6xl mb-6">⏰</div>
+            <h2 className="text-2xl font-semibold mb-4">Need Time to Confirm</h2>
+            <p className="text-gray-400 mb-6">
+              We understand this is an important decision. Your interest has been recorded for the Python Full Stack course.
+            </p>
+            
+            <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-6 mb-6">
+              <h3 className="font-semibold mb-4 text-blue-200">Remember to complete your payment before registration ends to:</h3>
+              <div className="text-left space-y-2">
+                <div className="flex items-center">
+                  <span className="text-blue-400 mr-2">📚</span>
+                  <span>Secure your spot in the course</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="text-blue-400 mr-2">💬</span>
+                  <span>Get access to the exclusive WhatsApp community</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="text-blue-400 mr-2">🎥</span>
+                  <span>Receive all course materials and recordings</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="text-blue-400 mr-2">🏆</span>
+                  <span>Get your certificate and mentorship session</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4 mb-6">
+              <p className="text-yellow-200">
+                <strong>⚠️ Registration closes soon!</strong> Complete payment before the deadline to confirm your access.
+              </p>
+            </div>
+
+            <div className="flex gap-4 justify-center">
+              <Link to="/payment" className="btn btn-primary">
+                Complete Payment Now
+              </Link>
+              <Link to="/" className="btn btn-secondary">
+                Back to Home
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

@@ -12,13 +12,46 @@ const paymentController = {
         status,
         transaction_id: transaction_id || `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         timestamp: new Date().toISOString(),
-        amount: status === "success" ? 97 : 0, // Simulated amount
-        currency: "USD",
+        amount: status === "success" ? 4999 : (status === "need_time_to_confirm" ? 0 : 0), // No charge for need_time_to_confirm
+        currency: "INR",
       }
 
       console.log(`💳 Payment simulation: ${status} for ${email}`)
 
-      // If API_BASE_URL is configured, send to n8n webhook
+      // Special handling for need_time_to_confirm - always succeed locally
+      if (status === "need_time_to_confirm") {
+        console.log("🕐 Processing need_time_to_confirm request")
+        
+        // Try to send to n8n but don't fail if it doesn't work
+        if (API_BASE_URL && API_BASE_URL !== "API_URL") {
+          try {
+            await axios.post(`${API_BASE_URL}/simulate-payment`, paymentData, {
+              timeout: 10000,
+              headers: {
+                "Content-Type": "application/json",
+              },
+            })
+            console.log("✅ Need time to confirm data sent to n8n successfully")
+          } catch (apiError) {
+            console.warn("⚠️ n8n API unavailable for need_time_to_confirm, continuing locally:", apiError.message)
+          }
+        }
+
+        // Always return success for need_time_to_confirm
+        return res.status(200).json({
+          success: true,
+          message: "Time to confirm request recorded successfully",
+          data: {
+            transaction_id: paymentData.transaction_id,
+            status: paymentData.status,
+            timestamp: paymentData.timestamp,
+            whatsapp_link: null,
+            confirmation_pending: true,
+          },
+        })
+      }
+
+      // If API_BASE_URL is configured, send to n8n webhook for other statuses
       if (API_BASE_URL && API_BASE_URL !== "API_URL") {
         try {
           const response = await axios.post(`${API_BASE_URL}/simulate-payment`, paymentData, {
@@ -38,6 +71,7 @@ const paymentController = {
               status: paymentData.status,
               timestamp: paymentData.timestamp,
               whatsapp_link: status === "success" ? "https://chat.whatsapp.com/sample-group-link" : null,
+              confirmation_pending: status === "need_time_to_confirm",
             },
           })
         } catch (apiError) {
@@ -55,6 +89,7 @@ const paymentController = {
           status: paymentData.status,
           timestamp: paymentData.timestamp,
           whatsapp_link: status === "success" ? "https://chat.whatsapp.com/sample-group-link" : null,
+          confirmation_pending: status === "need_time_to_confirm",
         },
       })
     } catch (error) {

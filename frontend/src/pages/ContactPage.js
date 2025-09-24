@@ -192,7 +192,7 @@ const ContactPage = () => {
                 <div>
                   <h4 className="font-semibold text-purple-400 mb-2">Is the webinar really free?</h4>
                   <p className="text-sm text-gray-400">
-                    Yes! The core webinar is completely free. We offer premium add-ons for additional resources.
+                    Yes! The core webinar is completely free. You can purchase the full course for additional resources and lifetime access.
                   </p>
                 </div>
 

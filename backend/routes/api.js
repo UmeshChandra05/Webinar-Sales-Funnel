@@ -30,7 +30,7 @@ const leadValidation = [
 // Payment validation
 const paymentValidation = [
   body("email").isEmail().normalizeEmail().withMessage("Valid email is required"),
-  body("status").isIn(["success", "failed"]).withMessage("Status must be success or failed"),
+  body("status").isIn(["success", "failed", "need_time_to_confirm"]).withMessage("Status must be success, failed, or need_time_to_confirm"),
   body("transaction_id").optional().isString().trim(),
 ]
 

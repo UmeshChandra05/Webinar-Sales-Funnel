@@ -59,9 +59,9 @@ const PaymentFailedPage = () => {
           </div>
 
           <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-6">
-            <h3 className="font-semibold text-purple-400 mb-2">Still Want Premium Access?</h3>
+            <h3 className="font-semibold text-purple-400 mb-2">Still Want to Secure Your Seat?</h3>
             <p className="text-sm text-gray-400 mb-4">
-              You can upgrade to premium anytime during or after the webinar. The free session alone is packed with
+              You can complete your payment anytime to secure your seat. The free session alone is packed with
               valuable content!
             </p>
             <p className="text-xs text-gray-500">

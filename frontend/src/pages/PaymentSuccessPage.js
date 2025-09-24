@@ -26,7 +26,7 @@ const PaymentSuccessPage = () => {
             Payment <span className="gradient-text">Successful!</span>
           </h1>
 
-          <p className="text-xl text-gray-400 mb-8">Welcome to the Premium Python Full Stack community!</p>
+          <p className="text-xl text-gray-400 mb-8">Your seat is confirmed! Welcome to the Python Full Stack course!</p>
 
           <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-6 mb-8">
             <h3 className="font-semibold text-green-400 mb-4">What's Next?</h3>
