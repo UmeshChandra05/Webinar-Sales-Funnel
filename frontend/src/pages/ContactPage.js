@@ -10,6 +10,54 @@ const ContactPage = () => {
   })
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState({ type: "", text: "" })
+  const [openFAQ, setOpenFAQ] = useState(null)
+
+  const toggleFAQ = (index) => {
+    setOpenFAQ(openFAQ === index ? null : index)
+  }
+
+  const faqData = [
+    {
+      question: "What is the cost of the webinar?",
+      answer: "The webinar is priced at ₹4,999 INR. This is a one-time payment for complete access to the entire Python Full Stack Development session."
+    },
+    {
+      question: "Is this a one-time webinar or recurring?",
+      answer: "This is a special one-time webinar event. We don't host regular recurring sessions, making this an exclusive opportunity to learn Python Full Stack Development."
+    },
+    {
+      question: "What payment methods do you accept?",
+      answer: "We accept all major payment methods including UPI, Net Banking, Credit/Debit Cards, and digital wallets for seamless transactions."
+    },
+    {
+      question: "Will I get a certificate after completion?",
+      answer: "Yes! All participants who attend the complete webinar will receive a digital certificate of completion from Python Full Stack Academy."
+    },
+    {
+      question: "What if I can't attend the live session?",
+      answer: "All registered participants receive lifetime access to the webinar recording, session materials, and code samples within 24 hours."
+    },
+    {
+      question: "Do I need prior programming experience?",
+      answer: "No prior experience required! The webinar is designed for complete beginners to advanced levels, covering Python basics to full-stack development."
+    },
+    {
+      question: "What topics will be covered in the webinar?",
+      answer: "Python fundamentals, Django framework, database integration, frontend technologies, API development, deployment strategies, and real-world project building."
+    },
+    {
+      question: "Is there a refund policy?",
+      answer: "We offer a 7-day money-back guarantee if you're not satisfied with the webinar content. Contact support within 7 days for a full refund."
+    },
+    {
+      question: "Will I get ongoing support after the webinar?",
+      answer: "Yes! Participants get access to our exclusive Discord community and 30 days of email support for any questions related to the webinar content."
+    },
+    {
+      question: "How long is the webinar session?",
+      answer: "The comprehensive webinar is approximately 3-4 hours long with interactive coding sessions, Q&A segments, and practical project demonstrations."
+    }
+  ]
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -59,7 +107,7 @@ const ContactPage = () => {
   }
 
   return (
-    <div className="min-h-screen section">
+    <div className="min-h-screen section" style={{ paddingBottom: '4rem' }}>
       <div className="container max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold mb-6">
@@ -70,9 +118,9 @@ const ContactPage = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-12">
+        <div className="grid md:grid-cols-2 gap-12" style={{ marginBottom: '4rem' }}>
           {/* Contact Form */}
-          <div className="card">
+          <div className="card" style={{ marginBottom: '3rem' }}>
             <h2 className="text-2xl font-semibold mb-6">Send us a Message</h2>
 
             {message.text && (
@@ -150,27 +198,24 @@ const ContactPage = () => {
 
               <div className="space-y-6">
                 <div className="flex items-start">
-                  <div className="text-2xl mr-4">📧</div>
                   <div>
-                    <h3 className="font-semibold mb-1">Email</h3>
+                    <h3 className="font-semibold mb-1">Email 📧</h3>
                     <p className="text-gray-400">support@pythonfullstack.com</p>
                     <p className="text-sm text-gray-500">We typically respond within 24 hours</p>
                   </div>
                 </div>
 
                 <div className="flex items-start">
-                  <div className="text-2xl mr-4">💬</div>
                   <div>
-                    <h3 className="font-semibold mb-1">Live Chat</h3>
+                    <h3 className="font-semibold mb-1">Live Chat 💬</h3>
                     <p className="text-gray-400">Available during webinars</p>
                     <p className="text-sm text-gray-500">Monday - Friday, 9 AM - 6 PM EST</p>
                   </div>
                 </div>
 
                 <div className="flex items-start">
-                  <div className="text-2xl mr-4">🌐</div>
                   <div>
-                    <h3 className="font-semibold mb-1">Community</h3>
+                    <h3 className="font-semibold mb-1">Community 🌐</h3>
                     <p className="text-gray-400">Join our Discord server</p>
                     <p className="text-sm text-gray-500">Connect with fellow learners</p>
                   </div>
@@ -179,29 +224,79 @@ const ContactPage = () => {
             </div>
 
             <div className="card">
-              <h3 className="text-xl font-semibold mb-4">Frequently Asked Questions</h3>
+              <h3 className="text-xl font-semibold mb-6">Frequently Asked Questions</h3>
 
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-semibold text-purple-400 mb-2">When is the next webinar?</h4>
-                  <p className="text-sm text-gray-400">
-                    We host webinars every week. Check our homepage for the countdown to the next session.
-                  </p>
-                </div>
-
-                <div>
-                  <h4 className="font-semibold text-purple-400 mb-2">Is the webinar really free?</h4>
-                  <p className="text-sm text-gray-400">
-                    Yes! The core webinar is completely free. You can purchase the full course for additional resources and lifetime access.
-                  </p>
-                </div>
-
-                <div>
-                  <h4 className="font-semibold text-purple-400 mb-2">What if I miss the live session?</h4>
-                  <p className="text-sm text-gray-400">
-                    All registered participants receive a recording link within 24 hours of the webinar.
-                  </p>
-                </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {faqData.map((faq, index) => (
+                  <div 
+                    key={index} 
+                    style={{
+                      border: '1px solid #374151',
+                      borderRadius: '8px',
+                      backgroundColor: '#1a1a1a',
+                      overflow: 'hidden',
+                      marginBottom: '0.5px'
+                    }}
+                  >
+                    <button
+                      onClick={() => toggleFAQ(index)}
+                      style={{
+                        width: '100%',
+                        padding: '16px 20px',
+                        textAlign: 'left',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        backgroundColor: 'transparent',
+                        border: 'none',
+                        color: '#ffffff',
+                        fontSize: '16px',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = 'rgba(139, 92, 246, 0.1)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = 'transparent'
+                      }}
+                    >
+                      <span>{faq.question}</span>
+                      <span 
+                        style={{
+                          fontSize: '18px',
+                          color: '#8b5cf6',
+                          transform: openFAQ === index ? 'rotate(45deg)' : 'rotate(0deg)',
+                          transition: 'transform 0.3s ease'
+                        }}
+                      >
+                        +
+                      </span>
+                    </button>
+                    
+                    <div
+                      style={{
+                        maxHeight: openFAQ === index ? '200px' : '0px',
+                        overflow: 'hidden',
+                        transition: 'max-height 0.3s ease',
+                        borderTop: openFAQ === index ? '1px solid #374151' : 'none'
+                      }}
+                    >
+                      <div
+                        style={{
+                          padding: '16px 20px',
+                          backgroundColor: '#0f0f0f',
+                          color: '#9ca3af',
+                          fontSize: '14px',
+                          lineHeight: '1.5'
+                        }}
+                      >
+                        {faq.answer}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

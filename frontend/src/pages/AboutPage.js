@@ -1,22 +1,28 @@
 const AboutPage = () => {
   const team = [
     {
-      name: "Sarah Johnson",
-      role: "Lead Python Developer",
-      experience: "8+ years",
-      specialties: ["Django", "Flask", "FastAPI", "PostgreSQL"],
-    },
-    {
-      name: "Mike Chen",
-      role: "Full Stack Engineer",
-      experience: "6+ years",
-      specialties: ["React", "Node.js", "Python", "AWS"],
-    },
-    {
-      name: "Emily Rodriguez",
-      role: "DevOps Specialist",
-      experience: "5+ years",
+      name: "Rajesh",
+      role: "Manager",
+      experience: "10+ years",
       specialties: ["Docker", "Kubernetes", "CI/CD", "Cloud Architecture"],
+    },
+    {
+      name: "Suneel",
+      role: "Manager",
+      experience: "10+ years",
+      specialties: ["Docker", "Flutter", "CI/CD", "DevOps"],
+    },
+    {
+      name: "Umesh Chandra",
+      role: "Lead Python Developer",
+      experience: "1+ years",
+      specialties: ["Django", "Flask", "PostgreSQL"],
+    },
+    {
+      name: "Harsha Sri",
+      role: "Full Stack Engineer",
+      experience: "1+ years",
+      specialties: ["React", "Node.js", "Python", "AWS"],
     },
   ]
 
@@ -35,7 +41,7 @@ const AboutPage = () => {
         </div>
 
         {/* Mission Section */}
-        <div className="card mb-12">
+        <div className="card" style={{ marginBottom: '4rem' }}>
           <h2 className="text-3xl font-bold mb-6">Our Mission</h2>
           <div className="grid md:grid-cols-2 gap-8">
             <div>
@@ -76,9 +82,9 @@ const AboutPage = () => {
         </div>
 
         {/* Team Section */}
-        <div className="mb-12">
+        <div style={{ marginBottom: '1rem', paddingBottom: '4rem' }}>
           <h2 className="text-3xl font-bold mb-8 text-center">Meet Our Expert Team</h2>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-2 gap-8 max-w-4xl mx-auto">
             {team.map((member, index) => (
               <div key={index} className="card text-center">
                 <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-purple-700 rounded-full mx-auto mb-4 flex items-center justify-center text-2xl font-bold">
@@ -90,9 +96,19 @@ const AboutPage = () => {
                 <h3 className="text-xl font-semibold mb-2">{member.name}</h3>
                 <p className="text-purple-400 mb-2">{member.role}</p>
                 <p className="text-sm text-gray-400 mb-4">{member.experience} experience</p>
-                <div className="flex flex-wrap gap-2 justify-center">
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
                   {member.specialties.map((specialty, idx) => (
-                    <span key={idx} className="px-2 py-1 bg-purple-900/30 text-purple-300 text-xs rounded">
+                    <span 
+                      key={idx} 
+                      style={{
+                        padding: '4px 8px',
+                        backgroundColor: 'rgba(147, 51, 234, 0.3)',
+                        color: '#c084fc',
+                        fontSize: '12px',
+                        borderRadius: '4px',
+                        margin: '2px'
+                      }}
+                    >
                       {specialty}
                     </span>
                   ))}
@@ -101,6 +117,9 @@ const AboutPage = () => {
             ))}
           </div>
         </div>
+
+        {/* Divider */}
+        <div className="w-full h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent mb-16"></div>
 
         {/* Values Section */}
         <div className="card">
