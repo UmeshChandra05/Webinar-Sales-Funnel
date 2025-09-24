@@ -39,9 +39,10 @@ const LandingPage = () => {
 
   const features = [
     {
-      icon: "🐍",
+      icon: "/Python.png",
       title: "Python Basics to Advanced",
       description: "Master Python fundamentals and advanced concepts needed for full-stack development.",
+      isImage: true,
     },
     {
       icon: "⚡",
@@ -125,7 +126,25 @@ const LandingPage = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
               <div key={index} className="card">
-                <div className="text-4xl mb-4">{feature.icon}</div>
+                <div className="mb-4">
+                  {feature.isImage ? (
+                    <img 
+                      src={feature.icon} 
+                      alt={feature.title}
+                      className="w-16 h-16 object-contain"
+                      onError={(e) => {
+                        // Fallback to Python emoji if image fails
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'inline-block';
+                      }}
+                    />
+                  ) : (
+                    <span className="text-4xl">{feature.icon}</span>
+                  )}
+                  {feature.isImage && (
+                    <span className="text-4xl" style={{display: 'none'}}>🐍</span>
+                  )}
+                </div>
                 <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
                 <p className="text-gray-400">{feature.description}</p>
               </div>

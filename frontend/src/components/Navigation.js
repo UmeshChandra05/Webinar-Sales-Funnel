@@ -28,7 +28,17 @@ const Navigation = () => {
           {/* Logo */}
           <Link to="/" className="nav-logo" onClick={closeMenu}>
             <div className="logo-icon">
-              <span className="logo-emoji">🐍</span>
+              <img 
+                src="/PyStack_logo.png" 
+                alt="PyStack Logo" 
+                className="logo-image"
+                onError={(e) => {
+                  // Fallback to emoji if image fails to load
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'inline-block';
+                }}
+              />
+              <span className="logo-emoji" style={{display: 'none'}}>🐍</span>
               <div className="logo-indicator"></div>
             </div>
             <div className="logo-text">
