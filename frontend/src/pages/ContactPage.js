@@ -11,6 +11,8 @@ const ContactPage = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [openFAQ, setOpenFAQ] = useState(null)
   const [toast, setToast] = useState({ show: false, message: "", type: "" })
+  const [messageError, setMessageError] = useState("")
+  const [hasSubmitted, setHasSubmitted] = useState(false)
 
   const showToast = (message, type = "success") => {
     setToast({ show: true, message, type })
@@ -76,10 +78,43 @@ const ContactPage = () => {
       ...prev,
       [name]: value,
     }))
+    
+    // Real-time validation for message field
+    if (name === 'message') {
+      validateMessage(value)
+    }
+  }
+  
+  const validateMessage = (message) => {
+    const trimmedMessage = message.trim()
+    if (trimmedMessage.length === 0) {
+      setMessageError("")
+    } else if (trimmedMessage.length > 1000) {
+      setMessageError(`Maximum 1000 characters allowed (${trimmedMessage.length}/1000)`)
+    } else if (hasSubmitted && trimmedMessage.length < 10) {
+      // Only show minimum character error after user has tried to submit
+      setMessageError(`Minimum 10 characters required (${trimmedMessage.length}/10)`)
+    } else {
+      setMessageError("")
+    }
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setHasSubmitted(true)
+    
+    // Frontend validation before submission
+    const trimmedMessage = formData.message.trim()
+    if (trimmedMessage.length < 10) {
+      validateMessage(formData.message) // This will now show the error since hasSubmitted is true
+      showToast("Message must be at least 10 characters long", "error")
+      return
+    }
+    if (trimmedMessage.length > 1000) {
+      showToast("Message must be less than 1000 characters", "error")
+      return
+    }
+    
     setIsLoading(true)
 
     try {
@@ -99,6 +134,8 @@ const ContactPage = () => {
           "success"
         )
         setFormData({ name: "", email: "", message: "" })
+        setHasSubmitted(false)
+        setMessageError("")
       } else {
         showToast(
           result.error || "Failed to send message. Please try again.", 
@@ -192,9 +229,7 @@ const ContactPage = () => {
               fontSize: '14px',
               fontWeight: '500'
             }}>
-              {toast.type === 'success' ? 'Success' : 
-               toast.type === 'error' ? 'Error' :
-               toast.type === 'warning' ? 'Warning' : 'Info'} toast notification
+              {toast.message}
             </div>
             
             {/* Close Button */}
@@ -285,19 +320,47 @@ const ContactPage = () => {
               </div>
 
               <div className="form-group">
-                <label htmlFor="message" className="form-label">
-                  Message *
-                </label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <label htmlFor="message" className="form-label">
+                    Message *
+                  </label>
+                  <span style={{ 
+                    fontSize: '12px', 
+                    color: formData.message.trim().length > 1000 ? '#ef4444' : 
+                           formData.message.trim().length < 10 && formData.message.trim().length > 0 ? '#f59e0b' : '#9ca3af'
+                  }}>
+                    {formData.message.trim().length}/1000
+                  </span>
+                </div>
                 <textarea
                   id="message"
                   name="message"
                   value={formData.message}
                   onChange={handleInputChange}
                   className="form-input form-textarea"
+                  style={{
+                    borderColor: messageError ? '#ef4444' : '#374151',
+                    backgroundColor: messageError ? '#1f1f1f' : '#1a1a1a',
+                    borderWidth: '2px',
+                    color: '#ffffff'
+                  }}
                   required
-                  placeholder="Tell us how we can help you..."
+                  placeholder="Tell us how we can help you... (minimum 10 characters)"
                   rows="5"
                 ></textarea>
+                {messageError && (
+                  <div style={{
+                    color: '#ef4444',
+                    fontSize: '14px',
+                    marginTop: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    <span>⚠</span>
+                    {messageError}
+                  </div>
+                )}
               </div>
 
               <button type="submit" className="btn btn-primary w-full" disabled={isLoading}>

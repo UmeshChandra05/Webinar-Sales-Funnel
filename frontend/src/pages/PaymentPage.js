@@ -285,9 +285,7 @@ const PaymentPage = () => {
                 fontSize: '14px',
                 fontWeight: '500'
               }}>
-                {toastMessage.type === 'success' ? 'Success' : 
-                 toastMessage.type === 'error' ? 'Error' :
-                 toastMessage.type === 'warning' ? 'Warning' : 'Info'} toast notification
+                {toastMessage.message}
               </div>
               
               {/* Close Button */}
