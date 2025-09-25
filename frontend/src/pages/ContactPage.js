@@ -19,6 +19,10 @@ const ContactPage = () => {
     }, 5000)
   }
 
+  const dismissToast = () => {
+    setToast({ show: false, message: "", type: "" })
+  }
+
   const toggleFAQ = (index) => {
     setOpenFAQ(openFAQ === index ? null : index)
   }
@@ -126,28 +130,106 @@ const ContactPage = () => {
               opacity: 1;
             }
           }
+          
+          @keyframes progress {
+            from {
+              width: 100%;
+            }
+            to {
+              width: 0%;
+            }
+          }
         `}
       </style>
 
       {/* Toast Notification */}
       {toast.show && (
-        <div
+        <div 
           style={{
             position: 'fixed',
             top: '20px',
             right: '20px',
-            backgroundColor: toast.type === 'success' ? '#10b981' : '#ef4444',
-            color: 'white',
-            padding: '16px 24px',
-            borderRadius: '8px',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
             zIndex: 1000,
+            backgroundColor: 'white',
+            borderRadius: '8px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
             animation: 'slideIn 0.3s ease-out',
+            minWidth: '300px',
             maxWidth: '400px',
-            wordWrap: 'break-word'
+            overflow: 'hidden'
           }}
         >
-          {toast.message}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            padding: '16px',
+            gap: '12px'
+          }}>
+            {/* Icon */}
+            <div style={{
+              width: '24px',
+              height: '24px',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              color: 'white',
+              backgroundColor: toast.type === 'success' ? '#10b981' : 
+                               toast.type === 'error' ? '#ef4444' :
+                               toast.type === 'warning' ? '#f59e0b' : '#3b82f6'
+            }}>
+              {toast.type === 'success' ? '✓' : 
+               toast.type === 'error' ? '✖' :
+               toast.type === 'warning' ? '⚠' : 'i'}
+            </div>
+            
+            {/* Message */}
+            <div style={{
+              flex: 1,
+              color: '#374151',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}>
+              {toast.type === 'success' ? 'Success' : 
+               toast.type === 'error' ? 'Error' :
+               toast.type === 'warning' ? 'Warning' : 'Info'} toast notification
+            </div>
+            
+            {/* Close Button */}
+            <button 
+              onClick={dismissToast}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#9ca3af',
+                fontSize: '18px',
+                cursor: 'pointer',
+                padding: '4px',
+                lineHeight: 1
+              }}
+            >
+              ×
+            </button>
+          </div>
+          
+          {/* Progress Bar */}
+          <div style={{
+            height: '4px',
+            backgroundColor: '#f3f4f6',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              height: '100%',
+              width: '100%',
+              backgroundColor: toast.type === 'success' ? '#10b981' : 
+                               toast.type === 'error' ? '#ef4444' :
+                               toast.type === 'warning' ? '#f59e0b' : '#3b82f6',
+              animation: 'progress 5s linear forwards'
+            }} />
+          </div>
         </div>
       )}
 
