@@ -12,7 +12,12 @@ const RegisterPage = () => {
     role: "",
   })
   const [isLoading, setIsLoading] = useState(false)
-  const [message, setMessage] = useState({ type: "", text: "" })
+  const [toastMessage, setToastMessage] = useState(null)
+
+  const showToast = (message, type = 'info') => {
+    setToastMessage({ message, type })
+    setTimeout(() => setToastMessage(null), 4000)
+  }
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -25,7 +30,6 @@ const RegisterPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsLoading(true)
-    setMessage({ type: "", text: "" })
 
     try {
       const response = await fetch("/api/capture-lead", {
@@ -46,33 +50,64 @@ const RegisterPage = () => {
         localStorage.setItem("userData", JSON.stringify(formData))
         localStorage.setItem("userEmail", formData.email)
 
-        setMessage({
-          type: "success",
-          text: "Thank you for your interest! Redirecting to secure your spot...",
-        })
+        showToast("Registration successful!", "success")
 
         setTimeout(() => {
           navigate("/payment")
         }, 2000)
       } else {
-        setMessage({
-          type: "error",
-          text: result.error || "Registration failed. Please try again.",
-        })
+        showToast(result.error || "Registration failed. Please try again.", "error")
       }
     } catch (error) {
       console.error("Registration error:", error)
-      setMessage({
-        type: "error",
-        text: "Network error. Please check your connection and try again.",
-      })
+      showToast("Network error. Please check your connection and try again.", "error")
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen section">
+    <>
+      <style>
+        {`
+          @keyframes slideIn {
+            from {
+              transform: translateX(100%);
+              opacity: 0;
+            }
+            to {
+              transform: translateX(0);
+              opacity: 1;
+            }
+          }
+        `}
+      </style>
+      
+      <div className="min-h-screen section">
+        {/* Toast Notification */}
+        {toastMessage && (
+          <div 
+            style={{
+              position: 'fixed',
+              top: '20px',
+              right: '20px',
+              zIndex: 1000,
+              padding: '12px 20px',
+              borderRadius: '8px',
+              color: 'white',
+              fontSize: '14px',
+              fontWeight: '500',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+              backgroundColor: toastMessage.type === 'success' ? '#10b981' : 
+                               toastMessage.type === 'error' ? '#ef4444' :
+                               toastMessage.type === 'warning' ? '#f59e0b' : '#6b7280',
+              animation: 'slideIn 0.3s ease-out',
+              maxWidth: '350px'
+            }}
+          >
+            {toastMessage.message}
+          </div>
+        )}
       <div className="container max-w-2xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-3xl md:text-4xl font-bold mb-4">
@@ -82,12 +117,6 @@ const RegisterPage = () => {
         </div>
 
         <div className="card">
-          {message.text && (
-            <div className={`alert ${message.type === "success" ? "alert-success" : "alert-error"}`}>
-              {message.text}
-            </div>
-          )}
-
           <form onSubmit={handleSubmit}>
             <div className="form-group">
               <label htmlFor="name" className="form-label">
@@ -171,7 +200,8 @@ const RegisterPage = () => {
           </form>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   )
 }
 

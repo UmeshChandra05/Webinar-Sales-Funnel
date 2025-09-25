@@ -29,23 +29,23 @@ const PaymentSuccessPage = () => {
           <p className="text-xl text-gray-400 mb-8">Your seat is confirmed! Welcome to the Python Full Stack course!</p>
 
           <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-6 mb-8">
-            <h3 className="font-semibold text-green-400 mb-4">What's Next?</h3>
+            <h3 className="font-semibold text-green-400 mb-4">You will receive via email:</h3>
             <ul className="text-left space-y-2 text-gray-300">
               <li className="flex items-center">
-                <span className="text-green-400 mr-2">✓</span>
-                Check your email for course access details
+                <span className="text-green-400 mr-2">📧</span>
+                <span><strong>Webinar Link</strong> - 24 hours before the session</span>
               </li>
               <li className="flex items-center">
-                <span className="text-green-400 mr-2">✓</span>
-                Join our exclusive WhatsApp community
+                <span className="text-green-400 mr-2">📚</span>
+                <span><strong>Course Resources</strong> - After the webinar completion</span>
               </li>
               <li className="flex items-center">
-                <span className="text-green-400 mr-2">✓</span>
-                Download your bonus materials
+                <span className="text-green-400 mr-2">💬</span>
+                <span><strong>WhatsApp Community Link</strong> - Join below now</span>
               </li>
               <li className="flex items-center">
-                <span className="text-green-400 mr-2">✓</span>
-                Schedule your 1-on-1 mentorship session
+                <span className="text-green-400 mr-2">🎓</span>
+                <span><strong>Certificate & Mentorship</strong> - Post-webinar</span>
               </li>
             </ul>
           </div>
@@ -55,15 +55,15 @@ const PaymentSuccessPage = () => {
               📱 Join WhatsApp Community
             </a>
 
-            <Link to="/thank-you" className="btn btn-secondary">
-              Continue to Resources
+            <Link to="/" className="btn btn-secondary">
+              Back to Home
             </Link>
           </div>
 
           <div className="mt-8 p-4 bg-purple-900/20 rounded-lg">
             <p className="text-sm text-gray-400">
-              <strong>Important:</strong> Save this page! You'll receive all access details via email within 5 minutes.
-              If you don't see it, check your spam folder.
+              <strong>Important:</strong> Check your email for confirmation. Webinar link will be sent 24 hours before the session.
+              All resources will be delivered after webinar completion.
             </p>
           </div>
         </div>

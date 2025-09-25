@@ -23,7 +23,7 @@ const PaymentFailedPage = () => {
           </h1>
 
           <p className="text-xl text-gray-400 mb-8">
-            Don't worry! Your registration is still active for the free webinar.
+            Don't worry! You can try again to secure your spot in the webinar.
           </p>
 
           <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-6 mb-8">
@@ -59,13 +59,12 @@ const PaymentFailedPage = () => {
           </div>
 
           <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-6">
-            <h3 className="font-semibold text-purple-400 mb-2">Still Want to Secure Your Seat?</h3>
+            <h3 className="font-semibold text-purple-400 mb-2">Ready to Secure Your Seat?</h3>
             <p className="text-sm text-gray-400 mb-4">
-              You can complete your payment anytime to secure your seat. The free session alone is packed with
-              valuable content!
+              Complete your payment to confirm your spot in the Python Full Stack Development webinar.
             </p>
             <p className="text-xs text-gray-500">
-              Special offer: Use code RETRY20 for 20% off if you upgrade within 24 hours.
+              Limited seats available. Don't miss this exclusive learning opportunity!
             </p>
           </div>
         </div>

@@ -9,8 +9,15 @@ const ContactPage = () => {
     message: "",
   })
   const [isLoading, setIsLoading] = useState(false)
-  const [message, setMessage] = useState({ type: "", text: "" })
   const [openFAQ, setOpenFAQ] = useState(null)
+  const [toast, setToast] = useState({ show: false, message: "", type: "" })
+
+  const showToast = (message, type = "success") => {
+    setToast({ show: true, message, type })
+    setTimeout(() => {
+      setToast({ show: false, message: "", type: "" })
+    }, 5000)
+  }
 
   const toggleFAQ = (index) => {
     setOpenFAQ(openFAQ === index ? null : index)
@@ -70,7 +77,6 @@ const ContactPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsLoading(true)
-    setMessage({ type: "", text: "" })
 
     try {
       const response = await fetch("/api/contact", {
@@ -84,30 +90,68 @@ const ContactPage = () => {
       const result = await response.json()
 
       if (result.success) {
-        setMessage({
-          type: "success",
-          text: result.message || "Thank you for your message. We will get back to you soon!",
-        })
+        showToast(
+          result.message || "Thank you for your message. We will get back to you soon!", 
+          "success"
+        )
         setFormData({ name: "", email: "", message: "" })
       } else {
-        setMessage({
-          type: "error",
-          text: result.error || "Failed to send message. Please try again.",
-        })
+        showToast(
+          result.error || "Failed to send message. Please try again.", 
+          "error"
+        )
       }
     } catch (error) {
       console.error("Contact form error:", error)
-      setMessage({
-        type: "error",
-        text: "Network error. Please check your connection and try again.",
-      })
+      showToast(
+        "Network error. Please check your connection and try again.", 
+        "error"
+      )
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen section" style={{ paddingBottom: '4rem' }}>
+    <>
+      <style>
+        {`
+          @keyframes slideIn {
+            from {
+              transform: translateX(100%);
+              opacity: 0;
+            }
+            to {
+              transform: translateX(0);
+              opacity: 1;
+            }
+          }
+        `}
+      </style>
+
+      {/* Toast Notification */}
+      {toast.show && (
+        <div
+          style={{
+            position: 'fixed',
+            top: '20px',
+            right: '20px',
+            backgroundColor: toast.type === 'success' ? '#10b981' : '#ef4444',
+            color: 'white',
+            padding: '16px 24px',
+            borderRadius: '8px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+            zIndex: 1000,
+            animation: 'slideIn 0.3s ease-out',
+            maxWidth: '400px',
+            wordWrap: 'break-word'
+          }}
+        >
+          {toast.message}
+        </div>
+      )}
+
+      <div className="min-h-screen section" style={{ paddingBottom: '4rem' }}>
       <div className="container max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold mb-6">
@@ -123,11 +167,7 @@ const ContactPage = () => {
           <div className="card" style={{ marginBottom: '3rem' }}>
             <h2 className="text-2xl font-semibold mb-6">Send us a Message</h2>
 
-            {message.text && (
-              <div className={`alert ${message.type === "success" ? "alert-success" : "alert-error"}`}>
-                {message.text}
-              </div>
-            )}
+
 
             <form onSubmit={handleSubmit}>
               <div className="form-group">
@@ -302,7 +342,8 @@ const ContactPage = () => {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   )
 }
 
