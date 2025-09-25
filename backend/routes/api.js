@@ -24,6 +24,7 @@ const leadValidation = [
   body("name").trim().isLength({ min: 2, max: 100 }).withMessage("Name must be between 2 and 100 characters"),
   body("email").isEmail().normalizeEmail().withMessage("Valid email is required"),
   body("phone").optional().isMobilePhone().withMessage("Valid phone number is required"),
+  body("role").trim().isLength({ min: 1, max: 50 }).withMessage("Role is required"),
   body("source").optional().isString().trim(),
 ]
 

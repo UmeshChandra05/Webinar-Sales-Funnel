@@ -9,6 +9,7 @@ const RegisterPage = () => {
     name: "",
     email: "",
     phone: "",
+    role: "",
   })
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState({ type: "", text: "" })
@@ -133,6 +134,28 @@ const RegisterPage = () => {
                 className="form-input"
                 placeholder="Enter your phone number (optional)"
               />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="role" className="form-label">
+                Role *
+              </label>
+              <select
+                id="role"
+                name="role"
+                value={formData.role}
+                onChange={handleInputChange}
+                className="form-input"
+                required
+              >
+                <option value="">Select your role</option>
+                <option value="Student">Student</option>
+                <option value="Faculty">Faculty</option>
+                <option value="Industry Professional">Industry Professional</option>
+                <option value="Freelancer">Freelancer</option>
+                <option value="Entrepreneur">Entrepreneur</option>
+                <option value="Other">Other</option>
+              </select>
             </div>
 
             <button type="submit" className="btn btn-primary btn-lg w-full" disabled={isLoading}>

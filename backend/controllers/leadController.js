@@ -5,19 +5,20 @@ const API_BASE_URL = process.env.API_BASE_URL
 const leadController = {
   captureLeadAsync: async (req, res) => {
     try {
-      const { name, email, phone, source } = req.body
+      const { name, email, phone, source, role } = req.body
 
       const leadData = {
         name,
         email,
         phone: phone || "",
+        role: role || "",
         source: source || "website",
         timestamp: new Date().toISOString(),
         ip_address: req.ip,
         user_agent: req.get("User-Agent"),
       }
 
-      console.log("📝 Capturing lead:", { email, name, source })
+      console.log("📝 Capturing lead:", { email, name, role, source })
 
       // If API_BASE_URL is configured, send to n8n webhook
       if (API_BASE_URL && API_BASE_URL !== "API_URL") {
