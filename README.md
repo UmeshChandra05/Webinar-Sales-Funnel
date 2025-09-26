@@ -1,6 +1,6 @@
-# Webinar Sales Funnel App
+# PyStack Analytics - Webinar Sales Funnel App
 
-🚀 **Complete Professional Webinar Sales Funnel** - A sophisticated React-based application that transforms visitors into paying customers through a strategically designed conversion journey. This isn't just a landing page - it's a comprehensive sales system with advanced features that maximize conversions and deliver exceptional user experience.
+🚀 **Complete Professional Webinar Sales Funnel with Admin Dashboard** - A sophisticated React-based application that transforms visitors into paying customers through a strategically designed conversion journey. Features a comprehensive admin panel with JWT authentication for managing analytics, leads, and performance metrics. This isn't just a landing page - it's a complete business management system with advanced features that maximize conversions and provide deep insights.
 
 ## 🎯 Complete Sales Funnel Features
 
@@ -12,9 +12,17 @@
 
 ### **💳 Sophisticated Payment & Conversion System**
 - **Dynamic Coupon Engine** with n8n webhook validation for personalized offers
-- **Professional Payment Flow** with clear success/failure messaging
+- **Professional Payment Flow** with strikethrough pricing and clear success/failure messaging
 - **Customer Journey Optimization** with contextual guidance at every step
 - **Conversion Tracking** through integrated lead capture workflows
+
+### **🛡️ Secure Admin Dashboard System**
+- **JWT Authentication** with 24-hour session management and secure token handling
+- **PyStack Analytics Platform** with comprehensive performance metrics
+- **Protected Admin Routes** with automatic session validation and cleanup
+- **Professional Split-Screen Login** with gradient backgrounds and responsive design
+- **Real-time Dashboard** with lead management, payment tracking, and analytics
+- **Session Security** with automatic logout and token expiration handling
 
 ### **⚡ Professional User Experience**
 - **Advanced Toast Notification System** with icons, progress bars, and animations
@@ -24,20 +32,24 @@
 
 ### **🏗️ Enterprise-Grade Technical Architecture**
 - **React 18.2.0** with modern hooks and component architecture
+- **JWT Authentication System** with secure token management and protected routes
 - **Custom Animation Engine** with CSS keyframes and smooth transitions
 - **n8n Workflow Integration** for real-time coupon validation and lead automation
-- **Express.js Backend** with comprehensive validation middleware
+- **Express.js Backend** with comprehensive validation middleware and admin endpoints
 - **Professional Notification Framework** with progress tracking and user guidance
 - **Advanced Form Engine** with character counting and real-time validation
-- **RESTful API Design** with proper error handling and response patterns
+- **RESTful API Design** with proper error handling and JWT middleware protection
+- **PyStack Analytics Engine** with comprehensive dashboard and metrics tracking
 
 ## 🛠️ Tech Stack
 
 - **Frontend**: React 18.2.0, React Router, Axios, CSS Grid & Flexbox, Custom Animations
-- **Backend**: Node.js, Express 4.18.2, express-validator (with custom validation rules), CORS, Helmet
+- **Backend**: Node.js, Express 4.18.2, express-validator, CORS, Helmet, **jsonwebtoken** for JWT authentication
+- **Authentication**: JWT tokens with 24-hour expiration, protected routes, secure session management
 - **Integration**: n8n webhooks for automation and coupon validation
 - **UI/UX**: Professional toast system with icons & progress bars, accordion components, real-time form validation
-- **Validation**: Frontend & backend validation with user-friendly error handling and character limitsation.
+- **Admin System**: PyStack Analytics dashboard with secure login and comprehensive metrics
+- **Validation**: Frontend & backend validation with user-friendly error handling and character limits
 
 ## 🎯 Sales Funnel Optimization Features
 
@@ -57,15 +69,28 @@
 
 ## 📋 Project Overview
 
-This application handles the complete customer journey from landing page to webinar registration:
+This application handles the complete customer journey from landing page to webinar registration, plus comprehensive admin management:
+
+### **🎯 Customer Journey:**
 - **Lead Capture**: Role-based registration forms with real-time validation
-- **Payment Processing**: Simulated payment flow (₹4999 webinar fee) with coupon system
+- **Payment Processing**: Simulated payment flow (₹4999 webinar fee) with dynamic coupon system and strikethrough pricing
 - **Coupon Validation**: Dynamic coupon code validation through n8n integration
 - **Interactive UI**: Professional toast notifications with icons, progress bars, and animations
 - **Form Validation**: Real-time character validation with user-friendly feedback
 - **Webinar Management**: Registration and information display
 - **Contact Forms**: Advanced message validation with character counting and error states
-- **n8n Integration**: Automated workflow triggers for payments and coupons
+
+### **🛡️ Admin Management:**
+- **Secure Authentication**: JWT-based login with environment variable credentials
+- **PyStack Analytics Dashboard**: Comprehensive metrics and performance tracking
+- **Protected Routes**: Automatic session validation and secure access control
+- **Professional Admin UI**: Split-screen design with PyStack branding and analytics cards
+- **Session Management**: 24-hour token expiration with automatic cleanup
+- **Lead & Payment Tracking**: Real-time monitoring of conversions and revenue
+
+### **🔗 Integration:**
+- **n8n Webhooks**: Automated workflow triggers for payments, coupons, and lead capture
+- **Backend API**: Secure endpoints with JWT middleware protection
 
 ## 🗂️ Project Structure
 
@@ -91,16 +116,21 @@ Webinar-Sales-Funnel-App/
 Landing Page → Interest Form → Payment Page → Success/Failed → Thank You
      ↓
 Contact/About Pages
+
+Admin Route:
+/admin → JWT Login → PyStack Analytics Dashboard
 ```
 
 **Key Pages:**
 - **Landing**: Hero section with countdown timer
 - **About**: Team showcase with 2x2 instructor grid and professional layout
 - **Register**: Interest capture form with role selection (Student, Faculty, Industry Professional, etc.)
-- **Payment**: ₹4999 payment simulation with advanced coupon system and professional toast notifications
+- **Payment**: ₹4999 payment simulation with advanced coupon system, strikethrough pricing, and professional toast notifications
 - **Success**: Payment confirmation with email delivery timeline information
 - **Contact**: Support form with message validation (10-1000 chars) and interactive FAQ accordion
 - **Thank You**: Conditional display based on payment status with proper user guidance
+- **Admin Login**: Secure JWT authentication with PyStack branding and split-screen design
+- **Admin Dashboard**: PyStack Analytics with lead management, payment tracking, and performance metrics
 
 ## 🚀 Quick Start
 
@@ -124,6 +154,11 @@ PORT=5000
 NODE_ENV=development
 FRONTEND_URL=http://localhost:3000
 API_BASE_URL=https://your-n8n-webhook-url.com/webhook
+
+# Admin Authentication (Required for /admin access)
+ADMIN_USERNAME=your-admin-username
+ADMIN_PASSWORD=your-secure-password
+JWT_SECRET=your-super-secure-jwt-secret-key
 ```
 
 3. **Start the application:**
@@ -133,8 +168,18 @@ npm run dev
 
 Access at: `http://localhost:3000`
 
+## 🛡️ Admin Access
+
+**PyStack Analytics Dashboard:**
+- **URL**: `http://localhost:3000/admin`
+- **Authentication**: Use credentials from your `.env` file
+- **Features**: Lead management, payment tracking, PyStack analytics with Python-focused metrics
+- **Session**: 24-hour JWT token with automatic expiration
+- **Security**: Protected routes with middleware validation
+
 ## 🌐 API Endpoints
 
+### **Public Endpoints:**
 | Endpoint | Purpose | n8n Webhook |
 |----------|---------|-------------|
 | `POST /api/capture-lead` | Lead registration | `/capture-lead` |
@@ -142,6 +187,13 @@ Access at: `http://localhost:3000`
 | `POST /api/validate-coupon` | Coupon validation | `/validate-coupon` |
 | `POST /api/contact` | Contact forms | `/contact-form` |
 | `GET /api/webinar-info` | Webinar details | - |
+
+### **Admin Endpoints (JWT Protected):**
+| Endpoint | Purpose | Authentication |
+|----------|---------|----------------|
+| `POST /api/admin/login` | Admin authentication | Environment credentials |
+| `GET /api/admin/dashboard` | Dashboard data | JWT Bearer token |
+| `GET /api/admin/verify-token` | Token validation | JWT Bearer token |
 
 ## 🔧 n8n Integration
 
