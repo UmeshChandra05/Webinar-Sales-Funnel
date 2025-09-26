@@ -6,6 +6,7 @@ const router = express.Router()
 const leadController = require("../controllers/leadController")
 const paymentController = require("../controllers/paymentController")
 const webinarController = require("../controllers/webinarController")
+const adminController = require("../controllers/adminController")
 
 // Validation middleware
 const handleValidationErrors = (req, res, next) => {
@@ -64,5 +65,20 @@ router.post(
   handleValidationErrors,
   leadController.handleContactForm,
 )
+
+// Admin routes
+router.post(
+  "/admin/login",
+  [
+    body("username").trim().isLength({ min: 1 }).withMessage("Username is required"),
+    body("password").isLength({ min: 1 }).withMessage("Password is required"),
+  ],
+  handleValidationErrors,
+  adminController.loginAdmin
+)
+
+// Protected admin routes
+router.get("/admin/dashboard", adminController.verifyAdminToken, adminController.getDashboardData)
+router.post("/admin/refresh-token", adminController.verifyAdminToken, adminController.refreshToken)
 
 module.exports = router

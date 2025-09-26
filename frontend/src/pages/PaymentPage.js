@@ -334,18 +334,32 @@ const PaymentPage = () => {
 
         <div className="card">
           <div className="text-center mb-6">
-            <div className="text-4xl font-bold gradient-text mb-2">
-              ₹{calculateFinalPrice().toLocaleString()}
-              {couponApplied && couponDiscount > 0 && (
-                <span className="text-lg text-gray-400 line-through ml-2">₹4,999</span>
-              )}
-            </div>
-            <p className="text-gray-400">One-time payment (INR)</p>
-            {couponApplied && couponDiscount > 0 && (
-              <p className="text-green-400 text-sm mt-1">
-                🎉 {couponDiscount}% discount applied!
-              </p>
+            {couponApplied && couponDiscount > 0 ? (
+              <>
+                {/* Original price with strikethrough */}
+                <div className="text-xl text-gray-500 mb-1">
+                  <span style={{
+                    textDecoration: 'line-through',
+                    textDecorationColor: '#ef4444',
+                    textDecorationThickness: '2px'
+                  }}>
+                    ₹4,999
+                  </span>
+                </div>
+                {/* Discounted price */}
+                <div className="text-4xl font-bold gradient-text mb-2">
+                  ₹{calculateFinalPrice().toLocaleString()}
+                </div>
+                <p className="text-green-400 text-sm mb-1">
+                  🎉 You save ₹{(4999 - calculateFinalPrice()).toLocaleString()} ({couponDiscount}% off)
+                </p>
+              </>
+            ) : (
+              <div className="text-4xl font-bold gradient-text mb-2">
+                ₹{calculateFinalPrice().toLocaleString()}
+              </div>
             )}
+            <p className="text-gray-400">One-time payment (INR)</p>
           </div>
 
           <div className="mb-6">
@@ -428,8 +442,12 @@ const PaymentPage = () => {
                 </div>
                 <button
                   onClick={removeCoupon}
-                  className="text-red-400 hover:text-red-300 text-sm"
+                  className="btn btn-danger text-sm px-3 py-1"
+                  style={{ minWidth: 'auto', fontSize: '12px' }}
                 >
+                  <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                   Remove
                 </button>
               </div>
