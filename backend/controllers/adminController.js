@@ -1,14 +1,55 @@
 const jwt = require('jsonwebtoken');
+const axiosInstance = require('../middleware/axios');
 require('dotenv').config();
-
-// Admin credentials (in production, these should be in environment variables)
-const ADMIN_CREDENTIALS = {
-  username: process.env.ADMIN_USERNAME || 'admin',
-  password: process.env.ADMIN_PASSWORD || 'admin.password'
-};
 
 // JWT secret (should be in environment variables)
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production';
+
+// N8n webhook URL for admin authentication
+const ADMIN_AUTH_WEBHOOK_URL =  process.env.API_BASE_URL + '/admin-auth';
+
+/**
+ * Validate admin credentials with N8n webhook
+ */
+const validateAdminCredentials = async (username, password) => {
+  try {
+    const payload = {
+      username: username,
+      password: password,
+      timestamp: new Date().toISOString(),
+      source: 'admin-login',
+      action: 'validate_credentials'
+    };
+
+    console.log('🔐 Validating admin credentials with N8n...');
+    
+    const response = await axiosInstance.post(ADMIN_AUTH_WEBHOOK_URL, payload);
+    
+    console.log('✅ N8n credential validation response received');
+    
+    // Check if N8n response indicates valid credentials
+    if (response.data && response.data.valid === true) {
+      return {
+        valid: true,
+        userInfo: response.data.userInfo || { username: username, role: 'admin' }
+      };
+    } else {
+      return {
+        valid: false,
+        message: response.data?.message || 'Invalid credentials'
+      };
+    }
+
+  } catch (error) {
+    console.error('❌ N8n credential validation error:', error.message);
+    
+    // Return false for any network or N8n errors
+    return {
+      valid: false,
+      message: 'Authentication service unavailable'
+    };
+  }
+};
 
 /**
  * Admin login endpoint
@@ -25,22 +66,31 @@ const loginAdmin = async (req, res) => {
       });
     }
 
-    // Verify credentials
-    if (username !== ADMIN_CREDENTIALS.username || password !== ADMIN_CREDENTIALS.password) {
+    // Validate credentials through N8n
+    console.log(`🔐 Admin login attempt for username: ${username}`);
+    
+    const validationResult = await validateAdminCredentials(username, password);
+
+    if (!validationResult.valid) {
       // Add a small delay to prevent timing attacks
       await new Promise(resolve => setTimeout(resolve, 1000));
       
+      console.log('❌ Admin login failed: Invalid credentials');
+      
       return res.status(401).json({
         success: false,
-        message: 'Invalid username or password'
+        message: validationResult.message || 'Invalid username or password'
       });
     }
+
+    console.log('✅ Admin login successful');
 
     // Generate JWT token
     const token = jwt.sign(
       { 
         username: username,
         role: 'admin',
+        userInfo: validationResult.userInfo,
         iat: Date.now()
       },
       JWT_SECRET,
@@ -55,15 +105,16 @@ const loginAdmin = async (req, res) => {
       token: token,
       user: {
         username: username,
-        role: 'admin'
+        role: 'admin',
+        ...validationResult.userInfo
       }
     });
 
   } catch (error) {
-    console.error('Admin login error:', error);
+    console.error('❌ Admin login error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error during authentication'
     });
   }
 };

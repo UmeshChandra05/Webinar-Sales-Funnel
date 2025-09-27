@@ -155,9 +155,8 @@ NODE_ENV=development
 FRONTEND_URL=http://localhost:3000
 API_BASE_URL=https://your-n8n-webhook-url.com/webhook
 
-# Admin Authentication (Required for /admin access)
-ADMIN_USERNAME=your-admin-username
-ADMIN_PASSWORD=your-secure-password
+# Admin Authentication (N8n-based validation)
+ADMIN_AUTH_WEBHOOK_URL=https://your-n8n-webhook-url.com/webhook/admin-auth
 JWT_SECRET=your-super-secure-jwt-secret-key
 ```
 
@@ -172,10 +171,11 @@ Access at: `http://localhost:3000`
 
 **PyStack Analytics Dashboard:**
 - **URL**: `http://localhost:3000/admin`
-- **Authentication**: Use credentials from your `.env` file
+- **Authentication**: Dynamic validation through N8n webhook
+- **Credentials**: Managed centrally in N8n workflow (no hardcoded values)
 - **Features**: Lead management, payment tracking, PyStack analytics with Python-focused metrics
 - **Session**: 24-hour JWT token with automatic expiration
-- **Security**: Protected routes with middleware validation
+- **Security**: Protected routes with N8n-based credential validation
 
 ## 🌐 API Endpoints
 
@@ -187,17 +187,18 @@ Access at: `http://localhost:3000`
 | `POST /api/validate-coupon` | Coupon validation | `/validate-coupon` |
 | `POST /api/contact` | Contact forms | `/contact-form` |
 | `GET /api/webinar-info` | Webinar details | - |
+| `POST /api/admin/login` | Admin authentication | `/admin-auth` |
 
 ### **Admin Endpoints (JWT Protected):**
 | Endpoint | Purpose | Authentication |
 |----------|---------|----------------|
-| `POST /api/admin/login` | Admin authentication | Environment credentials |
+| `POST /api/admin/login` | Admin authentication | N8n webhook validation |
 | `GET /api/admin/dashboard` | Dashboard data | JWT Bearer token |
 | `GET /api/admin/verify-token` | Token validation | JWT Bearer token |
 
 ## 🔧 n8n Integration
 
-The app sends data to 4 n8n webhook endpoints:
+The app sends data to 5 n8n webhook endpoints:
 
 **Lead Capture Data:**
 ```json
@@ -248,7 +249,42 @@ The app sends data to 4 n8n webhook endpoints:
 }
 ```
 
-## 📦 Available Scripts
+**Admin Authentication Data:**
+```json
+{
+  "username": "admin_user",
+  "password": "secure_password",
+  "timestamp": "2025-09-24T10:30:00Z",
+  "source": "admin-login",
+  "action": "validate_credentials"
+}
+```
+
+**Expected N8n Response for Admin Auth:**
+```json
+{
+  "valid": true,
+  "userInfo": {
+    "username": "admin_user",
+    "role": "admin",
+    "permissions": ["dashboard", "analytics", "user_management"]
+  }
+}
+```
+
+## � N8n Admin Authentication Setup
+
+**Required N8n Workflow for Admin Authentication:**
+
+1. **Webhook Trigger**: `/admin-auth`
+2. **Credential Validation Logic**: Check username/password against your secure data source
+3. **Response Format**: Return JSON with `valid: true/false` and optional `userInfo`
+
+**Sample N8n Workflow Response:**
+- **Valid Login**: `{ "valid": true, "userInfo": { "username": "admin", "role": "admin" } }`
+- **Invalid Login**: `{ "valid": false, "message": "Invalid credentials" }`
+
+## �📦 Available Scripts
 
 ```bash
 npm run dev              # Start both frontend & backend

@@ -4,14 +4,34 @@ import { useNavigate } from 'react-router-dom';
 function AdminLoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [toastMessage, setToastMessage] = useState(null);
   const navigate = useNavigate();
+
+  const showToast = (message, type = "info") => {
+    setToastMessage({ message, type });
+    setTimeout(() => setToastMessage(null), 4000); // Auto-hide after 4 seconds
+  };
+
+  const dismissToast = () => {
+    setToastMessage(null);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validation
+    if (!username.trim()) {
+      showToast('Please enter your username', 'warning');
+      return;
+    }
+    
+    if (!password.trim()) {
+      showToast('Please enter your password', 'warning');
+      return;
+    }
+    
     setIsLoading(true);
-    setError('');
 
     try {
       const response = await fetch('http://localhost:5000/api/admin/login', {
@@ -33,19 +53,141 @@ function AdminLoginPage() {
         localStorage.setItem('adminUser', JSON.stringify(data.user));
         localStorage.setItem('adminLoginTime', Date.now().toString());
         
-        navigate('/admin/dashboard');
+        showToast('Login successful! Redirecting to dashboard...', 'success');
+        setTimeout(() => {
+          navigate('/admin/dashboard');
+        }, 1500);
       } else {
-        setError(data.message || 'Invalid username or password');
+        showToast(data.message || 'Invalid username or password', 'error');
       }
     } catch (error) {
       console.error('Login error:', error);
-      setError('Connection error. Please try again.');
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        showToast('Connection failed. Please check your internet connection.', 'error');
+      } else {
+        showToast('Connection error. Please try again.', 'error');
+      }
     }
     
     setIsLoading(false);
   };
 
   return (
+    <>
+      {/* Toast Animation Styles */}
+      <style>
+        {`
+          @keyframes slideIn {
+            from {
+              transform: translateX(100%);
+              opacity: 0;
+            }
+            to {
+              transform: translateX(0);
+              opacity: 1;
+            }
+          }
+          
+          @keyframes progress {
+            from {
+              width: 100%;
+            }
+            to {
+              width: 0%;
+            }
+          }
+        `}
+      </style>
+
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: '20px',
+            right: '20px',
+            zIndex: 1000,
+            backgroundColor: 'white',
+            borderRadius: '8px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+            animation: 'slideIn 0.3s ease-out',
+            minWidth: '300px',
+            maxWidth: '400px',
+            overflow: 'hidden'
+          }}
+        >
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            padding: '16px',
+            gap: '12px'
+          }}>
+            {/* Icon */}
+            <div style={{
+              width: '24px',
+              height: '24px',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              color: 'white',
+              backgroundColor: toastMessage.type === 'success' ? '#10b981' : 
+                               toastMessage.type === 'error' ? '#ef4444' :
+                               toastMessage.type === 'warning' ? '#f59e0b' : '#3b82f6'
+            }}>
+              {toastMessage.type === 'success' ? '✓' : 
+               toastMessage.type === 'error' ? '✖' :
+               toastMessage.type === 'warning' ? '⚠' : 'i'}
+            </div>
+            
+            {/* Message */}
+            <div style={{
+              flex: 1,
+              color: '#374151',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}>
+              {toastMessage.message}
+            </div>
+            
+            {/* Close Button */}
+            <button 
+              onClick={dismissToast}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#9ca3af',
+                fontSize: '18px',
+                cursor: 'pointer',
+                padding: '4px',
+                lineHeight: 1
+              }}
+            >
+              ×
+            </button>
+          </div>
+          
+          {/* Progress Bar */}
+          <div style={{
+            height: '4px',
+            backgroundColor: '#f3f4f6',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              height: '100%',
+              width: '100%',
+              backgroundColor: toastMessage.type === 'success' ? '#10b981' : 
+                               toastMessage.type === 'error' ? '#ef4444' :
+                               toastMessage.type === 'warning' ? '#f59e0b' : '#3b82f6',
+              animation: 'progress 4s linear forwards'
+            }} />
+          </div>
+        </div>
+      )}
+
     <div className="min-h-screen gradient-bg">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">
@@ -99,16 +241,7 @@ function AdminLoginPage() {
               />
             </div>
 
-            {error && (
-              <div className="alert-error">
-                <div className="flex items-center">
-                  <svg className="w-5 h-5 text-red-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span className="text-sm">{error}</span>
-                </div>
-              </div>
-            )}
+
 
             <button
               type="submit"
@@ -123,8 +256,8 @@ function AdminLoginPage() {
               ) : (
                 <div className="flex items-center justify-center">
                     Sign In to Dashboard&nbsp;
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 8l4 4m0 0l-4 4m4-4H3m5-4V7a3 3 0 013-3h7a3 3 0 013 3v10a3 3 0 01-3 3h-7a3 3 0 01-3-3v-1" />
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 8l4 4m0 0l-4 4m4-4H3m5-4V7a3 3 0 013-3h7a3 3 0 013 3v10a3 3 0 01-3 3h-7a3 3 0 01-3-3v-1" />
                     </svg>
 
                 </div>
@@ -197,6 +330,7 @@ function AdminLoginPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 
