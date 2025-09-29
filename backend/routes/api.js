@@ -81,4 +81,11 @@ router.post(
 router.get("/admin/dashboard", adminController.verifyAdminToken, adminController.getDashboardData)
 router.post("/admin/refresh-token", adminController.verifyAdminToken, adminController.refreshToken)
 
+// AI Chat route
+router.post("/ai-chat", [
+  body("message").trim().isLength({ min: 1, max: 1000 }).withMessage("Message is required and must be under 1000 characters"),
+  body("sessionId").optional().isString().trim(),
+  body("userId").optional().isString().trim(),
+], handleValidationErrors, leadController.handleAIChat)
+
 module.exports = router

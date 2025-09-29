@@ -1,6 +1,7 @@
 import { Routes, Route, useLocation } from "react-router-dom"
 import Navigation from "./components/Navigation"
 import ProtectedAdminRoute from "./components/ProtectedAdminRoute"
+import AIChatWidget from "./components/AIChatWidget"
 import LandingPage from "./pages/LandingPage"
 import RegisterPage from "./pages/RegisterPage"
 import PaymentPage from "./pages/PaymentPage"
@@ -47,6 +48,9 @@ function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
+      
+      {/* AI Chat Widget - Only show on public pages */}
+      {!isAdminPath && <AIChatWidget />}
     </div>
   )
 }
