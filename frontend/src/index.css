@@ -1263,6 +1263,62 @@ p {
   box-shadow: 0 8px 32px rgba(139, 92, 246, 0.4);
 }
 
+/* User authentication styles */
+.nav-user-menu {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.nav-user-greeting {
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.nav-logout-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.nav-logout-btn:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.nav-mobile-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+  margin-bottom: 8px;
+}
+
+.nav-mobile-logout {
+  background: none;
+  border: none;
+  color: var(--text-secondary) !important;
+  text-decoration: none !important;
+  cursor: pointer;
+  border-radius: 0 !important;
+}
+
+.nav-mobile-logout:hover {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+  color: #ef4444 !important;
+}
+
 /* Screen reader only */
 .sr-only {
   position: absolute;

@@ -10,6 +10,7 @@ class ApiClient {
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`
     const config = {
+      credentials: 'include', // Include cookies for authentication
       headers: {
         "Content-Type": "application/json",
         ...options.headers,
@@ -78,6 +79,64 @@ class ApiClient {
   async healthCheck() {
     return this.request("/health")
   }
+
+  // User authentication APIs
+  async loginUser(loginData) {
+    return this.request("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({
+        email: loginData.email,
+        password: loginData.password,
+        rememberMe: loginData.rememberMe || false,
+      }),
+    })
+  }
+
+  async registerUser(userData) {
+    return this.request("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({
+        name: userData.name,
+        email: userData.email,
+        password: userData.password,
+        phone: userData.phone || "",
+        role: userData.role || "",
+        rememberMe: userData.rememberMe || false,
+      }),
+    })
+  }
+
+  async verifyToken(token) {
+    return this.request("/auth/verify", {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+      },
+    })
+  }
+
+  async refreshToken(token) {
+    return this.request("/auth/refresh", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+      },
+    })
+  }
+
+  // Verify token from cookie (no Authorization header needed)
+  async verifyTokenFromCookie() {
+    return this.request("/auth/verify", {
+      method: "GET",
+    })
+  }
+
+  // Logout user and clear cookies
+  async logoutUser() {
+    return this.request("/auth/logout", {
+      method: "POST",
+    })
+  }
 }
 
 // Create and export a singleton instance
@@ -86,8 +145,9 @@ export default apiClient
 
 // Helper function to store user data in localStorage
 export const userStorage = {
-  setUserData: (userData) => {
+  setUserData: (userData, rememberMe = false) => {
     localStorage.setItem("userData", JSON.stringify(userData))
+    localStorage.setItem("rememberMe", rememberMe.toString())
     if (userData.email) {
       localStorage.setItem("userEmail", userData.email)
     }
@@ -102,10 +162,17 @@ export const userStorage = {
     return localStorage.getItem("userEmail") || ""
   },
 
+  getRememberMe: () => {
+    return localStorage.getItem("rememberMe") === "true"
+  },
+
   clearUserData: () => {
     localStorage.removeItem("userData")
     localStorage.removeItem("userEmail")
     localStorage.removeItem("whatsappLink")
+    localStorage.removeItem("authUser")
+    localStorage.removeItem("authToken")
+    localStorage.removeItem("rememberMe")
   },
 
   setWhatsAppLink: (link) => {
