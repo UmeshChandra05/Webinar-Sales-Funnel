@@ -1,330 +1,426 @@
 import React, { useState, useEffect } from 'react';
-import googleSheetsService from '../services/googleSheetsService';
-import KPICard from '../components/KPICard';
-import AnalyticsConfig from '../components/AnalyticsConfig';
-import { 
-  RoleDistributionChart, 
-  PaymentStatusChart, 
-  RegistrationTrendChart, 
-  RevenueChart,
-  SourceAnalysisChart 
-} from '../components/Charts';
-import SalesFunnel from '../components/SalesFunnel';
-import DataTable from '../components/DataTable';
+import { fetchSheetData } from '../services/googleSheetsService';
 
 const AdminDashboard = () => {
-  const [dashboardData, setDashboardData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [dateRange, setDateRange] = useState('7d');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [countdown, setCountdown] = useState(30);
+  const [dashboardData, setDashboardData] = useState({
+    totalRevenue: 0,
+    totalLeads: 0,
+    conversionRate: 0,
+    engagement: 0,
+    roleDistribution: {},
+    paymentStats: {
+      successful: 0,
+      pending: 0,
+      failed: 0
+    },
+    funnel: {
+      leads: 0,
+      registered: 0,
+      paid: 0,
+      completed: 0
+    },
+    lastUpdated: null
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [dateRange, setDateRange] = useState('Last 30 Days');
-  const [lastUpdated, setLastUpdated] = useState(null);
-  const [refreshInterval, setRefreshInterval] = useState(30000); // 30 seconds
 
-  // Check if admin is authenticated using localStorage (separate from user auth)
-  const isAdmin = () => {
-    const adminToken = localStorage.getItem('adminToken');
-    const adminUser = localStorage.getItem('adminUser');
-    const loginTime = localStorage.getItem('adminLoginTime');
+  const dateRangeOptions = [
+    { value: '24h', label: 'Last 24 Hours' },
+    { value: '7d', label: 'Last 7 Days' },
+    { value: '30d', label: 'Last 30 Days' },
+    { value: '90d', label: 'Last 90 Days' },
+    { value: 'all', label: 'All Time' }
+  ];
+
+  // Function to load data from Google Sheets
+  const loadData = async (selectedDateRange) => {
+    setIsLoading(true);
+    setError(null);
     
-    if (!adminToken || !adminUser || !loginTime) {
-      return false;
-    }
-
-    // Check if session is expired (24 hours)
-    const sessionAge = Date.now() - parseInt(loginTime);
-    const sessionLimit = 24 * 60 * 60 * 1000; // 24 hours
-    
-    if (sessionAge > sessionLimit) {
-      // Clear expired session
-      localStorage.removeItem('adminToken');
-      localStorage.removeItem('adminUser');
-      localStorage.removeItem('adminLoginTime');
-      return false;
-    }
-
-    return true;
-  };
-
-  const fetchData = async () => {
     try {
-      setError(null);
-      const data = await googleSheetsService.fetchSheetData();
-      setDashboardData(data);
-      setLastUpdated(new Date());
-      setLoading(false);
+      const result = await fetchSheetData(selectedDateRange || dateRange);
+      
+      if (result.success) {
+        setDashboardData(result.data);
+        setCountdown(30); // Reset countdown
+      } else {
+        setError(result.error || 'Failed to load data');
+      }
     } catch (err) {
-      console.error('Error fetching dashboard data:', err);
-      setError('Failed to load dashboard data. Using fallback data.');
-      setLoading(false);
+      console.error('Error loading dashboard data:', err);
+      setError('Failed to load data from Google Sheets');
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  // Initial load and reload when date range changes
   useEffect(() => {
-    fetchData();
-    
-    // Set up auto-refresh
-    const interval = setInterval(fetchData, refreshInterval);
-    
+    loadData(dateRange);
+  }, [dateRange]);
+
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadData(dateRange);
+    }, 30000); // 30 seconds
+
     return () => clearInterval(interval);
-  }, [refreshInterval]);
+  }, [dateRange]);
 
-  const handleExportCSV = () => {
-    if (dashboardData?.rawData) {
-      googleSheetsService.exportToCSV(dashboardData.rawData);
-    }
+  // Countdown timer
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          return 30; // Will reset on next data load
+        }
+        return prev - 1;
+      });
+    }, 1000); // 1 second
+
+    return () => clearInterval(timer);
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showDropdown && !event.target.closest('.date-range-dropdown')) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showDropdown]);
+
+  const handleExport = () => {
+    // Export current data as CSV
+    const csvContent = convertToCSV(dashboardData);
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `dashboard_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
-  const handleExportExcel = () => {
-    if (dashboardData?.rawData) {
-      googleSheetsService.exportToExcel(dashboardData.rawData);
-    }
+  const handleRefresh = () => {
+    loadData();
   };
 
-  const handleExportPDF = () => {
-    if (dashboardData?.rawData && dashboardData?.analytics) {
-      googleSheetsService.exportToPDF(dashboardData.rawData, dashboardData.analytics);
-    }
+  const handleDateRangeChange = (value) => {
+    console.log('Date range changed to:', value);
+    setDateRange(value);
+    setShowDropdown(false);
   };
 
-  const handleUpdateSheetId = (newSheetId) => {
-    googleSheetsService.SHEET_ID = newSheetId;
-    // Clear cache to force refresh with new sheet
-    googleSheetsService.cache = null;
-    googleSheetsService.lastFetch = null;
-    fetchData();
+  const getDateRangeLabel = () => {
+    const option = dateRangeOptions.find(opt => opt.value === dateRange);
+    return option ? option.label : 'Select Range';
   };
 
-  if (!isAdmin()) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl mb-4">🔒</div>
-          <h1 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h1>
-          <p className="text-gray-600 mb-4">Admin authentication required.</p>
-          <button
-            onClick={() => window.location.href = '/admin'}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm transition-colors"
-          >
-            Go to Admin Login
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const { analytics, rawData } = dashboardData || {};
-  const { kpis, distributions, trends, funnelData, coupons } = analytics || {};
+  const convertToCSV = (data) => {
+    const headers = ['Metric', 'Value'];
+    const rows = [
+      ['Total Revenue', `₹${data.totalRevenue}`],
+      ['Total Leads', data.totalLeads],
+      ['Conversion Rate', `${data.conversionRate}%`],
+      ['Engagement', `${data.engagement}%`],
+      ['Payment Successful', data.paymentStats.successful],
+      ['Payment Pending', data.paymentStats.pending],
+      ['Payment Failed', data.paymentStats.failed],
+      ['Funnel - Leads', data.funnel.leads],
+      ['Funnel - Registered', data.funnel.registered],
+      ['Funnel - Paid', data.funnel.paid],
+      ['Funnel - Completed', data.funnel.completed],
+      ['Last Updated', data.lastUpdated]
+    ];
+    
+    return [headers, ...rows].map(row => row.join(',')).join('\n');
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Clean Professional Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-8">
-          <div className="flex justify-between items-center py-5">
-            
-            {/* Left - Logo and Title (Better Font Sizes) */}
-            <div className="flex items-center space-x-4 flex-1">
-              <div className="w-12 h-12 bg-gradient-to-br from-teal-600 to-teal-700 rounded-lg flex items-center justify-center shadow-md">
-                <span className="text-white text-lg font-bold">WS</span>
-              </div>
-              <div className="flex flex-col justify-center">
-                <h1 className="text-2xl font-bold text-gray-900 leading-tight tracking-tight">Webinar Sales Funnel</h1>
-                <p className="text-sm text-gray-500 mt-0.5">Admin Analytics Dashboard</p>
-              </div>
-            </div>
-            
-            {/* Right - Controls (Evenly Spaced with Better Styling) */}
-            <div className="flex items-center gap-5">
-              {/* Date Range Picker - Styled */}
-              <div className="relative min-w-[180px]">
-                <select 
-                  value={dateRange}
-                  onChange={(e) => setDateRange(e.target.value)}
-                  className="appearance-none w-full bg-gradient-to-b from-white to-gray-50 border-2 border-gray-300 hover:border-teal-400 rounded-lg pl-4 pr-10 py-2.5 text-sm text-gray-800 font-semibold cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-400 shadow-sm hover:shadow"
-                >
-                  <option>Last 7 Days</option>
-                  <option>Last 30 Days</option>
-                  <option>Last 3 Months</option>
-                  <option>Last 6 Months</option>
-                  <option>Last Year</option>
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-600">
-                  <svg className="fill-current h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/>
-                  </svg>
-                </div>
-              </div>
-              
-              {/* Action Buttons - Better Colors and Spacing */}
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleExportCSV}
-                  className="btn btn-secondary px-6 py-2.5 bg-white hover:bg-gray-50 text-gray-700 font-semibold text-sm rounded-lg transition-all duration-200 border-2 border-gray-300 hover:border-gray-400 shadow-sm hover:shadow-md active:scale-95"
-                >
-                  Export
-                </button>
-                <button
-                  onClick={fetchData}
-                  className="btn btn-primary px-6 py-2.5 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white font-semibold text-sm rounded-lg transition-all duration-200 shadow-md hover:shadow-lg active:scale-95"
-                >
-                  Refresh
-                </button>
-              </div>
-            </div>
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
+      {/* Loading Overlay */}
+      {isLoading && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'var(--surface)',
+            padding: '2rem',
+            borderRadius: '0.5rem',
+            textAlign: 'center'
+          }}>
+            <div className="spinner" style={{ width: '40px', height: '40px', margin: '0 auto 1rem' }}></div>
+            <p style={{ color: 'var(--text-primary)' }}>Loading dashboard data...</p>
           </div>
+        </div>
+      )}
+
+      {/* Error Message */}
+      {error && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          backgroundColor: '#ef4444',
+          color: 'white',
+          padding: '1rem',
+          borderRadius: '0.5rem',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          zIndex: 1000,
+          maxWidth: '400px'
+        }}>
+          <strong>Error:</strong> {error}
+        </div>
+      )}
+
+      {/* Header Section */}
+      <header className="flex justify-between items-center p-4" style={{ backgroundColor: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
+        <div>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--primary)' }}>
+            Webinar Sales Funnel – Admin Analytics Dashboard
+          </h1>
+          {dashboardData.lastUpdated && (
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+              Last updated: {dashboardData.lastUpdated} • Next refresh in: {countdown}s
+            </p>
+          )}
+        </div>
+        <div className="flex" style={{ gap: '0.5rem', alignItems: 'center' }}>
+          {/* Date Range Dropdown */}
+          <div className="date-range-dropdown" style={{ position: 'relative' }}>
+            <button 
+              className="btn"
+              onClick={() => setShowDropdown(!showDropdown)}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: 'var(--primary)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--border)',
+                borderRadius: '0.5rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                minWidth: '160px',
+                justifyContent: 'space-between'
+              }}
+            >
+              <span>{getDateRangeLabel()}</span>
+              <span style={{ fontSize: '0.75rem' }}>▼</span>
+            </button>
+            
+            {showDropdown && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                marginTop: '0.25rem',
+                backgroundColor: 'var(--surface)',
+                border: '1px solid var(--border)',
+                borderRadius: '0.5rem',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)',
+                zIndex: 1000,
+                minWidth: '160px',
+                overflow: 'hidden'
+              }}>
+                {dateRangeOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => handleDateRangeChange(option.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem 1rem',
+                      textAlign: 'left',
+                      backgroundColor: dateRange === option.value ? 'var(--primary)' : 'transparent',
+                      color: 'var(--text-primary)',
+                      border: 'none',
+                      cursor: 'pointer',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (dateRange !== option.value) {
+                        e.currentTarget.style.backgroundColor = 'var(--surface-light)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (dateRange !== option.value) {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }
+                    }}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <button 
+            className="btn"
+            onClick={handleExport}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: 'var(--surface-light)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border)',
+              borderRadius: '0.5rem',
+              cursor: 'pointer'
+            }}
+          >
+            Export
+          </button>
+          <button 
+            className="btn"
+            onClick={handleRefresh}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: 'var(--surface-light)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border)',
+              borderRadius: '0.5rem',
+              cursor: 'pointer'
+            }}
+          >
+            Refresh
+          </button>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-8 py-6">
-        {/* Sidekicks-Style Main Section with Mint Background */}
-        <section className="bg-gradient-to-br from-teal-50 via-emerald-50 to-green-100 rounded-xl p-6 mb-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            
-            {/* Left Column - Metrics & Table */}
-            <div className="space-y-4">
-              <h2 className="text-base font-semibold text-gray-900">Overall Site Performance</h2>
-              
-              {/* KPI Grid */}
-              <div className="grid grid-cols-2 gap-3">
-                <KPICard
-                  title="Total Leads"
-                  value={kpis?.totalLeads || 0}
-                  trend={12.2}
-                  compact
-                />
-                <KPICard
-                  title="Conversion Rate"
-                  value={`${kpis?.conversionRate || 0}%`}
-                  trend={-0.5}
-                  compact
-                />
-                <KPICard
-                  title="Total Revenue"
-                  value={`₹${Math.floor((kpis?.totalRevenue || 0) / 1000)}K`}
-                  trend={1.0}
-                  compact
-                />
-                <KPICard
-                  title="Engagement"
-                  value={`${kpis?.engagementRate || 62.5}%`}
-                  trend={4.2}
-                  compact
-                />
+      {/* Main Layout */}
+      <main className="grid grid-cols-2 gap-6 p-4">
+        {/* Left Column */}
+        <div className="flex flex-col" style={{ gap: '1.5rem' }}>
+          {/* Role Distribution Panel */}
+          <section className="card">
+            <h2 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
+              Role Distribution
+            </h2>
+            <div className="flex items-center justify-center" style={{ height: '12rem', backgroundColor: 'var(--surface-light)', borderRadius: '0.5rem' }}>
+              <div style={{ width: '150px', height: '150px', borderRadius: '50%', border: '30px solid var(--primary)', position: 'relative' }}>
+                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+                  <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+                    {dashboardData.totalLeads}
+                  </p>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Total Leads</p>
+                </div>
               </div>
-
-              {/* Funnel Steps Table */}
-              <div className="bg-white rounded-lg p-4 shadow-sm">
-                <div className="space-y-2">
-                  {funnelData?.slice(0, 4).map((stage, index) => (
-                    <div key={index} className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-500 font-medium w-4">{index + 1}.</span>
-                        <span className="text-xs text-gray-900">{stage.stage}</span>
-                      </div>
-                      <span className="text-xs font-semibold text-gray-900">
-                        {stage.count?.toLocaleString() || 0}
-                      </span>
+            </div>
+            {/* Role Distribution Details */}
+            {Object.keys(dashboardData.roleDistribution).length > 0 && (
+              <div style={{ marginTop: '1rem' }}>
+                <h3 style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
+                  By Role:
+                </h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {Object.entries(dashboardData.roleDistribution).map(([role, count]) => (
+                    <div key={role} style={{ 
+                      padding: '0.5rem', 
+                      backgroundColor: 'var(--surface-light)', 
+                      borderRadius: '0.25rem',
+                      fontSize: '0.875rem'
+                    }}>
+                      <span style={{ color: 'var(--text-secondary)' }}>{role}:</span>{' '}
+                      <span style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>{count}</span>
                     </div>
                   ))}
                 </div>
-                <div className="flex justify-center items-center gap-2 mt-3 pt-3 border-t border-gray-200">
-                  <button className="p-1 hover:bg-gray-100 rounded">
-                    <span className="text-gray-400 text-xs">‹</span>
-                  </button>
-                  <span className="text-xs text-gray-500">1 - 4 / {funnelData?.length || 4}</span>
-                  <button className="p-1 hover:bg-gray-100 rounded">
-                    <span className="text-gray-400 text-xs">›</span>
-                  </button>
-                </div>
+              </div>
+            )}
+          </section>
+
+          {/* Payment Stats Panel */}
+          <section className="card">
+            <h2 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
+              Payment Stats
+            </h2>
+            <div className="flex" style={{ height: '1.5rem', borderRadius: '0.5rem', overflow: 'hidden' }}>
+              <span style={{ flex: '1', backgroundColor: 'var(--success)' }}></span>
+              <span style={{ flex: '1', backgroundColor: 'var(--warning)' }}></span>
+              <span style={{ flex: '1', backgroundColor: 'var(--error)' }}></span>
+            </div>
+            <div className="flex justify-between" style={{ fontSize: '0.875rem', marginTop: '0.5rem', color: 'var(--text-secondary)' }}>
+              <span>✓ Successful: {dashboardData.paymentStats.successful}</span>
+              <span>⏳ Pending: {dashboardData.paymentStats.pending}</span>
+              <span>✗ Failed: {dashboardData.paymentStats.failed}</span>
+            </div>
+          </section>
+        </div>
+
+        {/* Right Column */}
+        <div className="flex flex-col" style={{ gap: '1.5rem' }}>
+          {/* Overall Performance Panel */}
+          <section className="card">
+            <h2 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
+              Overall Performance
+            </h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="card" style={{ backgroundColor: 'var(--surface-light)', padding: '1rem', textAlign: 'center' }}>
+                <h3 style={{ fontWeight: '500', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Total Revenue</h3>
+                <p style={{ fontSize: '1.5rem', fontWeight: 'bold', marginTop: '0.5rem', color: 'var(--text-primary)' }}>
+                  ₹{dashboardData.totalRevenue}
+                </p>
+              </div>
+              <div className="card" style={{ backgroundColor: 'var(--surface-light)', padding: '1rem', textAlign: 'center' }}>
+                <h3 style={{ fontWeight: '500', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Total Leads</h3>
+                <p style={{ fontSize: '1.5rem', fontWeight: 'bold', marginTop: '0.5rem', color: 'var(--text-primary)' }}>
+                  {dashboardData.totalLeads}
+                </p>
+              </div>
+              <div className="card" style={{ backgroundColor: 'var(--surface-light)', padding: '1rem', textAlign: 'center' }}>
+                <h3 style={{ fontWeight: '500', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Conv. Rate</h3>
+                <p style={{ fontSize: '1.5rem', fontWeight: 'bold', marginTop: '0.5rem', color: 'var(--text-primary)' }}>
+                  {dashboardData.conversionRate}%
+                </p>
+              </div>
+              <div className="card" style={{ backgroundColor: 'var(--surface-light)', padding: '1rem', textAlign: 'center' }}>
+                <h3 style={{ fontWeight: '500', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Engagement</h3>
+                <p style={{ fontSize: '1.5rem', fontWeight: 'bold', marginTop: '0.5rem', color: 'var(--text-primary)' }}>
+                  {dashboardData.engagement}%
+                </p>
               </div>
             </div>
+          </section>
 
-            {/* Right Column - Funnel Visualization */}
-            <div>
-              <h2 className="text-base font-semibold text-gray-900 mb-2">Webinar Sales Funnel</h2>
-              <div className="bg-transparent">
-                {funnelData && <SalesFunnel data={funnelData} />}
+          {/* Webinar Sales Funnel Panel */}
+          <section className="card">
+            <h2 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
+              Webinar Sales Funnel
+            </h2>
+            <div className="flex flex-col items-center justify-center" style={{ height: '14rem', backgroundColor: 'var(--surface-light)', borderRadius: '0.5rem', gap: '0.5rem' }}>
+              <div style={{ width: '75%', height: '2rem', backgroundColor: 'var(--primary)', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '0.875rem', fontWeight: '600' }}>
+                Leads ({dashboardData.funnel.leads})
+              </div>
+              <div style={{ width: '66%', height: '2rem', backgroundColor: 'var(--primary)', opacity: '0.8', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '0.875rem', fontWeight: '600' }}>
+                Registered ({dashboardData.funnel.registered})
+              </div>
+              <div style={{ width: '50%', height: '2rem', backgroundColor: 'var(--primary)', opacity: '0.6', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '0.875rem', fontWeight: '600' }}>
+                Paid ({dashboardData.funnel.paid})
+              </div>
+              <div style={{ width: '33%', height: '2rem', backgroundColor: 'var(--primary)', opacity: '0.4', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '0.875rem', fontWeight: '600' }}>
+                Completed ({dashboardData.funnel.completed})
               </div>
             </div>
-          </div>
-        </section>
-
-        {/* Analytics Charts - Compact */}
-        <section className="mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Analytics Overview</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Role Distribution</h3>
-              <div className="h-48">
-                {distributions?.role && <RoleDistributionChart data={distributions.role} />}
-              </div>
-            </div>
-            
-            <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Payment Status</h3>
-              <div className="h-48">
-                {distributions?.paymentStatus && <PaymentStatusChart data={distributions.paymentStatus} />}
-              </div>
-            </div>
-
-            <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Registration Trend</h3>
-              <div className="h-48">
-                {trends?.registrations && <RegistrationTrendChart data={trends.registrations} />}
-              </div>
-            </div>
-
-            <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Lead Sources</h3>
-              <div className="h-48">
-                {distributions?.source && <SourceAnalysisChart data={distributions.source} />}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Additional Metrics - Compact */}
-        <section className="mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Performance Metrics</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-              <p className="text-xs text-gray-600 mb-1">Avg Deal Size</p>
-              <p className="text-2xl font-bold text-gray-900">₹{(kpis?.averageDealSize || 0).toLocaleString()}</p>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-              <p className="text-xs text-gray-600 mb-1">Successful Payments</p>
-              <p className="text-2xl font-bold text-emerald-600">{kpis?.successfulPayments || 0}</p>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-              <p className="text-xs text-gray-600 mb-1">Pending Payments</p>
-              <p className="text-2xl font-bold text-orange-600">{kpis?.pendingPayments || 0}</p>
-            </div>
-          </div>
-        </section>
-
-        {/* Data Table */}
-        <section className="mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Lead Details</h2>
-          <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-            <DataTable 
-              data={rawData || []} 
-              title="All Leads & Transactions"
-            />
-          </div>
-        </section>
+          </section>
+        </div>
       </main>
     </div>
   );

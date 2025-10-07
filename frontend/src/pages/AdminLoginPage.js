@@ -1,36 +1,40 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+﻿import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 
-function AdminLoginPage() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+const AdminLoginPage = () => {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    username: '',
+    password: ''
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
-  const navigate = useNavigate();
 
-  const showToast = (message, type = "info") => {
+  const showToast = (message, type = 'info') => {
     setToastMessage({ message, type });
-    setTimeout(() => setToastMessage(null), 4000); // Auto-hide after 4 seconds
+    setTimeout(() => setToastMessage(null), 4000);
   };
 
   const dismissToast = () => {
     setToastMessage(null);
   };
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validation
-    if (!username.trim()) {
-      showToast('Please enter your username', 'warning');
+    if (!formData.username || !formData.password) {
+      showToast('Please fill in all fields', 'error');
       return;
     }
-    
-    if (!password.trim()) {
-      showToast('Please enter your password', 'warning');
-      return;
-    }
-    
+
     setIsLoading(true);
 
     try {
@@ -40,20 +44,20 @@ function AdminLoginPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          username: username,
-          password: password
+          username: formData.username,
+          password: formData.password
         }),
       });
 
       const data = await response.json();
 
       if (response.ok && data.success) {
-        // Store authentication token and user info
         localStorage.setItem('adminToken', data.token);
         localStorage.setItem('adminUser', JSON.stringify(data.user));
         localStorage.setItem('adminLoginTime', Date.now().toString());
         
         showToast('Login successful! Redirecting to dashboard...', 'success');
+        
         setTimeout(() => {
           navigate('/admin/dashboard');
         }, 1500);
@@ -61,20 +65,20 @@ function AdminLoginPage() {
         showToast(data.message || 'Invalid username or password', 'error');
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Admin login error:', error);
+      
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
         showToast('Connection failed. Please check your internet connection.', 'error');
       } else {
         showToast('Connection error. Please try again.', 'error');
       }
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
   return (
     <>
-      {/* Toast Animation Styles */}
       <style>
         {`
           @keyframes slideIn {
@@ -98,240 +102,168 @@ function AdminLoginPage() {
           }
         `}
       </style>
-
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div 
-          style={{
-            position: 'fixed',
-            top: '20px',
-            right: '20px',
-            zIndex: 1000,
-            backgroundColor: 'white',
-            borderRadius: '8px',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
-            animation: 'slideIn 0.3s ease-out',
-            minWidth: '300px',
-            maxWidth: '400px',
-            overflow: 'hidden'
-          }}
-        >
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            padding: '16px',
-            gap: '12px'
-          }}>
-            {/* Icon */}
+      
+      <div className="min-h-screen section">
+        {toastMessage && (
+          <div 
+            style={{
+              position: 'fixed',
+              top: '20px',
+              right: '20px',
+              zIndex: 1000,
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+              animation: 'slideIn 0.3s ease-out',
+              minWidth: '300px',
+              maxWidth: '400px',
+              overflow: 'hidden'
+            }}
+          >
             <div style={{
-              width: '24px',
-              height: '24px',
-              borderRadius: '50%',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '14px',
-              fontWeight: 'bold',
-              color: 'white',
-              backgroundColor: toastMessage.type === 'success' ? '#10b981' : 
-                               toastMessage.type === 'error' ? '#ef4444' :
-                               toastMessage.type === 'warning' ? '#f59e0b' : '#3b82f6'
+              padding: '16px',
+              gap: '12px'
             }}>
-              {toastMessage.type === 'success' ? '✓' : 
-               toastMessage.type === 'error' ? '✖' :
-               toastMessage.type === 'warning' ? '⚠' : 'i'}
+              <div style={{
+                width: '24px',
+                height: '24px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '14px',
+                fontWeight: 'bold',
+                color: 'white',
+                backgroundColor: toastMessage.type === 'success' ? '#10b981' : 
+                                 toastMessage.type === 'error' ? '#ef4444' :
+                                 toastMessage.type === 'warning' ? '#f59e0b' : '#3b82f6'
+              }}>
+                {toastMessage.type === 'success' ? '✓' : 
+                 toastMessage.type === 'error' ? '✖' :
+                 toastMessage.type === 'warning' ? '⚠' : 'i'}
+              </div>
+              
+              <div style={{ flex: 1 }}>
+                <div style={{
+                  color: '#374151',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}>
+                  {toastMessage.message}
+                </div>
+              </div>
+              
+              <button 
+                onClick={dismissToast}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#9ca3af',
+                  fontSize: '18px',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  lineHeight: 1
+                }}
+              >
+                ×
+              </button>
             </div>
             
-            {/* Message */}
             <div style={{
-              flex: 1,
-              color: '#374151',
-              fontSize: '14px',
-              fontWeight: '500'
+              height: '4px',
+              backgroundColor: '#f3f4f6',
+              position: 'relative',
+              overflow: 'hidden'
             }}>
-              {toastMessage.message}
+              <div style={{
+                height: '100%',
+                width: '100%',
+                backgroundColor: toastMessage.type === 'success' ? '#10b981' : 
+                                 toastMessage.type === 'error' ? '#ef4444' :
+                                 toastMessage.type === 'warning' ? '#f59e0b' : '#3b82f6',
+                animation: 'progress 4s linear forwards'
+              }} />
             </div>
-            
-            {/* Close Button */}
-            <button 
-              onClick={dismissToast}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#9ca3af',
-                fontSize: '18px',
-                cursor: 'pointer',
-                padding: '4px',
-                lineHeight: 1
-              }}
-            >
-              ×
-            </button>
           </div>
-          
-          {/* Progress Bar */}
-          <div style={{
-            height: '4px',
-            backgroundColor: '#f3f4f6',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
-            <div style={{
-              height: '100%',
-              width: '100%',
-              backgroundColor: toastMessage.type === 'success' ? '#10b981' : 
-                               toastMessage.type === 'error' ? '#ef4444' :
-                               toastMessage.type === 'warning' ? '#f59e0b' : '#3b82f6',
-              animation: 'progress 4s linear forwards'
-            }} />
-          </div>
-        </div>
-      )}
+        )}
 
-    <div className="min-h-screen gradient-bg">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0" style={{
-          backgroundImage: 'radial-gradient(circle at 25% 25%, rgba(168, 85, 247, 0.3) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(236, 72, 153, 0.3) 0%, transparent 50%)'
-        }}></div>
-      </div>
-
-      <div className="flex min-h-screen relative z-10">
-        {/* Left Side - Login Form */}
-        <div className="w-full lg:w-1/2 flex items-center justify-center py-16 px-8" style={{ paddingLeft: '1.5rem' }}>
-          <div className="max-w-md w-full" style={{ marginLeft: '1px' }}>
-            <div className="card backdrop-blur-sm border-purple-500/20 bg-gray-900/50">
-          {/* Header Section with Icon, Title, and Subtitle grouped together */}
-          <div className="w-20 h-20 gradient-bg rounded flex flex-col items-center justify-center mx-auto mb-8 shadow-lg pt-6 pb-4 px-6" style={{ width: 'auto', height: 'auto', minWidth: '280px' }}>
-            <svg className="w-10 h-10 text-white mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-            <h1 className="text-3xl font-bold text-white mb-2 text-center">Admin Portal</h1>
-            <p className="text-white text-center">Access the admin dashboard</p>
+        <div className="mx-auto px-4" style={{ maxWidth: '450px' }}>
+          <div className="text-center mb-8">
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">
+              Welcome to <span className="gradient-text">Admin Portal</span>
+            </h1>
+            <p className="text-xl text-gray-400">Sign in to access the analytics dashboard</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="form-group">
-              <label htmlFor="username" className="form-label">
-                Username
-              </label>
-              <input
-                type="text"
-                id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="form-input"
-                placeholder="Enter username"
-                required
-              />
-            </div>
+          <div className="card">
+            <form onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label htmlFor="username" className="form-label">
+                  Username *
+                </label>
+                <input
+                  type="text"
+                  id="username"
+                  name="username"
+                  value={formData.username}
+                  onChange={handleInputChange}
+                  className="form-input"
+                  required
+                  placeholder="Enter your username"
+                />
+              </div>
 
-            <div className="form-group">
-              <label htmlFor="password" className="form-label">
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="form-input"
-                placeholder="Enter password"
-                required
-              />
-            </div>
+              <div className="form-group">
+                <label htmlFor="password" className="form-label">
+                  Password *
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  className="form-input"
+                  required
+                  placeholder="Enter your password"
+                />
+              </div>
 
+              <div className="flex justify-center">
+                <button type="submit" className="btn btn-primary btn-lg" style={{ minWidth: '240px' }} disabled={isLoading}>
+                  {isLoading ? (
+                  <>
+                    <div className="spinner mr-2"></div>
+                    Signing in...
+                  </>
+                ) : (
+                  "🔐 Sign In to Dashboard"
+                  )}
+                </button>
+              </div>
 
+              <div className="text-center mt-4">
+                <p className="text-gray-400">
+                  Not an admin?{' '}
+                  <Link to="/" className="text-purple-400 hover:text-purple-300 font-medium">
+                    Back to website
+                  </Link>
+                </p>
+              </div>
+            </form>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="btn btn-primary btn-lg w-full"
-            >
-              {isLoading ? (
-                <div className="flex items-center justify-center">
-                  <div className="spinner mr-3"></div>
-                  Signing in...
-                </div>
-              ) : (
-                <div className="flex items-center justify-center">
-                    Sign In to Dashboard&nbsp;
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 8l4 4m0 0l-4 4m4-4H3m5-4V7a3 3 0 013-3h7a3 3 0 013 3v10a3 3 0 01-3 3h-7a3 3 0 01-3-3v-1" />
-                    </svg>
-
-                </div>
-              )}
-            </button>
-          </form>
-
-          <div className="mt-8 pt-6 border-t border-purple-500/20 text-center">
-            <button
-              onClick={() => navigate('/')}
-              className="btn btn-light text-sm flex items-center justify-center mx-auto"
-            >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              Back to Website
-            </button>
-          </div>
-        </div>
-
-            {/* Security Notice */}
-            <div className="mt-6 text-center">
-              <p className="text-xs text-white">
+            <div className="mt-6 pt-6 border-t border-gray-700 text-center">
+              <p className="text-xs text-gray-500">
                 🔒 Secure admin access • Session expires in 24 hours
               </p>
             </div>
           </div>
         </div>
-
-        {/* Right Side - PyStack Branding */}
-        <div className="hidden lg:flex lg:w-1/2 items-center justify-center py-16 px-8">
-          <div className="text-center max-w-lg">
-            {/* PyStack Logo */}
-            <div className="w-32 h-32 gradient-bg rounded flex items-center justify-center mx-auto mb-8 shadow-2xl">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-white mb-1">Py</div>
-                <div className="text-xl font-semibold text-white">Stack</div>
-              </div>
-            </div>
-            <h2 className="text-4xl font-bold text-white mb-4">
-              <span className="gradient-text">PyStack</span>
-              <span className="block text-2xl font-medium">Analytics Dashboard</span>
-            </h2>
-            <p className="text-lg text-gray-300 mb-8">
-              Comprehensive analytics platform for Python developers. Track webinar performance, monitor sales funnels, and gain insights into your educational content delivery.
-            </p>
-            <div className="grid grid-cols-2 gap-6 text-left">
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-purple-500/20">
-                <div className="text-purple-400 text-2xl font-bold mb-1">�</div>
-                <h3 className="text-white font-semibold mb-1">Python Analytics</h3>
-                <p className="text-gray-400 text-sm">Code performance metrics</p>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-purple-500/20">
-                <div className="text-green-400 text-2xl font-bold mb-1">�</div>
-                <h3 className="text-white font-semibold mb-1">Data Insights</h3>
-                <p className="text-gray-400 text-sm">Real-time dashboards</p>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-purple-500/20">
-                <div className="text-blue-400 text-2xl font-bold mb-1">⚡</div>
-                <h3 className="text-white font-semibold mb-1">Performance</h3>
-                <p className="text-gray-400 text-sm">Stack optimization</p>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-purple-500/20">
-                <div className="text-orange-400 text-2xl font-bold mb-1">�</div>
-                <h3 className="text-white font-semibold mb-1">Tools</h3>
-                <p className="text-gray-400 text-sm">Developer utilities</p>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
-    </div>
     </>
   );
-}
+};
 
 export default AdminLoginPage;

@@ -1,7 +1,6 @@
 import { Routes, Route, useLocation } from "react-router-dom"
 import { AuthProvider } from "./contexts/AuthContext"
 import Navigation from "./components/Navigation"
-import ProtectedAdminRoute from "./components/ProtectedAdminRoute"
 import AIChatWidget from "./components/AIChatWidget"
 import LandingPage from "./pages/LandingPage"
 import RegisterPage from "./pages/RegisterPage"
@@ -39,21 +38,14 @@ function App() {
             
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLoginPage />} />
-            <Route 
-              path="/admin/dashboard" 
-              element={
-                <ProtectedAdminRoute>
-                  <AdminDashboard />
-                </ProtectedAdminRoute>
-              } 
-            />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
             
             {/* Catch All */}
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </main>
         
-        {/* AI Chat Widget - Only show on public pages */}
+        {/* AI Chat Widget - Only on public pages */}
         {!isAdminPath && <AIChatWidget />}
       </div>
     </AuthProvider>
