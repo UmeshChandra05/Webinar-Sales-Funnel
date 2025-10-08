@@ -97,18 +97,40 @@ const AdminDashboard = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showDropdown]);
 
-  const handleExport = () => {
-    // Export current data as CSV
-    const csvContent = convertToCSV(dashboardData);
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `dashboard_export_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleExport = async () => {
+    try {
+      // Google Sheets CSV export URL
+      const SHEET_ID = '1UinuM281y4r8gxCrCr2dvF_-7CBC2l_FVSomj0Ia-c8';
+      const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
+      
+      // Fetch the CSV file
+      const response = await fetch(CSV_URL);
+      
+      if (!response.ok) {
+        throw new Error('Failed to download sheet');
+      }
+      
+      const csvData = await response.text();
+      
+      // Create blob and download
+      const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      const fileName = `PyStack_Webinar_${new Date().toISOString().split('T')[0]}.csv`;
+      link.setAttribute('href', url);
+      link.setAttribute('download', fileName);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      console.log('Sheet exported successfully');
+    } catch (error) {
+      console.error('Export error:', error);
+      setError('Failed to export sheet. Please try again.');
+      setTimeout(() => setError(null), 3000);
+    }
   };
 
   const handleRefresh = () => {
@@ -126,54 +148,8 @@ const AdminDashboard = () => {
     return option ? option.label : 'Select Range';
   };
 
-  const convertToCSV = (data) => {
-    const headers = ['Metric', 'Value'];
-    const rows = [
-      ['Total Revenue', `₹${data.totalRevenue}`],
-      ['Total Leads', data.totalLeads],
-      ['Conversion Rate', `${data.conversionRate}%`],
-      ['Engagement', `${data.engagement}%`],
-      ['Payment Successful', data.paymentStats.successful],
-      ['Payment Pending', data.paymentStats.pending],
-      ['Payment Failed', data.paymentStats.failed],
-      ['Funnel - Leads', data.funnel.leads],
-      ['Funnel - Registered', data.funnel.registered],
-      ['Funnel - Paid', data.funnel.paid],
-      ['Funnel - Completed', data.funnel.completed],
-      ['Last Updated', data.lastUpdated]
-    ];
-    
-    return [headers, ...rows].map(row => row.join(',')).join('\n');
-  };
-
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
-      {/* Loading Overlay */}
-      {isLoading && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'var(--surface)',
-            padding: '2rem',
-            borderRadius: '0.5rem',
-            textAlign: 'center'
-          }}>
-            <div className="spinner" style={{ width: '40px', height: '40px', margin: '0 auto 1rem' }}></div>
-            <p style={{ color: 'var(--text-primary)' }}>Loading dashboard data...</p>
-          </div>
-        </div>
-      )}
-
       {/* Error Message */}
       {error && (
         <div style={{
@@ -291,16 +267,24 @@ const AdminDashboard = () => {
           <button 
             className="btn"
             onClick={handleRefresh}
+            disabled={isLoading}
             style={{
               padding: '0.5rem 1rem',
               backgroundColor: 'var(--surface-light)',
               color: 'var(--text-primary)',
               border: '1px solid var(--border)',
               borderRadius: '0.5rem',
-              cursor: 'pointer'
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+              opacity: isLoading ? 0.7 : 1,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
             }}
           >
-            Refresh
+            {isLoading && (
+              <div className="spinner" style={{ width: '14px', height: '14px', borderWidth: '2px' }}></div>
+            )}
+            <span>Refresh</span>
           </button>
         </div>
       </header>
