@@ -1,6 +1,53 @@
 ﻿// Google Sheets CSV export service
 const SHEET_ID = '1UinuM281y4r8gxCrCr2dvF_-7CBC2l_FVSomj0Ia-c8';
 const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
+const CONTACTS_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=1649167240`; // Contacts sheet GID
+
+export const fetchContactsData = async () => {
+  try {
+    console.log('Fetching contacts/tickets data...');
+    const response = await fetch(CONTACTS_CSV_URL);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch contacts data');
+    }
+    
+    const csvText = await response.text();
+    const parsedData = parseCSV(csvText);
+    console.log('Parsed contacts count:', parsedData.length);
+    
+    // Process ticket statistics
+    const ticketStats = {
+      open: 0,
+      closed: 0,
+      total: parsedData.length
+    };
+    
+    parsedData.forEach(row => {
+      const status = (row.Status || '').toLowerCase().trim();
+      if (status === 'open') {
+        ticketStats.open++;
+      } else if (status === 'closed' || status === 'resolved') {
+        ticketStats.closed++;
+      }
+    });
+    
+    console.log('Ticket stats:', ticketStats);
+    
+    return {
+      success: true,
+      data: ticketStats,
+      rawData: parsedData
+    };
+  } catch (error) {
+    console.error('Error fetching contacts data:', error);
+    return {
+      success: false,
+      error: error.message,
+      data: { open: 0, closed: 0, total: 0 }
+    };
+  }
+};
 
 export const fetchSheetData = async (dateRange = 'all') => {
   try {
@@ -316,5 +363,6 @@ const getEmptyMetrics = () => ({
 });
 
 export default {
-  fetchSheetData
+  fetchSheetData,
+  fetchContactsData
 };

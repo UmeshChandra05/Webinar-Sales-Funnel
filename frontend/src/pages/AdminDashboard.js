@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { fetchSheetData } from '../services/googleSheetsService';
+import { fetchSheetData, fetchContactsData } from '../services/googleSheetsService';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -7,12 +7,14 @@ import {
   PointElement,
   LineElement,
   BarElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend,
   Filler
 } from 'chart.js';
-import { Line, Bar } from 'react-chartjs-2';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
+import { Line, Bar, Doughnut } from 'react-chartjs-2';
 
 // Register Chart.js components
 ChartJS.register(
@@ -21,10 +23,12 @@ ChartJS.register(
   PointElement,
   LineElement,
   BarElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
+  ChartDataLabels
 );
 
 const AdminDashboard = () => {
@@ -66,6 +70,14 @@ const AdminDashboard = () => {
   // Chart data state
   const [registrationTrendData, setRegistrationTrendData] = useState(null);
   const [leadSourceData, setLeadSourceData] = useState(null);
+  const [roleDistributionChartData, setRoleDistributionChartData] = useState(null);
+  
+  // Ticket data state
+  const [ticketData, setTicketData] = useState({
+    open: 0,
+    closed: 0,
+    total: 0
+  });
 
   const dateRangeOptions = [
     { value: '24h', label: 'Last 24 Hours' },
@@ -98,9 +110,22 @@ const AdminDashboard = () => {
     }
   };
 
+  // Function to load ticket/contact data
+  const loadTicketData = async () => {
+    try {
+      const result = await fetchContactsData();
+      if (result.success) {
+        setTicketData(result.data);
+      }
+    } catch (err) {
+      console.error('Error loading ticket data:', err);
+    }
+  };
+
   // Initial load and reload when date range changes
   useEffect(() => {
     loadData(dateRange);
+    loadTicketData(); // Load ticket data on mount
   }, [dateRange]);
 
   // Auto-refresh every 30 seconds
@@ -204,7 +229,20 @@ const AdminDashboard = () => {
     if (paymentFilter !== 'all') {
       filtered = filtered.filter(lead => {
         const status = (lead['Payment Status'] || '').toLowerCase().trim();
-        return status === paymentFilter.toLowerCase();
+        
+        // Map filter values to actual CSV values
+        if (paymentFilter === 'success') {
+          return status === 'success' || status === 'successful' || status === 'paid' || status === 'completed';
+        } else if (paymentFilter === 'pending') {
+          // Empty status = Pending, or explicit pending/processing
+          return status === '' || status === 'pending' || status === 'processing';
+        } else if (paymentFilter === 'needtime') {
+          return status.includes('need time') || status.includes('needtime') || status === 'need time to confirm';
+        } else if (paymentFilter === 'failed') {
+          return status === 'failed' || status === 'failure' || status === 'declined';
+        }
+        
+        return false;
       });
     }
 
@@ -234,11 +272,7 @@ const AdminDashboard = () => {
       const aVal = a[key] || '';
       const bVal = b[key] || '';
 
-      if (key === 'Paid Amount' || key === 'Discount' || key === 'PayableAmount') {
-        const aNum = parseFloat(aVal) || 0;
-        const bNum = parseFloat(bVal) || 0;
-        return direction === 'asc' ? aNum - bNum : bNum - aNum;
-      }
+      // No numeric sorting needed anymore (removed Paid Amount, Discount, PayableAmount)
 
       if (aVal < bVal) return direction === 'asc' ? -1 : 1;
       if (aVal > bVal) return direction === 'asc' ? 1 : -1;
@@ -265,17 +299,80 @@ const AdminDashboard = () => {
 
   // Badge color based on payment status
   const getPaymentBadgeClass = (status) => {
-    const s = (status || '').toLowerCase().trim();
-    if (s === 'success' || s === 'successful' || s === 'paid') return 'badge-success';
-    if (s === 'pending' || s === 'processing') return 'badge-warning';
-    if (s === 'failed' || s === 'failure') return 'badge-error';
+    const s = (status || '').toLowerCase().trim().replace(/_/g, ' '); // Replace underscores with spaces
+    if (s === 'success' || s === 'successful' || s === 'paid' || s === 'completed') return 'badge-success';
+    // Empty status OR "need time" = Yellow (warning)
+    if (s === '' || s === 'pending' || s === 'processing' || s.includes('need time') || s === 'need time to confirm') return 'badge-warning';
+    if (s === 'failed' || s === 'failure' || s === 'declined') return 'badge-error';
     return 'badge-default';
   };
 
-  // Process chart data when leadData changes
+  // Get display text for payment status
+  const getPaymentStatusDisplay = (status) => {
+    const s = (status || '').toLowerCase().trim().replace(/_/g, ' '); // Replace underscores with spaces
+    if (s === '') return 'Pending'; // Empty = Pending
+    if (s.includes('need time') || s === 'need time to confirm' || s === 'need time to confirm') return 'Need Time';
+    // Otherwise return original status with proper capitalization
+    return status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' ');
+  };
+
+  // Format source display text (e.g., "Registration Page" instead of "RegistrationPage")
+  const formatSourceDisplay = (source) => {
+    if (!source) return '-';
+    
+    // Handle common patterns
+    const formatted = source
+      // Add space before capital letters (camelCase/PascalCase)
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      // Add space before numbers
+      .replace(/([a-zA-Z])(\d)/g, '$1 $2')
+      // Replace underscores and hyphens with spaces
+      .replace(/[_-]/g, ' ')
+      // Capitalize first letter of each word
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+    
+    return formatted;
+  };
+
+  // Filter leadData by date range
+  const getFilteredLeadData = () => {
+    if (dateRange === 'all') return leadData;
+    
+    const now = new Date();
+    const cutoffDate = new Date();
+    
+    switch(dateRange) {
+      case '24h':
+        cutoffDate.setHours(now.getHours() - 24);
+        break;
+      case '7d':
+        cutoffDate.setDate(now.getDate() - 7);
+        break;
+      case '30d':
+        cutoffDate.setDate(now.getDate() - 30);
+        break;
+      case '90d':
+        cutoffDate.setDate(now.getDate() - 90);
+        break;
+      default:
+        return leadData;
+    }
+    
+    return leadData.filter(lead => {
+      if (!lead.Registration_TS) return false;
+      const regDate = new Date(lead.Registration_TS);
+      return !isNaN(regDate.getTime()) && regDate >= cutoffDate;
+    });
+  };
+
+  // Process chart data when leadData or dateRange changes
   useEffect(() => {
     if (leadData.length === 0) return;
 
+    const filteredLeads = getFilteredLeadData();
+    
     // Process Registration Trend Data (last 30 days)
     const last30Days = [];
     const registrationCounts = {};
@@ -290,8 +387,8 @@ const AdminDashboard = () => {
       registrationCounts[dateStr] = 0;
     }
 
-    // Count registrations per day
-    leadData.forEach(lead => {
+    // Count registrations per day from filtered data
+    filteredLeads.forEach(lead => {
       if (lead.Registration_TS) {
         const regDate = new Date(lead.Registration_TS);
         const dateStr = regDate.toISOString().split('T')[0];
@@ -325,9 +422,9 @@ const AdminDashboard = () => {
 
     setRegistrationTrendData(trendData);
 
-    // Process Lead Sources Data
+    // Process Lead Sources Data from filtered data
     const sourceCounts = {};
-    leadData.forEach(lead => {
+    filteredLeads.forEach(lead => {
       const source = lead.Source || 'Unknown';
       sourceCounts[source] = (sourceCounts[source] || 0) + 1;
     });
@@ -373,13 +470,91 @@ const AdminDashboard = () => {
     };
 
     setLeadSourceData(sourceData);
-  }, [leadData]);
+
+    // Process Role Distribution Data (Donut Chart) from filtered data
+    // Always include these 4 primary roles even if count is 0
+    const primaryRoles = ['Entrepreneur', 'Student', 'Faculty', 'Industry Professional'];
+    const roleCounts = {};
+    
+    // Initialize primary roles with 0
+    primaryRoles.forEach(role => {
+      roleCounts[role] = 0;
+    });
+    
+    let totalCount = 0;
+    
+    filteredLeads.forEach(lead => {
+      const role = lead.Role || 'Unknown';
+      roleCounts[role] = (roleCounts[role] || 0) + 1;
+      totalCount++;
+    });
+
+    // Sort roles: primary roles first (in order), then others alphabetically
+    const sortedRoleEntries = Object.entries(roleCounts).sort((a, b) => {
+      const aIsPrimary = primaryRoles.indexOf(a[0]);
+      const bIsPrimary = primaryRoles.indexOf(b[0]);
+      
+      if (aIsPrimary !== -1 && bIsPrimary !== -1) {
+        return aIsPrimary - bIsPrimary; // Keep primary roles in defined order
+      }
+      if (aIsPrimary !== -1) return -1; // a is primary, comes first
+      if (bIsPrimary !== -1) return 1;  // b is primary, comes first
+      return a[0].localeCompare(b[0]); // Both non-primary, sort alphabetically
+    });
+
+    const roleLabels = sortedRoleEntries.map(([role]) => role);
+    const roleCounts_array = sortedRoleEntries.map(([, count]) => count);
+    
+    // Vibrant color palette for roles - inspired by modern UI
+    const getColorForRole = (role) => {
+      const colorMap = {
+        'Student': { bg: 'rgba(99, 179, 237, 0.9)', border: 'rgba(99, 179, 237, 1)' }, // Vibrant Cyan Blue
+        'Teacher': { bg: 'rgba(72, 207, 173, 0.9)', border: 'rgba(72, 207, 173, 1)' }, // Vibrant Teal
+        'Faculty': { bg: 'rgba(72, 207, 173, 0.9)', border: 'rgba(72, 207, 173, 1)' }, // Vibrant Teal
+        'Entrepreneur': { bg: 'rgba(255, 159, 67, 0.9)', border: 'rgba(255, 159, 67, 1)' }, // Vibrant Orange
+        'Industry Professional': { bg: 'rgba(142, 124, 255, 0.9)', border: 'rgba(142, 124, 255, 1)' }, // Vibrant Purple
+        'Working Professional': { bg: 'rgba(142, 124, 255, 0.9)', border: 'rgba(142, 124, 255, 1)' }, // Vibrant Purple
+        'Professional': { bg: 'rgba(142, 124, 255, 0.9)', border: 'rgba(142, 124, 255, 1)' }, // Vibrant Purple
+        'HR Professional': { bg: 'rgba(255, 107, 161, 0.9)', border: 'rgba(255, 107, 161, 1)' }, // Vibrant Pink/Coral
+        'Consultant': { bg: 'rgba(94, 231, 223, 0.9)', border: 'rgba(94, 231, 223, 1)' }, // Vibrant Light Cyan
+        'Business Owner': { bg: 'rgba(255, 195, 113, 0.9)', border: 'rgba(255, 195, 113, 1)' }, // Vibrant Peach
+        'Others': { bg: 'rgba(163, 174, 208, 0.9)', border: 'rgba(163, 174, 208, 1)' }, // Soft Blue Grey
+        'Unknown': { bg: 'rgba(163, 174, 208, 0.9)', border: 'rgba(163, 174, 208, 1)' } // Soft Blue Grey
+      };
+      return colorMap[role] || { bg: 'rgba(163, 174, 208, 0.9)', border: 'rgba(163, 174, 208, 1)' }; // Default soft grey
+    };
+
+    const roleBackgroundColors = roleLabels.map(role => getColorForRole(role).bg);
+    const roleBorderColors = roleLabels.map(role => getColorForRole(role).border);
+
+    const roleChartData = {
+      labels: roleLabels,
+      datasets: [
+        {
+          data: roleCounts_array,
+          backgroundColor: roleBackgroundColors,
+          borderColor: roleBorderColors,
+          borderWidth: 2,
+          hoverOffset: 4
+        }
+      ]
+    };
+
+    setRoleDistributionChartData({
+      ...roleChartData,
+      totalCount: totalCount,
+      roleCounts: roleCounts
+    });
+  }, [leadData, dateRange]);
 
   // Chart options
   const trendChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
+      datalabels: {
+        display: false // Disable datalabels for this chart
+      },
       legend: {
         display: false
       },
@@ -423,6 +598,9 @@ const AdminDashboard = () => {
     maintainAspectRatio: false,
     indexAxis: 'y',
     plugins: {
+      datalabels: {
+        display: false // Disable datalabels for this chart
+      },
       legend: {
         display: false
       },
@@ -456,6 +634,49 @@ const AdminDashboard = () => {
         }
       }
     }
+  };
+
+  const roleChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false // We'll show custom legend below
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        padding: 12,
+        titleColor: '#fff',
+        bodyColor: '#fff',
+        borderColor: 'rgba(139, 92, 246, 0.5)',
+        borderWidth: 1,
+        displayColors: true,
+        callbacks: {
+          title: function(context) {
+            return context[0].label || '';
+          },
+          label: function(context) {
+            const value = context.parsed || 0;
+            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+            const percentage = ((value / total) * 100).toFixed(1);
+            return `  Count: ${value} (${percentage}%)`;
+          }
+        }
+      },
+      datalabels: {
+        color: '#fff',
+        font: {
+          weight: 'bold',
+          size: 12
+        },
+        formatter: (value, context) => {
+          const total = context.dataset.data.reduce((a, b) => a + b, 0);
+          const percentage = ((value / total) * 100).toFixed(1);
+          return percentage > 5 ? `${percentage}%` : ''; // Only show if > 5%
+        }
+      }
+    },
+    cutout: '60%' // Makes it a donut (inner circle cutout)
   };
 
   return (
@@ -608,35 +829,87 @@ const AdminDashboard = () => {
             <h2 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
               Role Distribution
             </h2>
-            <div className="flex items-center justify-center" style={{ height: '12rem', backgroundColor: 'var(--surface-light)', borderRadius: '0.5rem' }}>
-              <div style={{ width: '150px', height: '150px', borderRadius: '50%', border: '30px solid var(--primary)', position: 'relative' }}>
-                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
-                  <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>
-                    {dashboardData.totalLeads}
-                  </p>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Total Leads</p>
+            <div style={{ height: '14rem', position: 'relative', padding: '1rem 0' }}>
+              {roleDistributionChartData ? (
+                <>
+                  <Doughnut data={roleDistributionChartData} options={roleChartOptions} />
+                  {/* Center Total Count */}
+                  <div style={{ 
+                    position: 'absolute', 
+                    top: '50%', 
+                    left: '50%', 
+                    transform: 'translate(-50%, -50%)',
+                    textAlign: 'center',
+                    pointerEvents: 'none'
+                  }}>
+                    <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: '0' }}>
+                      {roleDistributionChartData.totalCount || 0}
+                    </p>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+                      Total Leads
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-center justify-center" style={{ height: '100%' }}>
+                  <div className="spinner"></div>
                 </div>
-              </div>
+              )}
             </div>
-            {/* Role Distribution Details */}
-            {Object.keys(dashboardData.roleDistribution).length > 0 && (
-              <div style={{ marginTop: '1rem' }}>
-                <h3 style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
-                  By Role:
-                </h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {Object.entries(dashboardData.roleDistribution).map(([role, count]) => (
+            {/* Role Distribution Legend with Color Dots */}
+            {roleDistributionChartData && roleDistributionChartData.labels && (
+              <div style={{ 
+                marginTop: '1rem',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gap: '0.5rem',
+                maxHeight: '120px',
+                overflowY: 'auto'
+              }}>
+                {roleDistributionChartData.labels.map((role, index) => {
+                  const getColorForRole = (roleName) => {
+                    const colorMap = {
+                      'Student': 'rgba(99, 179, 237, 1)',
+                      'Teacher': 'rgba(72, 207, 173, 1)',
+                      'Faculty': 'rgba(72, 207, 173, 1)',
+                      'Entrepreneur': 'rgba(255, 159, 67, 1)',
+                      'Industry Professional': 'rgba(142, 124, 255, 1)',
+                      'Working Professional': 'rgba(142, 124, 255, 1)',
+                      'Professional': 'rgba(142, 124, 255, 1)',
+                      'HR Professional': 'rgba(255, 107, 161, 1)',
+                      'Consultant': 'rgba(94, 231, 223, 1)',
+                      'Business Owner': 'rgba(255, 195, 113, 1)',
+                      'Others': 'rgba(163, 174, 208, 1)',
+                      'Unknown': 'rgba(163, 174, 208, 1)'
+                    };
+                    return colorMap[roleName] || 'rgba(163, 174, 208, 1)';
+                  };
+
+                  return (
                     <div key={role} style={{ 
-                      padding: '0.5rem', 
-                      backgroundColor: 'var(--surface-light)', 
-                      borderRadius: '0.25rem',
-                      fontSize: '0.875rem'
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      fontSize: '0.8rem',
+                      color: 'var(--text-secondary)'
                     }}>
-                      <span style={{ color: 'var(--text-secondary)' }}>{role}:</span>{' '}
-                      <span style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>{count}</span>
+                      <span style={{
+                        width: '10px',
+                        height: '10px',
+                        borderRadius: '50%',
+                        backgroundColor: getColorForRole(role),
+                        flexShrink: 0
+                      }}></span>
+                      <span style={{ 
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}>
+                        {role} ({roleDistributionChartData.roleCounts[role]})
+                      </span>
                     </div>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
             )}
           </section>
@@ -657,37 +930,116 @@ const AdminDashboard = () => {
               <span>✗ Failed: {dashboardData.paymentStats.failed}</span>
             </div>
           </section>
+
+          {/* Query Analytics Panel */}
+          <section className="card">
+            <div className="flex justify-between items-center" style={{ marginBottom: '1rem' }}>
+              <h2 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '0' }}>
+                Query Analytics
+              </h2>
+              <button
+                onClick={() => window.open('https://docs.google.com/spreadsheets/d/1UinuM281y4r8gxCrCr2dvF_-7CBC2l_FVSomj0Ia-c8/edit#gid=1649167240', '_blank')}
+                style={{
+                  padding: '0.5rem 1rem',
+                  backgroundColor: 'var(--primary)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '0.375rem',
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'opacity 0.2s'
+                }}
+                onMouseEnter={(e) => e.target.style.opacity = '0.8'}
+                onMouseLeave={(e) => e.target.style.opacity = '1'}
+              >
+                📋 View Tickets
+              </button>
+            </div>
+            
+            {/* Ticket Statistics */}
+            <div className="flex justify-between items-center" style={{ marginBottom: '1rem' }}>
+              <div style={{ flex: '1', textAlign: 'center' }}>
+                <p style={{ fontSize: '1.75rem', fontWeight: 'bold', color: 'var(--warning)', marginBottom: '0.25rem' }}>
+                  {ticketData.open}
+                </p>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Open Tickets</p>
+              </div>
+              <div style={{ width: '1px', height: '3rem', backgroundColor: 'var(--border)' }}></div>
+              <div style={{ flex: '1', textAlign: 'center' }}>
+                <p style={{ fontSize: '1.75rem', fontWeight: 'bold', color: 'var(--success)', marginBottom: '0.25rem' }}>
+                  {ticketData.closed}
+                </p>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Closed Tickets</p>
+              </div>
+              <div style={{ width: '1px', height: '3rem', backgroundColor: 'var(--border)' }}></div>
+              <div style={{ flex: '1', textAlign: 'center' }}>
+                <p style={{ fontSize: '1.75rem', fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: '0.25rem' }}>
+                  {ticketData.total}
+                </p>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Total Queries</p>
+              </div>
+            </div>
+
+            {/* Visual Bar Chart */}
+            <div style={{ marginTop: '1rem' }}>
+              <div className="flex" style={{ height: '2rem', borderRadius: '0.5rem', overflow: 'hidden' }}>
+                <div 
+                  style={{ 
+                    width: ticketData.total > 0 ? `${(ticketData.open / ticketData.total) * 100}%` : '50%',
+                    backgroundColor: 'var(--warning)',
+                    transition: 'width 0.3s ease'
+                  }}
+                ></div>
+                <div 
+                  style={{ 
+                    width: ticketData.total > 0 ? `${(ticketData.closed / ticketData.total) * 100}%` : '50%',
+                    backgroundColor: 'var(--success)',
+                    transition: 'width 0.3s ease'
+                  }}
+                ></div>
+              </div>
+              <div className="flex justify-between" style={{ fontSize: '0.875rem', marginTop: '0.5rem', color: 'var(--text-secondary)' }}>
+                <span>
+                  ⚠️ Open: {ticketData.total > 0 ? ((ticketData.open / ticketData.total) * 100).toFixed(1) : 0}%
+                </span>
+                <span>
+                  ✓ Resolved: {ticketData.total > 0 ? ((ticketData.closed / ticketData.total) * 100).toFixed(1) : 0}%
+                </span>
+              </div>
+            </div>
+          </section>
         </div>
 
         {/* Right Column */}
         <div className="flex flex-col" style={{ gap: '1.5rem' }}>
           {/* Overall Performance Panel */}
           <section className="card">
-            <h2 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
+            <h2 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1rem', color: 'var(--text-primary)' }}>
               Overall Performance
             </h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="card" style={{ backgroundColor: 'var(--surface-light)', padding: '1rem', textAlign: 'center' }}>
-                <h3 style={{ fontWeight: '500', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Total Revenue</h3>
-                <p style={{ fontSize: '1.5rem', fontWeight: 'bold', marginTop: '0.5rem', color: 'var(--text-primary)' }}>
+            <div className="grid grid-cols-2 gap-4" style={{ height: '19rem' }}>
+              <div className="card" style={{ backgroundColor: 'var(--surface-light)', padding: '1.5rem', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderRadius: '0.5rem' }}>
+                <h3 style={{ fontWeight: '500', color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '0.75rem' }}>Total Revenue</h3>
+                <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--text-primary)', margin: '0' }}>
                   ₹{dashboardData.totalRevenue}
                 </p>
               </div>
-              <div className="card" style={{ backgroundColor: 'var(--surface-light)', padding: '1rem', textAlign: 'center' }}>
-                <h3 style={{ fontWeight: '500', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Total Leads</h3>
-                <p style={{ fontSize: '1.5rem', fontWeight: 'bold', marginTop: '0.5rem', color: 'var(--text-primary)' }}>
+              <div className="card" style={{ backgroundColor: 'var(--surface-light)', padding: '1.5rem', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderRadius: '0.5rem' }}>
+                <h3 style={{ fontWeight: '500', color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '0.75rem' }}>Total Leads</h3>
+                <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--text-primary)', margin: '0' }}>
                   {dashboardData.totalLeads}
                 </p>
               </div>
-              <div className="card" style={{ backgroundColor: 'var(--surface-light)', padding: '1rem', textAlign: 'center' }}>
-                <h3 style={{ fontWeight: '500', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Conv. Rate</h3>
-                <p style={{ fontSize: '1.5rem', fontWeight: 'bold', marginTop: '0.5rem', color: 'var(--text-primary)' }}>
+              <div className="card" style={{ backgroundColor: 'var(--surface-light)', padding: '1.5rem', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderRadius: '0.5rem' }}>
+                <h3 style={{ fontWeight: '500', color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '0.75rem' }}>Conversion Rate</h3>
+                <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--text-primary)', margin: '0' }}>
                   {dashboardData.conversionRate}%
                 </p>
               </div>
-              <div className="card" style={{ backgroundColor: 'var(--surface-light)', padding: '1rem', textAlign: 'center' }}>
-                <h3 style={{ fontWeight: '500', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Engagement</h3>
-                <p style={{ fontSize: '1.5rem', fontWeight: 'bold', marginTop: '0.5rem', color: 'var(--text-primary)' }}>
+              <div className="card" style={{ backgroundColor: 'var(--surface-light)', padding: '1.5rem', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderRadius: '0.5rem' }}>
+                <h3 style={{ fontWeight: '500', color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '0.75rem' }}>Engagement</h3>
+                <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--text-primary)', margin: '0' }}>
                   {dashboardData.engagement}%
                 </p>
               </div>
@@ -699,17 +1051,17 @@ const AdminDashboard = () => {
             <h2 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
               Webinar Sales Funnel
             </h2>
-            <div className="flex flex-col items-center justify-center" style={{ height: '14rem', backgroundColor: 'var(--surface-light)', borderRadius: '0.5rem', gap: '0.5rem' }}>
-              <div style={{ width: '75%', height: '2rem', backgroundColor: 'var(--primary)', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '0.875rem', fontWeight: '600' }}>
+            <div className="flex flex-col items-center justify-center" style={{ height: '20rem', backgroundColor: 'var(--surface-light)', borderRadius: '0.5rem', gap: '1rem', padding: '1rem 0' }}>
+              <div style={{ width: '80%', height: '3rem', backgroundColor: 'var(--primary)', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '0.875rem', fontWeight: '600', boxShadow: '0 2px 8px rgba(139, 92, 246, 0.3)' }}>
                 Leads ({dashboardData.funnel.leads})
               </div>
-              <div style={{ width: '66%', height: '2rem', backgroundColor: 'var(--primary)', opacity: '0.8', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '0.875rem', fontWeight: '600' }}>
+              <div style={{ width: '70%', height: '3rem', backgroundColor: 'var(--primary)', opacity: '0.85', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '0.875rem', fontWeight: '600', boxShadow: '0 2px 8px rgba(139, 92, 246, 0.25)' }}>
                 Registered ({dashboardData.funnel.registered})
               </div>
-              <div style={{ width: '50%', height: '2rem', backgroundColor: 'var(--primary)', opacity: '0.6', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '0.875rem', fontWeight: '600' }}>
+              <div style={{ width: '55%', height: '3rem', backgroundColor: 'var(--primary)', opacity: '0.7', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '0.875rem', fontWeight: '600', boxShadow: '0 2px 8px rgba(139, 92, 246, 0.2)' }}>
                 Paid ({dashboardData.funnel.paid})
               </div>
-              <div style={{ width: '33%', height: '2rem', backgroundColor: 'var(--primary)', opacity: '0.4', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '0.875rem', fontWeight: '600' }}>
+              <div style={{ width: '40%', height: '3rem', backgroundColor: 'var(--primary)', opacity: '0.55', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '0.875rem', fontWeight: '600', boxShadow: '0 2px 8px rgba(139, 92, 246, 0.15)' }}>
                 Completed ({dashboardData.funnel.completed})
               </div>
             </div>
@@ -811,7 +1163,7 @@ const AdminDashboard = () => {
               >
                 <option value="all">All Sources</option>
                 {uniqueSources.map(source => (
-                  <option key={source} value={source}>{source}</option>
+                  <option key={source} value={source}>{formatSourceDisplay(source)}</option>
                 ))}
               </select>
 
@@ -825,12 +1177,14 @@ const AdminDashboard = () => {
                   color: 'var(--text-primary)',
                   border: '1px solid var(--border)',
                   borderRadius: '0.5rem',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  minWidth: '200px'
                 }}
               >
                 <option value="all">All Payment Status</option>
-                <option value="paid">Paid</option>
+                <option value="success">Successful</option>
                 <option value="pending">Pending</option>
+                <option value="needtime">Need Time</option>
                 <option value="failed">Failed</option>
               </select>
             </div>
@@ -909,6 +1263,21 @@ const AdminDashboard = () => {
                   </th>
                   <th 
                     className="cursor-pointer"
+                    onClick={() => handleSort('Phone')}
+                    style={{
+                      padding: '0.75rem',
+                      textAlign: 'left',
+                      fontWeight: '600',
+                      color: 'var(--text-primary)',
+                      borderBottom: '1px solid var(--border)',
+                      cursor: 'pointer',
+                      userSelect: 'none'
+                    }}
+                  >
+                    Mobile {sortConfig.key === 'Phone' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th 
+                    className="cursor-pointer"
                     onClick={() => handleSort('Email')}
                     style={{
                       padding: '0.75rem',
@@ -921,6 +1290,21 @@ const AdminDashboard = () => {
                     }}
                   >
                     Email {sortConfig.key === 'Email' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th 
+                    className="cursor-pointer"
+                    onClick={() => handleSort('Role')}
+                    style={{
+                      padding: '0.75rem',
+                      textAlign: 'left',
+                      fontWeight: '600',
+                      color: 'var(--text-primary)',
+                      borderBottom: '1px solid var(--border)',
+                      cursor: 'pointer',
+                      userSelect: 'none'
+                    }}
+                  >
+                    Role {sortConfig.key === 'Role' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                   </th>
                   <th 
                     className="cursor-pointer"
@@ -969,7 +1353,7 @@ const AdminDashboard = () => {
                   </th>
                   <th 
                     className="cursor-pointer"
-                    onClick={() => handleSort('Paid Amount')}
+                    onClick={() => handleSort('CouponCode')}
                     style={{
                       padding: '0.75rem',
                       textAlign: 'left',
@@ -980,11 +1364,11 @@ const AdminDashboard = () => {
                       userSelect: 'none'
                     }}
                   >
-                    Paid Amount {sortConfig.key === 'Paid Amount' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    Coupon Code {sortConfig.key === 'CouponCode' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                   </th>
                   <th 
                     className="cursor-pointer"
-                    onClick={() => handleSort('Discount')}
+                    onClick={() => handleSort('Nuturing')}
                     style={{
                       padding: '0.75rem',
                       textAlign: 'left',
@@ -995,37 +1379,7 @@ const AdminDashboard = () => {
                       userSelect: 'none'
                     }}
                   >
-                    Discount {sortConfig.key === 'Discount' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                  </th>
-                  <th 
-                    className="cursor-pointer"
-                    onClick={() => handleSort('PayableAmount')}
-                    style={{
-                      padding: '0.75rem',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      color: 'var(--text-primary)',
-                      borderBottom: '1px solid var(--border)',
-                      cursor: 'pointer',
-                      userSelect: 'none'
-                    }}
-                  >
-                    Payable {sortConfig.key === 'PayableAmount' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                  </th>
-                  <th 
-                    className="cursor-pointer"
-                    onClick={() => handleSort('Role')}
-                    style={{
-                      padding: '0.75rem',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      color: 'var(--text-primary)',
-                      borderBottom: '1px solid var(--border)',
-                      cursor: 'pointer',
-                      userSelect: 'none'
-                    }}
-                  >
-                    Role {sortConfig.key === 'Role' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    Nurturing {sortConfig.key === 'Nuturing' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                   </th>
                   <th 
                     className="cursor-pointer"
@@ -1049,7 +1403,7 @@ const AdminDashboard = () => {
                 {currentLeads.length === 0 ? (
                   <tr>
                     <td 
-                      colSpan="10" 
+                      colSpan="9" 
                       style={{
                         padding: '2rem',
                         textAlign: 'center',
@@ -1078,10 +1432,16 @@ const AdminDashboard = () => {
                         {lead.Name || '-'}
                       </td>
                       <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                        {lead.Phone || '-'}
+                      </td>
+                      <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
                         {lead.Email || '-'}
                       </td>
                       <td style={{ padding: '0.75rem', color: 'var(--text-primary)' }}>
-                        {lead.Source || '-'}
+                        {lead.Role || '-'}
+                      </td>
+                      <td style={{ padding: '0.75rem', color: 'var(--text-primary)' }}>
+                        {formatSourceDisplay(lead.Source)}
                       </td>
                       <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
                         {lead.Registration_TS ? new Date(lead.Registration_TS).toLocaleDateString() : '-'}
@@ -1091,10 +1451,12 @@ const AdminDashboard = () => {
                           className={`badge ${getPaymentBadgeClass(lead['Payment Status'])}`}
                           style={{
                             display: 'inline-block',
-                            padding: '0.25rem 0.75rem',
+                            padding: '0.35rem 1rem',
                             borderRadius: '9999px',
                             fontSize: '0.75rem',
                             fontWeight: '600',
+                            minWidth: '85px',
+                            textAlign: 'center',
                             backgroundColor: getPaymentBadgeClass(lead['Payment Status']) === 'badge-success' ? 'var(--success)' :
                                            getPaymentBadgeClass(lead['Payment Status']) === 'badge-warning' ? 'var(--warning)' :
                                            getPaymentBadgeClass(lead['Payment Status']) === 'badge-error' ? 'var(--error)' : 'var(--surface-light)',
@@ -1103,20 +1465,14 @@ const AdminDashboard = () => {
                                    getPaymentBadgeClass(lead['Payment Status']) === 'badge-warning' ? '#ffffff' : 'var(--text-secondary)'
                           }}
                         >
-                          {lead['Payment Status'] || 'N/A'}
+                          {getPaymentStatusDisplay(lead['Payment Status'])}
                         </span>
                       </td>
-                      <td style={{ padding: '0.75rem', color: 'var(--text-primary)', fontWeight: '600' }}>
-                        ₹{lead['Paid Amount'] || '0'}
-                      </td>
-                      <td style={{ padding: '0.75rem', color: 'var(--text-secondary)' }}>
-                        {lead.Discount || '-'}
-                      </td>
-                      <td style={{ padding: '0.75rem', color: 'var(--text-primary)', fontWeight: '600' }}>
-                        ₹{lead.PayableAmount || '0'}
+                      <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                        {lead.CouponCode || '-'}
                       </td>
                       <td style={{ padding: '0.75rem', color: 'var(--text-primary)' }}>
-                        {lead.Role || '-'}
+                        {lead.Nuturing || '-'}
                       </td>
                       <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
                         {lead.Interest || '-'}
