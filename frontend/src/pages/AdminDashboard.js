@@ -269,8 +269,15 @@ const AdminDashboard = () => {
     setSortConfig({ key, direction });
 
     const sorted = [...filteredLeads].sort((a, b) => {
-      const aVal = a[key] || '';
-      const bVal = b[key] || '';
+      // Handle Mobile column specially - check both Mobile and Phone fields for backward compatibility
+      let aVal, bVal;
+      if (key === 'Mobile') {
+        aVal = a['Mobile'] || a['Phone'] || '';
+        bVal = b['Mobile'] || b['Phone'] || '';
+      } else {
+        aVal = a[key] || '';
+        bVal = b[key] || '';
+      }
 
       // No numeric sorting needed anymore (removed Paid Amount, Discount, PayableAmount)
 
