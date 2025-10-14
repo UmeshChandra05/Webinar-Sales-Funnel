@@ -6,6 +6,7 @@ const ContactPage = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    mobile: "",
     message: "",
   })
   const [isLoading, setIsLoading] = useState(false)
@@ -133,7 +134,7 @@ const ContactPage = () => {
           result.message || "Thank you for your message. We will get back to you soon!", 
           "success"
         )
-        setFormData({ name: "", email: "", message: "" })
+        setFormData({ name: "", email: "", mobile: "", message: "" })
         setHasSubmitted(false)
         setMessageError("")
       } else {
@@ -316,6 +317,21 @@ const ContactPage = () => {
                   className="form-input"
                   required
                   placeholder="your.email@example.com"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="mobile" className="form-label">
+                  Mobile Number
+                </label>
+                <input
+                  type="tel"
+                  id="mobile"
+                  name="mobile"
+                  value={formData.mobile}
+                  onChange={handleInputChange}
+                  className="form-input"
+                  placeholder="Enter your mobile number"
                 />
               </div>
 

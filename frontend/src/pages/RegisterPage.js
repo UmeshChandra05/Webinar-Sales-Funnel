@@ -8,7 +8,7 @@ const RegisterPage = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    phone: "",
+    mobile: "",
     role: "",
   })
   const [isLoading, setIsLoading] = useState(false)
@@ -228,17 +228,17 @@ const RegisterPage = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="phone" className="form-label">
-                Phone Number
+              <label htmlFor="mobile" className="form-label">
+                Mobile Number
               </label>
               <input
                 type="tel"
-                id="phone"
-                name="phone"
-                value={formData.phone}
+                id="mobile"
+                name="mobile"
+                value={formData.mobile}
                 onChange={handleInputChange}
                 className="form-input"
-                placeholder="Enter your phone number (optional)"
+                placeholder="Enter your mobile number"
               />
             </div>
 

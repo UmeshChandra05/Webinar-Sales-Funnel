@@ -252,7 +252,7 @@ const AdminDashboard = () => {
       filtered = filtered.filter(lead => 
         (lead.Name || '').toLowerCase().includes(query) ||
         (lead.Email || '').toLowerCase().includes(query) ||
-        (lead.Phone || '').toLowerCase().includes(query)
+        (lead.Mobile || lead.Phone || '').toLowerCase().includes(query)
       );
     }
 
@@ -1193,7 +1193,7 @@ const AdminDashboard = () => {
             <div className="flex items-center gap-2">
               <input
                 type="text"
-                placeholder="Search by name, email, or phone"
+                placeholder="Search by name, email, or mobile"
                 className="form-input"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -1263,7 +1263,7 @@ const AdminDashboard = () => {
                   </th>
                   <th 
                     className="cursor-pointer"
-                    onClick={() => handleSort('Phone')}
+                    onClick={() => handleSort('Mobile')}
                     style={{
                       padding: '0.75rem',
                       textAlign: 'left',
@@ -1274,7 +1274,7 @@ const AdminDashboard = () => {
                       userSelect: 'none'
                     }}
                   >
-                    Mobile {sortConfig.key === 'Phone' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    Mobile {sortConfig.key === 'Mobile' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                   </th>
                   <th 
                     className="cursor-pointer"
@@ -1432,7 +1432,7 @@ const AdminDashboard = () => {
                         {lead.Name || '-'}
                       </td>
                       <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                        {lead.Phone || '-'}
+                        {lead.Mobile || lead.Phone || '-'}
                       </td>
                       <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
                         {lead.Email || '-'}

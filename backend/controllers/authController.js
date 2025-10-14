@@ -9,7 +9,7 @@ const authController = {
   // Register new user
   registerUser: async (req, res) => {
     try {
-      const { name, email, password, phone, role, rememberMe } = req.body;
+      const { name, email, password, mobile, role, rememberMe } = req.body;
 
       // Hash password
       const saltRounds = 10;
@@ -19,7 +19,7 @@ const authController = {
         name,
         email,
         password: hashedPassword,
-        phone: phone || "",
+        mobile: mobile || "NA",
         role: role || "",
         type: "user_registration",
         timestamp: new Date().toISOString(),
@@ -74,7 +74,7 @@ const authController = {
                 id: response.data?.userId || `user_${Date.now()}`,
                 name: name,
                 email: email,
-                phone: phone,
+                mobile: mobile,
                 role: role,
                 timestamp: userData.timestamp
               }
@@ -155,7 +155,7 @@ const authController = {
           id: `user_${Date.now()}`,
           name: name,
           email: email,
-          phone: phone,
+          mobile: mobile,
           role: role,
           timestamp: userData.timestamp
         }
@@ -232,7 +232,7 @@ const authController = {
                 id: response.data.user.id || response.data.user.userId,
                 name: response.data.user.name,
                 email: response.data.user.email || email,
-                phone: response.data.user.phone,
+                mobile: response.data.user.mobile || "NA",
                 role: response.data.user.role
               }
             });

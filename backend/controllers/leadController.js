@@ -5,12 +5,12 @@ const API_BASE_URL = process.env.API_BASE_URL
 const leadController = {
   captureLeadAsync: async (req, res) => {
     try {
-      const { name, email, phone, source, role } = req.body
+      const { name, email, mobile, source, role } = req.body
 
       const leadData = {
         name,
         email,
-        phone: phone || "",
+        mobile: mobile || "NA", // Default to NA if mobile is not provided
         role: role || "",
         source: source || "website",
         timestamp: new Date().toISOString(),
@@ -67,11 +67,12 @@ const leadController = {
 
   handleContactForm: async (req, res) => {
     try {
-      const { name, email, message } = req.body
+      const { name, email, mobile, message } = req.body
 
       const contactData = {
         name,
         email,
+        mobile: mobile || "NA",
         message,
         type: "contact_form",
         timestamp: new Date().toISOString(),

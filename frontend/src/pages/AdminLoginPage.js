@@ -37,6 +37,32 @@ const AdminLoginPage = () => {
 
     setIsLoading(true);
 
+    // ============================================
+    // ⚠️ REMOVE IN PRODUCTION - START
+    // Development bypass for admin login
+    // ============================================
+    if (formData.username === 'admin' && formData.password === 'admin') {
+      localStorage.setItem('adminToken', 'dev-token-' + Date.now());
+      localStorage.setItem('adminUser', JSON.stringify({ 
+        username: 'admin', 
+        role: 'admin',
+        id: 'dev-admin-1'
+      }));
+      localStorage.setItem('adminLoginTime', Date.now().toString());
+      
+      showToast('Login successful! Redirecting to dashboard...', 'success');
+      
+      setTimeout(() => {
+        navigate('/admin/dashboard');
+      }, 1500);
+      
+      setIsLoading(false);
+      return;
+    }
+    // ============================================
+    // ⚠️ REMOVE IN PRODUCTION - END
+    // ============================================
+
     try {
       const response = await fetch('http://localhost:5000/api/admin/login', {
         method: 'POST',

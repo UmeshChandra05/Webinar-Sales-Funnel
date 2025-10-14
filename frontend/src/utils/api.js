@@ -40,7 +40,7 @@ class ApiClient {
       body: JSON.stringify({
         name: leadData.name,
         email: leadData.email,
-        phone: leadData.phone || "",
+        mobile: leadData.mobile || "NA",
         source: leadData.source || "website",
       }),
     })
@@ -58,14 +58,15 @@ class ApiClient {
     })
   }
 
-  // Contact form API
-  async submitContactForm(contactData) {
+  // Contact form submission
+  async submitContactForm(formData) {
     return this.request("/contact", {
       method: "POST",
       body: JSON.stringify({
-        name: contactData.name,
-        email: contactData.email,
-        message: contactData.message,
+        name: formData.name,
+        email: formData.email,
+        mobile: formData.mobile || "NA",
+        message: formData.message,
       }),
     })
   }
@@ -99,7 +100,7 @@ class ApiClient {
         name: userData.name,
         email: userData.email,
         password: userData.password,
-        phone: userData.phone || "",
+        mobile: userData.mobile || "",
         role: userData.role || "",
         rememberMe: userData.rememberMe || false,
       }),
