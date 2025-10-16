@@ -32,8 +32,14 @@ ChartJS.register(
 );
 
 const AdminDashboard = () => {
-  const [dateRange, setDateRange] = useState('7d');
+  const [dateRange, setDateRange] = useState('alltime');
+  const [dateRangeLabel, setDateRangeLabel] = useState('Select Date Range');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
+  const [tempStartDate, setTempStartDate] = useState(null);
+  const [tempEndDate, setTempEndDate] = useState(null);
   const [countdown, setCountdown] = useState(30);
   const [dashboardData, setDashboardData] = useState({
     totalRevenue: 0,
@@ -67,6 +73,35 @@ const AdminDashboard = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   
+  // Advanced analytics state
+  const [showAdvancedSelection, setShowAdvancedSelection] = useState(false);
+  const [visibleColumns, setVisibleColumns] = useState({
+    Name: true,
+    Mobile: true,
+    Email: true,
+    Role: true,
+    Source: false,
+    'Registration_TS': true,
+    'Payment Status': true,
+    CouponCode: false,
+    Nuturing: false,
+    Interest: false
+  });
+  
+  // Column-specific filters
+  const [columnFilters, setColumnFilters] = useState({
+    Name: 'all',
+    Mobile: 'all',
+    Email: 'all',
+    Role: 'all',
+    Source: 'all',
+    'Registration_TS': 'all',
+    'Payment Status': 'all',
+    CouponCode: 'all',
+    Nuturing: 'all',
+    Interest: 'all'
+  });
+  
   // Chart data state
   const [registrationTrendData, setRegistrationTrendData] = useState(null);
   const [leadSourceData, setLeadSourceData] = useState(null);
@@ -80,11 +115,14 @@ const AdminDashboard = () => {
   });
 
   const dateRangeOptions = [
-    { value: '24h', label: 'Last 24 Hours' },
-    { value: '7d', label: 'Last 7 Days' },
-    { value: '30d', label: 'Last 30 Days' },
-    { value: '90d', label: 'Last 90 Days' },
-    { value: 'all', label: 'All Time' }
+    { value: 'today', label: 'Today' },
+    { value: 'yesterday', label: 'Yesterday' },
+    { value: 'last7days', label: 'Last 7 Days' },
+    { value: 'last30days', label: 'Last 30 Days' },
+    { value: 'last90days', label: 'Last 90 Days' },
+    { value: 'lastmonth', label: 'Last Month' },
+    { value: 'alltime', label: 'All Time' },
+    { value: 'custom', label: 'Custom Range' }
   ];
 
   // Function to load data from Google Sheets
@@ -210,8 +248,151 @@ const AdminDashboard = () => {
   };
 
   const getDateRangeLabel = () => {
-    const option = dateRangeOptions.find(opt => opt.value === dateRange);
-    return option ? option.label : 'Select Range';
+    if (dateRange === 'custom' && customStartDate && customEndDate) {
+      const start = new Date(customStartDate);
+      const end = new Date(customEndDate);
+      return `${start.getDate()} ${start.toLocaleString('default', { month: 'short' })} ${start.getFullYear().toString().slice(-2)} - ${end.getDate()} ${end.toLocaleString('default', { month: 'short' })} ${end.getFullYear().toString().slice(-2)}`;
+    }
+    return dateRangeLabel;
+  };
+
+  // Calendar helper functions
+  const getDaysInMonth = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+    
+    return { daysInMonth, startingDayOfWeek, year, month };
+  };
+
+  const handleQuickSelect = (type) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    let start, end, range, label;
+    
+    switch(type) {
+      case 'today':
+        start = new Date(today);
+        end = new Date(today);
+        range = 'today';
+        label = 'Today';
+        break;
+      case 'yesterday':
+        start = new Date(today);
+        start.setDate(start.getDate() - 1);
+        end = new Date(today);
+        end.setDate(end.getDate() - 1);
+        range = 'yesterday';
+        label = 'Yesterday';
+        break;
+      case 'last7days':
+        start = new Date(today);
+        start.setDate(start.getDate() - 6); // Including today = 7 days
+        end = new Date(today);
+        range = 'last7days';
+        label = 'Last 7 Days';
+        break;
+      case 'last30days':
+        start = new Date(today);
+        start.setDate(start.getDate() - 29); // Including today = 30 days
+        end = new Date(today);
+        range = 'last30days';
+        label = 'Last 30 Days';
+        break;
+      case 'last90days':
+        start = new Date(today);
+        start.setDate(start.getDate() - 89); // Including today = 90 days
+        end = new Date(today);
+        range = 'last90days';
+        label = 'Last 90 Days';
+        break;
+      case 'lastmonth':
+        // Literal last month (e.g., if October, then September 1-30)
+        start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        end = new Date(today.getFullYear(), today.getMonth(), 0); // Last day of previous month
+        range = 'lastmonth';
+        label = 'Last Month';
+        break;
+      case 'alltime':
+        // For all time, don't set dates - will show all data
+        setDateRange('alltime');
+        setDateRangeLabel('All Time');
+        setCustomStartDate('');
+        setCustomEndDate('');
+        setTempStartDate(null);
+        setTempEndDate(null);
+        setShowDropdown(false);
+        return;
+      default:
+        return;
+    }
+    
+    setDateRange(range);
+    setDateRangeLabel(label);
+    setCustomStartDate(start.toISOString().split('T')[0]);
+    setCustomEndDate(end.toISOString().split('T')[0]);
+    setTempStartDate(start);
+    setTempEndDate(end);
+    setShowDropdown(false);
+  };
+
+  const handleCalendarDateClick = (date) => {
+    // Normalize date to midnight
+    const normalizedDate = new Date(date);
+    normalizedDate.setHours(0, 0, 0, 0);
+    
+    if (!tempStartDate || (tempStartDate && tempEndDate)) {
+      // Start new selection
+      setTempStartDate(normalizedDate);
+      setTempEndDate(null);
+    } else {
+      // Complete selection - ensure start is before end
+      let finalStart = tempStartDate;
+      let finalEnd = normalizedDate;
+      
+      if (normalizedDate < tempStartDate) {
+        finalStart = normalizedDate;
+        finalEnd = tempStartDate;
+      }
+      
+      setTempStartDate(finalStart);
+      setTempEndDate(finalEnd);
+      
+      // Apply the selection (both dates are inclusive)
+      setCustomStartDate(finalStart.toISOString().split('T')[0]);
+      setCustomEndDate(finalEnd.toISOString().split('T')[0]);
+      setDateRange('custom');
+      setDateRangeLabel('Custom Range');
+      setShowDropdown(false);
+    }
+  };
+
+  const handleResetCalendar = () => {
+    setTempStartDate(null);
+    setTempEndDate(null);
+    setCustomStartDate('');
+    setCustomEndDate('');
+    setDateRange('alltime');
+    setDateRangeLabel('Select Date Range');
+    setShowDropdown(false);
+  };
+
+  const isDateInRange = (date) => {
+    if (!tempStartDate) return false;
+    if (!tempEndDate) return date.toDateString() === tempStartDate.toDateString();
+    return date >= tempStartDate && date <= tempEndDate;
+  };
+
+  const isDateRangeStart = (date) => {
+    return tempStartDate && date.toDateString() === tempStartDate.toDateString();
+  };
+
+  const isDateRangeEnd = (date) => {
+    return tempEndDate && date.toDateString() === tempEndDate.toDateString();
   };
 
   // Filter and search leads
@@ -246,6 +427,31 @@ const AdminDashboard = () => {
       });
     }
 
+    // Apply column-specific filters
+    Object.keys(columnFilters).forEach(column => {
+      if (columnFilters[column] !== 'all') {
+        filtered = filtered.filter(lead => {
+          // Handle Mobile column with Phone fallback
+          if (column === 'Mobile') {
+            const mobileValue = (lead.Mobile || lead.Phone || '').toString().toLowerCase().trim();
+            const filterValue = columnFilters[column].toLowerCase().trim();
+            return mobileValue === filterValue;
+          }
+          
+          // Handle Registration_TS with date comparison
+          if (column === 'Registration_TS') {
+            if (!lead.Registration_TS) return false;
+            const leadDate = new Date(lead.Registration_TS).toISOString().split('T')[0];
+            return leadDate === columnFilters[column];
+          }
+          
+          const value = (lead[column] || '').toString().toLowerCase().trim();
+          const filterValue = columnFilters[column].toLowerCase().trim();
+          return value === filterValue;
+        });
+      }
+    });
+
     // Apply search query
     if (searchQuery.trim() !== '') {
       const query = searchQuery.toLowerCase();
@@ -258,7 +464,7 @@ const AdminDashboard = () => {
 
     setFilteredLeads(filtered);
     setCurrentPage(1); // Reset to first page on filter change
-  }, [leadData, sourceFilter, paymentFilter, searchQuery]);
+  }, [leadData, sourceFilter, paymentFilter, searchQuery, columnFilters]);
 
   // Sorting function
   const handleSort = (key) => {
@@ -304,6 +510,99 @@ const AdminDashboard = () => {
   // Get unique sources for filter dropdown
   const uniqueSources = [...new Set(leadData.map(lead => lead.Source).filter(Boolean))];
 
+  // Get unique values for a column
+  const getUniqueValuesForColumn = (columnName) => {
+    if (columnName === 'Mobile') {
+      // Handle Mobile with Phone fallback
+      return [...new Set(leadData.map(lead => lead.Mobile || lead.Phone).filter(Boolean))].sort();
+    }
+    // For Registration_TS, extract unique dates (not timestamps)
+    if (columnName === 'Registration_TS') {
+      const dates = leadData
+        .map(lead => lead.Registration_TS)
+        .filter(Boolean)
+        .map(timestamp => {
+          const date = new Date(timestamp);
+          return date.toISOString().split('T')[0]; // Get YYYY-MM-DD format
+        });
+      return [...new Set(dates)].sort().reverse(); // Most recent first
+    }
+    return [...new Set(leadData.map(lead => lead[columnName]).filter(Boolean))].sort();
+  };
+
+  // Toggle column visibility
+  const toggleColumn = (columnName) => {
+    setVisibleColumns(prev => ({
+      ...prev,
+      [columnName]: !prev[columnName]
+    }));
+  };
+
+  // Update column filter
+  const handleColumnFilter = (columnName, value) => {
+    setColumnFilters(prev => ({
+      ...prev,
+      [columnName]: value
+    }));
+  };
+
+  // Reset all column filters
+  const resetColumnFilters = () => {
+    const resetFilters = {};
+    Object.keys(columnFilters).forEach(col => {
+      resetFilters[col] = 'all';
+    });
+    setColumnFilters(resetFilters);
+  };
+
+  // Download CSV function
+  const downloadCSV = () => {
+    if (filteredLeads.length === 0) {
+      alert('No data to download');
+      return;
+    }
+
+    // Get all possible column names from the data
+    const allColumns = Object.keys(filteredLeads[0] || {});
+    
+    // Filter to only visible columns
+    const columnsToExport = allColumns.filter(col => visibleColumns[col] !== false);
+    
+    // Create CSV header
+    const headers = columnsToExport.join(',');
+    
+    // Create CSV rows
+    const rows = filteredLeads.map(lead => {
+      return columnsToExport.map(col => {
+        let value = lead[col] || '';
+        // Escape quotes and wrap in quotes if contains comma or newline
+        if (typeof value === 'string' && (value.includes(',') || value.includes('\n') || value.includes('"'))) {
+          value = '"' + value.replace(/"/g, '""') + '"';
+        }
+        return value;
+      }).join(',');
+    }).join('\n');
+    
+    // Combine header and rows
+    const csv = headers + '\n' + rows;
+    
+    // Create blob and download
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    // Create filename with timestamp
+    const timestamp = new Date().toISOString().slice(0, 10);
+    const filename = `leads_export_${timestamp}.csv`;
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // Badge color based on payment status
   const getPaymentBadgeClass = (status) => {
     const s = (status || '').toLowerCase().trim().replace(/_/g, ' '); // Replace underscores with spaces
@@ -345,93 +644,211 @@ const AdminDashboard = () => {
 
   // Filter leadData by date range
   const getFilteredLeadData = () => {
-    if (dateRange === 'all') return leadData;
+    if (dateRange === 'alltime') return leadData;
     
-    const now = new Date();
-    const cutoffDate = new Date();
+    // For all ranges including custom, use customStartDate and customEndDate
+    if (!customStartDate || !customEndDate) return leadData;
     
-    switch(dateRange) {
-      case '24h':
-        cutoffDate.setHours(now.getHours() - 24);
-        break;
-      case '7d':
-        cutoffDate.setDate(now.getDate() - 7);
-        break;
-      case '30d':
-        cutoffDate.setDate(now.getDate() - 30);
-        break;
-      case '90d':
-        cutoffDate.setDate(now.getDate() - 90);
-        break;
-      default:
-        return leadData;
-    }
+    const startDate = new Date(customStartDate);
+    startDate.setHours(0, 0, 0, 0); // Start of day
+    
+    const endDate = new Date(customEndDate);
+    endDate.setHours(23, 59, 59, 999); // End of day (inclusive)
     
     return leadData.filter(lead => {
       if (!lead.Registration_TS) return false;
       const regDate = new Date(lead.Registration_TS);
-      return !isNaN(regDate.getTime()) && regDate >= cutoffDate;
+      return !isNaN(regDate.getTime()) && regDate >= startDate && regDate <= endDate;
     });
   };
 
-  // Process chart data when leadData or dateRange changes
+  // Process chart data when filtered data changes
   useEffect(() => {
     if (leadData.length === 0) return;
 
-    const filteredLeads = getFilteredLeadData();
+    // Get date-filtered data for charts
+    const dateFilteredLeads = getFilteredLeadData();
     
-    // Process Registration Trend Data (last 30 days)
-    const last30Days = [];
-    const registrationCounts = {};
-    const today = new Date();
+    // Process Registration Trend Data (based on selected time period)
+    let trendData;
     
-    // Initialize last 30 days
-    for (let i = 29; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
-      last30Days.push(dateStr);
-      registrationCounts[dateStr] = 0;
-    }
-
-    // Count registrations per day from filtered data
-    filteredLeads.forEach(lead => {
-      if (lead.Registration_TS) {
-        const regDate = new Date(lead.Registration_TS);
-        const dateStr = regDate.toISOString().split('T')[0];
-        if (registrationCounts.hasOwnProperty(dateStr)) {
-          registrationCounts[dateStr]++;
-        }
+    // Check if we should use hourly breakdown
+    let useHourlyBreakdown = false;
+    let hourlyDays = 1;
+    
+    if ((dateRange === 'today' || dateRange === 'yesterday') && customStartDate && customEndDate) {
+      const start = new Date(customStartDate);
+      const end = new Date(customEndDate);
+      const daysDiff = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+      if (daysDiff <= 2) {
+        useHourlyBreakdown = true;
+        hourlyDays = daysDiff;
       }
-    });
-
-    const trendData = {
-      labels: last30Days.map(date => {
-        const d = new Date(date);
-        return `${d.getMonth() + 1}/${d.getDate()}`;
-      }),
-      datasets: [
-        {
-          label: 'Registrations',
-          data: last30Days.map(date => registrationCounts[date]),
-          borderColor: 'rgba(139, 92, 246, 1)',
-          backgroundColor: 'rgba(139, 92, 246, 0.1)',
-          fill: true,
-          tension: 0.4,
-          pointRadius: 3,
-          pointHoverRadius: 5,
-          pointBackgroundColor: 'rgba(139, 92, 246, 1)',
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2
+    }
+    
+    if (useHourlyBreakdown) {
+      // For single day, show all 24 hours (12 AM to 12 AM next day)
+      const hourLabels = [];
+      const registrationCounts = {};
+      
+      let startTime;
+      // Start from customStartDate at midnight
+      startTime = new Date(customStartDate);
+      startTime.setHours(0, 0, 0, 0);
+      
+      // Initialize all 24 hours (0-23)
+      for (let hour = 0; hour < 24; hour++) {
+        const hourDate = new Date(startTime);
+        hourDate.setHours(hour);
+        const hourKey = hourDate.toISOString().slice(0, 13); // YYYY-MM-DDTHH
+        hourLabels.push(hourKey);
+        registrationCounts[hourKey] = 0;
+      }
+      
+      // Count registrations per hour from date-filtered data
+      dateFilteredLeads.forEach(lead => {
+        if (lead.Registration_TS) {
+          const regDate = new Date(lead.Registration_TS);
+          const hourKey = regDate.toISOString().slice(0, 13); // YYYY-MM-DDTHH
+          if (registrationCounts.hasOwnProperty(hourKey)) {
+            registrationCounts[hourKey]++;
+          }
         }
-      ]
-    };
+      });
+      
+      trendData = {
+        labels: hourLabels.map((hourKey) => {
+          const date = new Date(hourKey);
+          const hours = date.getHours();
+          const ampm = hours >= 12 ? 'PM' : 'AM';
+          const displayHours = hours % 12 || 12;
+          
+          // Show all hours for single day view
+          return `${displayHours}${ampm}`;
+        }),
+        datasets: [
+          {
+            label: 'Registrations',
+            data: hourLabels.map(hourKey => registrationCounts[hourKey]),
+            borderColor: 'rgba(139, 92, 246, 1)',
+            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+            fill: true,
+            tension: 0.4,
+            pointRadius: 3,
+            pointHoverRadius: 5,
+            pointBackgroundColor: 'rgba(139, 92, 246, 1)',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2
+          }
+        ]
+      };
+    } else {
+      // For other time periods, show daily or monthly breakdown
+      const dateLabels = [];
+      const registrationCounts = {};
+      
+      if (!customStartDate || !customEndDate) {
+        // No date range selected (All Time), show all 12 months
+        const currentYear = new Date().getFullYear();
+        const monthlyData = {};
+        
+        // Initialize all 12 months with 0
+        for (let month = 1; month <= 12; month++) {
+          const monthKey = `${currentYear}-${String(month).padStart(2, '0')}`;
+          monthlyData[monthKey] = 0;
+        }
+        
+        // Group all leads by month (only current year)
+        dateFilteredLeads.forEach(lead => {
+          if (lead.Registration_TS) {
+            const regDate = new Date(lead.Registration_TS);
+            if (regDate.getFullYear() === currentYear) {
+              const monthKey = `${regDate.getFullYear()}-${String(regDate.getMonth() + 1).padStart(2, '0')}`;
+              if (monthlyData[monthKey] !== undefined) {
+                monthlyData[monthKey]++;
+              }
+            }
+          }
+        });
+        
+        // Get all months in order (Jan to Dec)
+        const allMonths = Object.keys(monthlyData).sort();
+        
+        trendData = {
+          labels: allMonths.map(monthKey => {
+            const [year, month] = monthKey.split('-');
+            const date = new Date(year, parseInt(month) - 1, 1);
+            return date.toLocaleString('default', { month: 'short' });
+          }),
+          datasets: [{
+            label: 'Registrations',
+            data: allMonths.map(monthKey => monthlyData[monthKey]),
+            borderColor: 'rgba(139, 92, 246, 1)',
+            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+            fill: true,
+            tension: 0.4,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            pointBackgroundColor: 'rgba(139, 92, 246, 1)',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2
+          }]
+        };
+      } else {
+        // Use customStartDate and customEndDate for all ranges
+        const start = new Date(customStartDate);
+        const end = new Date(customEndDate);
+        const daysToShow = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+        
+        // Initialize date range from start to end (inclusive)
+        for (let i = 0; i < daysToShow; i++) {
+          const date = new Date(start);
+          date.setDate(start.getDate() + i);
+          const dateStr = date.toISOString().split('T')[0];
+          dateLabels.push(dateStr);
+          registrationCounts[dateStr] = 0;
+        }
+        
+        // Count registrations per day from date-filtered data
+        dateFilteredLeads.forEach(lead => {
+          if (lead.Registration_TS) {
+            const regDate = new Date(lead.Registration_TS);
+            const dateStr = regDate.toISOString().split('T')[0];
+            if (registrationCounts.hasOwnProperty(dateStr)) {
+              registrationCounts[dateStr]++;
+            }
+          }
+        });
+
+        trendData = {
+          labels: dateLabels.map(date => {
+            const d = new Date(date);
+            return `${d.getMonth() + 1}/${d.getDate()}`;
+          }),
+          datasets: [
+            {
+              label: 'Registrations',
+              data: dateLabels.map(date => registrationCounts[date]),
+              borderColor: 'rgba(139, 92, 246, 1)',
+              backgroundColor: 'rgba(139, 92, 246, 0.1)',
+              fill: true,
+              tension: 0.4,
+              pointRadius: 3,
+              pointHoverRadius: 5,
+              pointBackgroundColor: 'rgba(139, 92, 246, 1)',
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2
+            }
+          ]
+        };
+      }
+    }
 
     setRegistrationTrendData(trendData);
 
-    // Process Lead Sources Data from filtered data
+    // Process Lead Sources Data from date-filtered data
     const sourceCounts = {};
-    filteredLeads.forEach(lead => {
+    dateFilteredLeads.forEach(lead => {
       const source = lead.Source || 'Unknown';
       sourceCounts[source] = (sourceCounts[source] || 0) + 1;
     });
@@ -478,7 +895,7 @@ const AdminDashboard = () => {
 
     setLeadSourceData(sourceData);
 
-    // Process Role Distribution Data (Donut Chart) from filtered data
+    // Process Role Distribution Data (Donut Chart) from date-filtered data
     // Always include these 4 primary roles even if count is 0
     const primaryRoles = ['Entrepreneur', 'Student', 'Faculty', 'Industry Professional'];
     const roleCounts = {};
@@ -490,7 +907,7 @@ const AdminDashboard = () => {
     
     let totalCount = 0;
     
-    filteredLeads.forEach(lead => {
+    dateFilteredLeads.forEach(lead => {
       const role = lead.Role || 'Unknown';
       roleCounts[role] = (roleCounts[role] || 0) + 1;
       totalCount++;
@@ -552,7 +969,7 @@ const AdminDashboard = () => {
       totalCount: totalCount,
       roleCounts: roleCounts
     });
-  }, [leadData, dateRange]);
+  }, [leadData, dateRange, customStartDate, customEndDate, sourceFilter, paymentFilter, searchQuery, columnFilters]);
 
   // Chart options
   const trendChartOptions = {
@@ -746,44 +1163,354 @@ const AdminDashboard = () => {
               <div style={{
                 position: 'absolute',
                 top: '100%',
-                left: 0,
-                marginTop: '0.25rem',
+                right: 0,
+                marginTop: '0.5rem',
                 backgroundColor: 'var(--surface)',
                 border: '1px solid var(--border)',
-                borderRadius: '0.5rem',
-                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)',
+                borderRadius: '0.75rem',
+                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
                 zIndex: 1000,
-                minWidth: '160px',
-                overflow: 'hidden'
+                display: 'flex',
+                minWidth: '600px'
               }}>
-                {dateRangeOptions.map((option) => (
+                {/* Left side - Quick select options */}
+                <div style={{
+                  borderRight: '1px solid var(--border)',
+                  padding: '1rem',
+                  minWidth: '160px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem'
+                }}>
                   <button
-                    key={option.value}
-                    onClick={() => handleDateRangeChange(option.value)}
+                    onClick={() => handleQuickSelect('today')}
                     style={{
-                      width: '100%',
                       padding: '0.75rem 1rem',
                       textAlign: 'left',
-                      backgroundColor: dateRange === option.value ? 'var(--primary)' : 'transparent',
+                      backgroundColor: 'transparent',
                       color: 'var(--text-primary)',
                       border: 'none',
                       cursor: 'pointer',
+                      borderRadius: '0.375rem',
+                      fontSize: '0.95rem',
                       transition: 'background-color 0.2s'
                     }}
-                    onMouseEnter={(e) => {
-                      if (dateRange !== option.value) {
-                        e.currentTarget.style.backgroundColor = 'var(--surface-light)';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (dateRange !== option.value) {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                      }
-                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--surface-light)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                   >
-                    {option.label}
+                    Today
                   </button>
-                ))}
+                  <button
+                    onClick={() => handleQuickSelect('yesterday')}
+                    style={{
+                      padding: '0.75rem 1rem',
+                      textAlign: 'left',
+                      backgroundColor: 'transparent',
+                      color: 'var(--text-primary)',
+                      border: 'none',
+                      cursor: 'pointer',
+                      borderRadius: '0.375rem',
+                      fontSize: '0.95rem',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--surface-light)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    Yesterday
+                  </button>
+                  <button
+                    onClick={() => handleQuickSelect('lastmonth')}
+                    style={{
+                      padding: '0.75rem 1rem',
+                      textAlign: 'left',
+                      backgroundColor: 'transparent',
+                      color: 'var(--text-primary)',
+                      border: 'none',
+                      cursor: 'pointer',
+                      borderRadius: '0.375rem',
+                      fontSize: '0.95rem',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--surface-light)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    Last month
+                  </button>
+                  <button
+                    onClick={() => handleQuickSelect('last7days')}
+                    style={{
+                      padding: '0.75rem 1rem',
+                      textAlign: 'left',
+                      backgroundColor: 'transparent',
+                      color: 'var(--text-primary)',
+                      border: 'none',
+                      cursor: 'pointer',
+                      borderRadius: '0.375rem',
+                      fontSize: '0.95rem',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--surface-light)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    Last 7 days
+                  </button>
+                  <button
+                    onClick={() => handleQuickSelect('last30days')}
+                    style={{
+                      padding: '0.75rem 1rem',
+                      textAlign: 'left',
+                      backgroundColor: 'transparent',
+                      color: 'var(--text-primary)',
+                      border: 'none',
+                      cursor: 'pointer',
+                      borderRadius: '0.375rem',
+                      fontSize: '0.95rem',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--surface-light)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    Last 30 days
+                  </button>
+                  <button
+                    onClick={() => handleQuickSelect('last90days')}
+                    style={{
+                      padding: '0.75rem 1rem',
+                      textAlign: 'left',
+                      backgroundColor: 'transparent',
+                      color: 'var(--text-primary)',
+                      border: 'none',
+                      cursor: 'pointer',
+                      borderRadius: '0.375rem',
+                      fontSize: '0.95rem',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--surface-light)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    Last 90 days
+                  </button>
+                  <button
+                    onClick={() => handleQuickSelect('alltime')}
+                    style={{
+                      padding: '0.75rem 1rem',
+                      textAlign: 'left',
+                      backgroundColor: 'transparent',
+                      color: 'var(--text-primary)',
+                      border: 'none',
+                      cursor: 'pointer',
+                      borderRadius: '0.375rem',
+                      fontSize: '0.95rem',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--surface-light)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    All time
+                  </button>
+                  <button
+                    onClick={handleResetCalendar}
+                    style={{
+                      padding: '0.75rem 1rem',
+                      textAlign: 'left',
+                      backgroundColor: 'transparent',
+                      color: 'rgb(59, 130, 246)',
+                      border: 'none',
+                      cursor: 'pointer',
+                      borderRadius: '0.375rem',
+                      fontSize: '0.95rem',
+                      fontWeight: '500',
+                      marginTop: 'auto',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--surface-light)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    Reset
+                  </button>
+                </div>
+
+                {/* Right side - Calendar */}
+                <div style={{ padding: '1rem', flex: 1 }}>
+                  {/* Calendar Header */}
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '1rem'
+                  }}>
+                    <div style={{
+                      fontSize: '1rem',
+                      fontWeight: '600',
+                      color: 'var(--text-primary)'
+                    }}>
+                      {calendarMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button
+                        onClick={() => {
+                          const newMonth = new Date(calendarMonth);
+                          newMonth.setMonth(newMonth.getMonth() - 1);
+                          setCalendarMonth(newMonth);
+                        }}
+                        style={{
+                          padding: '0.25rem 0.5rem',
+                          backgroundColor: 'transparent',
+                          color: 'var(--text-primary)',
+                          border: '1px solid var(--border)',
+                          borderRadius: '0.375rem',
+                          cursor: 'pointer',
+                          fontSize: '1.25rem',
+                          lineHeight: '1'
+                        }}
+                      >
+                        ‹
+                      </button>
+                      <button
+                        onClick={() => {
+                          const newMonth = new Date(calendarMonth);
+                          newMonth.setMonth(newMonth.getMonth() + 1);
+                          setCalendarMonth(newMonth);
+                        }}
+                        style={{
+                          padding: '0.25rem 0.5rem',
+                          backgroundColor: 'transparent',
+                          color: 'var(--text-primary)',
+                          border: '1px solid var(--border)',
+                          borderRadius: '0.375rem',
+                          cursor: 'pointer',
+                          fontSize: '1.25rem',
+                          lineHeight: '1'
+                        }}
+                      >
+                        ›
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Weekday Headers */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(7, 1fr)',
+                    gap: '0.25rem',
+                    marginBottom: '0.5rem'
+                  }}>
+                    {['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].map(day => (
+                      <div key={day} style={{
+                        textAlign: 'center',
+                        fontSize: '0.75rem',
+                        fontWeight: '500',
+                        color: 'var(--text-secondary)',
+                        padding: '0.5rem 0'
+                      }}>
+                        {day}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Calendar Days */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(7, 1fr)',
+                    gap: '0.25rem'
+                  }}>
+                    {(() => {
+                      const { daysInMonth, startingDayOfWeek, year, month } = getDaysInMonth(calendarMonth);
+                      const days = [];
+                      const today = new Date();
+                      
+                      // Adjust for Monday start (0 = Monday, 6 = Sunday)
+                      const adjustedStart = startingDayOfWeek === 0 ? 6 : startingDayOfWeek - 1;
+                      
+                      // Empty cells for days before month starts
+                      for (let i = 0; i < adjustedStart; i++) {
+                        days.push(<div key={`empty-${i}`} style={{ padding: '0.5rem' }}></div>);
+                      }
+                      
+                      // Days of the month
+                      for (let day = 1; day <= daysInMonth; day++) {
+                        const date = new Date(year, month, day);
+                        const isToday = date.toDateString() === today.toDateString();
+                        const inRange = isDateInRange(date);
+                        const isStart = isDateRangeStart(date);
+                        const isEnd = isDateRangeEnd(date);
+                        const isPast = date < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                        
+                        days.push(
+                          <button
+                            key={day}
+                            onClick={() => handleCalendarDateClick(date)}
+                            style={{
+                              padding: '0.5rem',
+                              textAlign: 'center',
+                              backgroundColor: (isStart || isEnd) ? 'rgb(59, 130, 246)' : 
+                                              inRange ? 'rgba(59, 130, 246, 0.2)' :
+                                              'transparent',
+                              color: (isStart || isEnd) ? 'white' : 
+                                     isPast ? 'var(--text-secondary)' : 'var(--text-primary)',
+                              border: isToday && !isStart && !isEnd ? '2px solid rgb(59, 130, 246)' : 'none',
+                              borderRadius: '50%',
+                              cursor: 'pointer',
+                              fontSize: '0.875rem',
+                              fontWeight: (isStart || isEnd) ? '600' : isToday ? '500' : '400',
+                              transition: 'all 0.2s',
+                              width: '36px',
+                              height: '36px'
+                            }}
+                            onMouseEnter={(e) => {
+                              if (!isStart && !isEnd && !inRange) {
+                                e.currentTarget.style.backgroundColor = 'var(--surface-light)';
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!isStart && !isEnd && !inRange) {
+                                e.currentTarget.style.backgroundColor = (isStart || isEnd) ? 'rgb(59, 130, 246)' : 
+                                                                        inRange ? 'rgba(59, 130, 246, 0.2)' : 'transparent';
+                              }
+                            }}
+                          >
+                            {day}
+                          </button>
+                        );
+                      }
+                      
+                      return days;
+                    })()}
+                  </div>
+                  
+                  {/* Date Selection Display */}
+                  <div style={{
+                    marginTop: '1rem',
+                    paddingTop: '1rem',
+                    borderTop: '1px solid var(--border)',
+                    display: 'flex',
+                    gap: '1.5rem',
+                    fontSize: '0.875rem'
+                  }}>
+                    <div style={{ flex: 1 }}>
+                      <span style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>From</span>
+                      <span style={{ marginLeft: '0.5rem', marginRight: '0.25rem' }}>|</span>
+                      <span style={{ color: 'var(--text-primary)', fontWeight: '500' }}>
+                        {tempStartDate ? tempStartDate.toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric', 
+                          year: 'numeric' 
+                        }) : '___'}
+                      </span>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <span style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>To</span>
+                      <span style={{ marginLeft: '0.5rem', marginRight: '0.25rem' }}>|</span>
+                      <span style={{ color: 'var(--text-primary)', fontWeight: '500' }}>
+                        {tempEndDate ? tempEndDate.toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric', 
+                          year: 'numeric' 
+                        }) : '___'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -1087,7 +1814,7 @@ const AdminDashboard = () => {
           {/* Registration Trend Chart */}
           <div className="card p-4 rounded-lg shadow-md">
             <h3 className="text-lg font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
-              Registration Trend (Last 30 Days)
+              Registration Trend ({getDateRangeLabel()})
             </h3>
             <div 
               id="registrationTrendChart" 
@@ -1144,60 +1871,18 @@ const AdminDashboard = () => {
             </div>
           </div>
         </div>
+      </section>
 
         {/* Lead Details Table Section */}
         <section className="card mt-6 p-4">
-          <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
-            Lead Details
-          </h3>
-
-          {/* Header Controls - Filters + Search */}
-          <div className="flex justify-between items-center mb-4" style={{ gap: '1rem', flexWrap: 'wrap' }}>
-            {/* Left: Filter dropdowns */}
-            <div className="flex items-center gap-3" style={{ flexWrap: 'wrap' }}>
-              <select 
-                className="form-select"
-                value={sourceFilter}
-                onChange={(e) => setSourceFilter(e.target.value)}
-                style={{
-                  padding: '0.5rem 1rem',
-                  backgroundColor: 'var(--surface)',
-                  color: 'var(--text-primary)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '0.5rem',
-                  cursor: 'pointer'
-                }}
-              >
-                <option value="all">All Sources</option>
-                {uniqueSources.map(source => (
-                  <option key={source} value={source}>{formatSourceDisplay(source)}</option>
-                ))}
-              </select>
-
-              <select 
-                className="form-select"
-                value={paymentFilter}
-                onChange={(e) => setPaymentFilter(e.target.value)}
-                style={{
-                  padding: '0.5rem 1rem',
-                  backgroundColor: 'var(--surface)',
-                  color: 'var(--text-primary)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '0.5rem',
-                  cursor: 'pointer',
-                  minWidth: '200px'
-                }}
-              >
-                <option value="all">All Payment Status</option>
-                <option value="success">Successful</option>
-                <option value="pending">Pending</option>
-                <option value="needtime">Need Time</option>
-                <option value="failed">Failed</option>
-              </select>
-            </div>
-
-            {/* Right: Search box and button */}
-            <div className="flex items-center gap-2">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+              Lead Details
+            </h3>
+            
+            {/* Right side actions - Search, Filters, Reset, Download */}
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+              {/* Search Box */}
               <input
                 type="text"
                 placeholder="Search by name, email, or mobile"
@@ -1210,25 +1895,186 @@ const AdminDashboard = () => {
                   color: 'var(--text-primary)',
                   border: '1px solid var(--border)',
                   borderRadius: '0.5rem',
-                  width: '16rem'
+                  width: '16rem',
+                  fontSize: '0.875rem'
                 }}
               />
-              <button 
-                className="btn"
-                onClick={() => setSearchQuery('')}
+              
+              {/* Advanced Filters Toggle Button */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                padding: '0.5rem 1rem',
+                backgroundColor: 'rgb(139, 92, 246)',
+                border: '1px solid rgb(139, 92, 246)',
+                borderRadius: '0.5rem',
+                fontSize: '0.875rem',
+                fontWeight: '500',
+                color: 'white',
+                boxShadow: '0 2px 8px rgba(139, 92, 246, 0.4)'
+              }}>
+                <span>Advanced Filters</span>
+                
+                {/* Toggle Switch */}
+                <div
+                  onClick={() => setShowAdvancedSelection(!showAdvancedSelection)}
+                  style={{
+                    position: 'relative',
+                    width: '48px',
+                    height: '24px',
+                    backgroundColor: showAdvancedSelection ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.2)',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.3s',
+                    border: '2px solid rgba(255, 255, 255, 0.3)'
+                  }}
+                >
+                  <div style={{
+                    position: 'absolute',
+                    top: '2px',
+                    left: showAdvancedSelection ? '24px' : '2px',
+                    width: '16px',
+                    height: '16px',
+                    backgroundColor: 'white',
+                    borderRadius: '50%',
+                    transition: 'left 0.3s',
+                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+                  }} />
+                </div>
+              </div>
+              
+              {/* Reset Filters Button */}
+              <button
+                onClick={resetColumnFilters}
                 style={{
                   padding: '0.5rem 1rem',
-                  backgroundColor: 'var(--primary)',
-                  color: 'var(--text-primary)',
+                  backgroundColor: 'var(--warning)',
+                  color: 'white',
                   border: 'none',
                   borderRadius: '0.5rem',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  transition: 'all 0.2s'
                 }}
+                title="Reset all filters"
               >
-                Clear
+                Reset Filters
+              </button>
+              
+              {/* Download CSV Button */}
+              <button
+                onClick={downloadCSV}
+                style={{
+                  padding: '0.5rem 1rem',
+                  backgroundColor: 'var(--success)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '0.5rem',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  transition: 'all 0.2s'
+                }}
+                title="Download filtered data as CSV"
+              >
+                Download CSV
               </button>
             </div>
           </div>
+
+          {/* Advanced Filters Panel */}
+          {showAdvancedSelection && (
+            <div style={{
+              padding: '1.25rem',
+              backgroundColor: 'var(--surface)',
+              border: '1px solid var(--border)',
+              borderRadius: '0.5rem',
+              marginBottom: '1rem'
+            }}>
+              <h4 style={{ 
+                fontSize: '0.95rem', 
+                fontWeight: '600', 
+                color: 'var(--text-primary)',
+                marginBottom: '1rem'
+              }}>
+                Column Selection
+              </h4>
+              
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
+                gap: '0.75rem' 
+              }}>
+                {Object.keys(visibleColumns).map(column => {
+                  return (
+                    <div 
+                      key={column}
+                      style={{ 
+                        padding: '0.5rem 0.75rem',
+                        backgroundColor: visibleColumns[column] ? 'rgba(59, 130, 246, 0.08)' : 'var(--surface-light)',
+                        borderRadius: '0.375rem',
+                        border: visibleColumns[column] ? '1px solid rgba(59, 130, 246, 0.2)' : '1px solid var(--border)',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <label style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '0.5rem',
+                        cursor: 'pointer'
+                      }}>
+                        <input
+                          type="checkbox"
+                          checked={visibleColumns[column]}
+                          onChange={() => toggleColumn(column)}
+                          style={{ cursor: 'pointer' }}
+                        />
+                        <span style={{ 
+                          fontSize: '0.875rem', 
+                          color: 'var(--text-primary)',
+                          fontWeight: '500'
+                        }}>
+                          {column}
+                        </span>
+                      </label>
+                    </div>
+                  );
+                })}
+                
+                {/* Show All Columns Button - Last item in grid */}
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  padding: '0.5rem 0.75rem'
+                }}>
+                  <button
+                    onClick={() => {
+                      const allVisible = {};
+                      Object.keys(visibleColumns).forEach(col => allVisible[col] = true);
+                      setVisibleColumns(allVisible);
+                    }}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      fontSize: '0.875rem',
+                      backgroundColor: 'rgb(139, 92, 246)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '0.375rem',
+                      cursor: 'pointer',
+                      fontWeight: '500',
+                      width: '100%',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    Show All Columns
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Results count */}
           <div style={{ 
@@ -1252,165 +2098,398 @@ const AdminDashboard = () => {
               }}
             >
               <thead style={{ backgroundColor: 'var(--surface-light)' }}>
+                {/* Header Row - Column Names with Sort */}
                 <tr>
-                  <th 
-                    className="cursor-pointer"
-                    onClick={() => handleSort('Name')}
-                    style={{
-                      padding: '0.75rem',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      color: 'var(--text-primary)',
-                      borderBottom: '1px solid var(--border)',
-                      cursor: 'pointer',
-                      userSelect: 'none'
-                    }}
-                  >
-                    Name {sortConfig.key === 'Name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                  </th>
-                  <th 
-                    className="cursor-pointer"
-                    onClick={() => handleSort('Mobile')}
-                    style={{
-                      padding: '0.75rem',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      color: 'var(--text-primary)',
-                      borderBottom: '1px solid var(--border)',
-                      cursor: 'pointer',
-                      userSelect: 'none'
-                    }}
-                  >
-                    Mobile {sortConfig.key === 'Mobile' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                  </th>
-                  <th 
-                    className="cursor-pointer"
-                    onClick={() => handleSort('Email')}
-                    style={{
-                      padding: '0.75rem',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      color: 'var(--text-primary)',
-                      borderBottom: '1px solid var(--border)',
-                      cursor: 'pointer',
-                      userSelect: 'none'
-                    }}
-                  >
-                    Email {sortConfig.key === 'Email' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                  </th>
-                  <th 
-                    className="cursor-pointer"
-                    onClick={() => handleSort('Role')}
-                    style={{
-                      padding: '0.75rem',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      color: 'var(--text-primary)',
-                      borderBottom: '1px solid var(--border)',
-                      cursor: 'pointer',
-                      userSelect: 'none'
-                    }}
-                  >
-                    Role {sortConfig.key === 'Role' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                  </th>
-                  <th 
-                    className="cursor-pointer"
-                    onClick={() => handleSort('Source')}
-                    style={{
-                      padding: '0.75rem',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      color: 'var(--text-primary)',
-                      borderBottom: '1px solid var(--border)',
-                      cursor: 'pointer',
-                      userSelect: 'none'
-                    }}
-                  >
-                    Source {sortConfig.key === 'Source' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                  </th>
-                  <th 
-                    className="cursor-pointer"
-                    onClick={() => handleSort('Registration_TS')}
-                    style={{
-                      padding: '0.75rem',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      color: 'var(--text-primary)',
-                      borderBottom: '1px solid var(--border)',
-                      cursor: 'pointer',
-                      userSelect: 'none'
-                    }}
-                  >
-                    Registered {sortConfig.key === 'Registration_TS' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                  </th>
-                  <th 
-                    className="cursor-pointer"
-                    onClick={() => handleSort('Payment Status')}
-                    style={{
-                      padding: '0.75rem',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      color: 'var(--text-primary)',
-                      borderBottom: '1px solid var(--border)',
-                      cursor: 'pointer',
-                      userSelect: 'none'
-                    }}
-                  >
-                    Payment Status {sortConfig.key === 'Payment Status' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                  </th>
-                  <th 
-                    className="cursor-pointer"
-                    onClick={() => handleSort('CouponCode')}
-                    style={{
-                      padding: '0.75rem',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      color: 'var(--text-primary)',
-                      borderBottom: '1px solid var(--border)',
-                      cursor: 'pointer',
-                      userSelect: 'none'
-                    }}
-                  >
-                    Coupon Code {sortConfig.key === 'CouponCode' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                  </th>
-                  <th 
-                    className="cursor-pointer"
-                    onClick={() => handleSort('Nuturing')}
-                    style={{
-                      padding: '0.75rem',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      color: 'var(--text-primary)',
-                      borderBottom: '1px solid var(--border)',
-                      cursor: 'pointer',
-                      userSelect: 'none'
-                    }}
-                  >
-                    Nurturing {sortConfig.key === 'Nuturing' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                  </th>
-                  <th 
-                    className="cursor-pointer"
-                    onClick={() => handleSort('Interest')}
-                    style={{
-                      padding: '0.75rem',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      color: 'var(--text-primary)',
-                      borderBottom: '1px solid var(--border)',
-                      cursor: 'pointer',
-                      userSelect: 'none'
-                    }}
-                  >
-                    Interest {sortConfig.key === 'Interest' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                  </th>
+                  {visibleColumns.Name && (
+                    <th 
+                      className="cursor-pointer"
+                      onClick={() => handleSort('Name')}
+                      style={{
+                        padding: '0.75rem',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: 'var(--text-primary)',
+                        borderBottom: '1px solid var(--border)',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                    >
+                      Name {sortConfig.key === 'Name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </th>
+                  )}
+                  {visibleColumns.Mobile && (
+                    <th 
+                      className="cursor-pointer"
+                      onClick={() => handleSort('Mobile')}
+                      style={{
+                        padding: '0.75rem',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: 'var(--text-primary)',
+                        borderBottom: '1px solid var(--border)',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                    >
+                      Mobile {sortConfig.key === 'Mobile' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </th>
+                  )}
+                  {visibleColumns.Email && (
+                    <th 
+                      className="cursor-pointer"
+                      onClick={() => handleSort('Email')}
+                      style={{
+                        padding: '0.75rem',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: 'var(--text-primary)',
+                        borderBottom: '1px solid var(--border)',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                    >
+                      Email {sortConfig.key === 'Email' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </th>
+                  )}
+                  {visibleColumns.Role && (
+                    <th 
+                      className="cursor-pointer"
+                      onClick={() => handleSort('Role')}
+                      style={{
+                        padding: '0.75rem',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: 'var(--text-primary)',
+                        borderBottom: '1px solid var(--border)',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                    >
+                      Role {sortConfig.key === 'Role' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </th>
+                  )}
+                  {visibleColumns.Source && (
+                    <th 
+                      className="cursor-pointer"
+                      onClick={() => handleSort('Source')}
+                      style={{
+                        padding: '0.75rem',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: 'var(--text-primary)',
+                        borderBottom: '1px solid var(--border)',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                    >
+                      Source {sortConfig.key === 'Source' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </th>
+                  )}
+                  {visibleColumns.Registration_TS && (
+                    <th 
+                      className="cursor-pointer"
+                      onClick={() => handleSort('Registration_TS')}
+                      style={{
+                        padding: '0.75rem',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: 'var(--text-primary)',
+                        borderBottom: '1px solid var(--border)',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                    >
+                      Registered {sortConfig.key === 'Registration_TS' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </th>
+                  )}
+                  {visibleColumns['Payment Status'] && (
+                    <th 
+                      className="cursor-pointer"
+                      onClick={() => handleSort('Payment Status')}
+                      style={{
+                        padding: '0.75rem',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: 'var(--text-primary)',
+                        borderBottom: '1px solid var(--border)',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                    >
+                      Payment Status {sortConfig.key === 'Payment Status' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </th>
+                  )}
+                  {visibleColumns.CouponCode && (
+                    <th 
+                      className="cursor-pointer"
+                      onClick={() => handleSort('CouponCode')}
+                      style={{
+                        padding: '0.75rem',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: 'var(--text-primary)',
+                        borderBottom: '1px solid var(--border)',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                    >
+                      Coupon Code {sortConfig.key === 'CouponCode' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </th>
+                  )}
+                  {visibleColumns.Nuturing && (
+                    <th 
+                      className="cursor-pointer"
+                      onClick={() => handleSort('Nuturing')}
+                      style={{
+                        padding: '0.75rem',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: 'var(--text-primary)',
+                        borderBottom: '1px solid var(--border)',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                    >
+                      Nurturing {sortConfig.key === 'Nuturing' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </th>
+                  )}
+                  {visibleColumns.Interest && (
+                    <th 
+                      className="cursor-pointer"
+                      onClick={() => handleSort('Interest')}
+                      style={{
+                        padding: '0.75rem',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: 'var(--text-primary)',
+                        borderBottom: '1px solid var(--border)',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                    >
+                      Interest {sortConfig.key === 'Interest' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </th>
+                  )}
                 </tr>
+                
+                {/* Filter Row - Dropdowns for each column (Only shown when Advanced Filters is active) */}
+                {showAdvancedSelection && (
+                  <tr>
+                    {visibleColumns.Name && (
+                      <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
+                        {/* No filter for Name - use search instead */}
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                          Use search
+                        </div>
+                      </th>
+                    )}
+                    {visibleColumns.Mobile && (
+                    <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
+                      {/* No filter for Mobile - use search instead */}
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                        Use search
+                      </div>
+                    </th>
+                  )}
+                  {visibleColumns.Email && (
+                    <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
+                      {/* No filter for Email - use search instead */}
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                        Use search
+                      </div>
+                    </th>
+                  )}
+                  {visibleColumns.Role && (
+                    <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
+                      <select
+                        value={columnFilters.Role || 'all'}
+                        onChange={(e) => handleColumnFilter('Role', e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          width: '100%',
+                          padding: '0.375rem 0.5rem',
+                          backgroundColor: 'var(--surface)',
+                          color: 'var(--text-primary)',
+                          border: '1px solid var(--border)',
+                          borderRadius: '0.25rem',
+                          fontSize: '0.75rem',
+                          cursor: 'pointer',
+                          outline: 'none'
+                        }}
+                      >
+                        <option value="all">All</option>
+                        {getUniqueValuesForColumn('Role').map(value => (
+                          <option key={value} value={value}>{value}</option>
+                        ))}
+                      </select>
+                    </th>
+                  )}
+                  {visibleColumns.Source && (
+                    <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
+                      <select
+                        value={columnFilters.Source || 'all'}
+                        onChange={(e) => handleColumnFilter('Source', e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          width: '100%',
+                          padding: '0.375rem 0.5rem',
+                          backgroundColor: 'var(--surface)',
+                          color: 'var(--text-primary)',
+                          border: '1px solid var(--border)',
+                          borderRadius: '0.25rem',
+                          fontSize: '0.75rem',
+                          cursor: 'pointer',
+                          outline: 'none'
+                        }}
+                      >
+                        <option value="all">All</option>
+                        {getUniqueValuesForColumn('Source').map(value => (
+                          <option key={value} value={value}>{value}</option>
+                        ))}
+                      </select>
+                    </th>
+                  )}
+                  {visibleColumns.Registration_TS && (
+                    <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
+                      <select
+                        value={columnFilters.Registration_TS || 'all'}
+                        onChange={(e) => handleColumnFilter('Registration_TS', e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          width: '100%',
+                          padding: '0.375rem 0.5rem',
+                          backgroundColor: 'var(--surface)',
+                          color: 'var(--text-primary)',
+                          border: '1px solid var(--border)',
+                          borderRadius: '0.25rem',
+                          fontSize: '0.75rem',
+                          cursor: 'pointer',
+                          outline: 'none'
+                        }}
+                      >
+                        <option value="all">All Dates</option>
+                        {getUniqueValuesForColumn('Registration_TS').map(value => {
+                          const displayDate = new Date(value + 'T00:00:00').toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          });
+                          return (
+                            <option key={value} value={value}>{displayDate}</option>
+                          );
+                        })}
+                      </select>
+                    </th>
+                  )}
+                  {visibleColumns['Payment Status'] && (
+                    <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
+                      <select
+                        value={columnFilters['Payment Status'] || 'all'}
+                        onChange={(e) => handleColumnFilter('Payment Status', e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          width: '100%',
+                          padding: '0.375rem 0.5rem',
+                          backgroundColor: 'var(--surface)',
+                          color: 'var(--text-primary)',
+                          border: '1px solid var(--border)',
+                          borderRadius: '0.25rem',
+                          fontSize: '0.75rem',
+                          cursor: 'pointer',
+                          outline: 'none'
+                        }}
+                      >
+                        <option value="all">All</option>
+                        {getUniqueValuesForColumn('Payment Status').map(value => (
+                          <option key={value} value={value}>{value}</option>
+                        ))}
+                      </select>
+                    </th>
+                  )}
+                  {visibleColumns.CouponCode && (
+                    <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
+                      <select
+                        value={columnFilters.CouponCode || 'all'}
+                        onChange={(e) => handleColumnFilter('CouponCode', e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          width: '100%',
+                          padding: '0.375rem 0.5rem',
+                          backgroundColor: 'var(--surface)',
+                          color: 'var(--text-primary)',
+                          border: '1px solid var(--border)',
+                          borderRadius: '0.25rem',
+                          fontSize: '0.75rem',
+                          cursor: 'pointer',
+                          outline: 'none'
+                        }}
+                      >
+                        <option value="all">All</option>
+                        {getUniqueValuesForColumn('CouponCode').map(value => (
+                          <option key={value} value={value}>{value}</option>
+                        ))}
+                      </select>
+                    </th>
+                  )}
+                  {visibleColumns.Nuturing && (
+                    <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
+                      <select
+                        value={columnFilters.Nuturing || 'all'}
+                        onChange={(e) => handleColumnFilter('Nuturing', e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          width: '100%',
+                          padding: '0.375rem 0.5rem',
+                          backgroundColor: 'var(--surface)',
+                          color: 'var(--text-primary)',
+                          border: '1px solid var(--border)',
+                          borderRadius: '0.25rem',
+                          fontSize: '0.75rem',
+                          cursor: 'pointer',
+                          outline: 'none'
+                        }}
+                      >
+                        <option value="all">All</option>
+                        {getUniqueValuesForColumn('Nuturing').map(value => (
+                          <option key={value} value={value}>{value}</option>
+                        ))}
+                      </select>
+                    </th>
+                  )}
+                  {visibleColumns.Interest && (
+                    <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
+                      <select
+                        value={columnFilters.Interest || 'all'}
+                        onChange={(e) => handleColumnFilter('Interest', e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          width: '100%',
+                          padding: '0.375rem 0.5rem',
+                          backgroundColor: 'var(--surface)',
+                          color: 'var(--text-primary)',
+                          border: '1px solid var(--border)',
+                          borderRadius: '0.25rem',
+                          fontSize: '0.75rem',
+                          cursor: 'pointer',
+                          outline: 'none'
+                        }}
+                      >
+                        <option value="all">All</option>
+                        {getUniqueValuesForColumn('Interest').map(value => (
+                          <option key={value} value={value}>{value}</option>
+                        ))}
+                      </select>
+                    </th>
+                  )}
+                  </tr>
+                )}
               </thead>
 
               <tbody>
                 {currentLeads.length === 0 ? (
                   <tr>
                     <td 
-                      colSpan="9" 
+                      colSpan={Object.values(visibleColumns).filter(Boolean).length} 
                       style={{
                         padding: '2rem',
                         textAlign: 'center',
@@ -1435,55 +2514,75 @@ const AdminDashboard = () => {
                         e.currentTarget.style.backgroundColor = 'transparent';
                       }}
                     >
-                      <td style={{ padding: '0.75rem', color: 'var(--text-primary)' }}>
-                        {lead.Name || '-'}
-                      </td>
-                      <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                        {lead.Mobile || lead.Phone || '-'}
-                      </td>
-                      <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                        {lead.Email || '-'}
-                      </td>
-                      <td style={{ padding: '0.75rem', color: 'var(--text-primary)' }}>
-                        {lead.Role || '-'}
-                      </td>
-                      <td style={{ padding: '0.75rem', color: 'var(--text-primary)' }}>
-                        {formatSourceDisplay(lead.Source)}
-                      </td>
-                      <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                        {lead.Registration_TS ? new Date(lead.Registration_TS).toLocaleDateString() : '-'}
-                      </td>
-                      <td style={{ padding: '0.75rem' }}>
-                        <span 
-                          className={`badge ${getPaymentBadgeClass(lead['Payment Status'])}`}
-                          style={{
-                            display: 'inline-block',
-                            padding: '0.35rem 1rem',
-                            borderRadius: '9999px',
-                            fontSize: '0.75rem',
-                            fontWeight: '600',
-                            minWidth: '85px',
-                            textAlign: 'center',
-                            backgroundColor: getPaymentBadgeClass(lead['Payment Status']) === 'badge-success' ? 'var(--success)' :
-                                           getPaymentBadgeClass(lead['Payment Status']) === 'badge-warning' ? 'var(--warning)' :
-                                           getPaymentBadgeClass(lead['Payment Status']) === 'badge-error' ? 'var(--error)' : 'var(--surface-light)',
-                            color: getPaymentBadgeClass(lead['Payment Status']) === 'badge-success' || 
-                                   getPaymentBadgeClass(lead['Payment Status']) === 'badge-error' || 
-                                   getPaymentBadgeClass(lead['Payment Status']) === 'badge-warning' ? '#ffffff' : 'var(--text-secondary)'
-                          }}
-                        >
-                          {getPaymentStatusDisplay(lead['Payment Status'])}
-                        </span>
-                      </td>
-                      <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                        {lead.CouponCode || '-'}
-                      </td>
-                      <td style={{ padding: '0.75rem', color: 'var(--text-primary)' }}>
-                        {lead.Nuturing || '-'}
-                      </td>
-                      <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                        {lead.Interest || '-'}
-                      </td>
+                      {visibleColumns.Name && (
+                        <td style={{ padding: '0.75rem', color: 'var(--text-primary)' }}>
+                          {lead.Name || '-'}
+                        </td>
+                      )}
+                      {visibleColumns.Mobile && (
+                        <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                          {lead.Mobile || lead.Phone || '-'}
+                        </td>
+                      )}
+                      {visibleColumns.Email && (
+                        <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                          {lead.Email || '-'}
+                        </td>
+                      )}
+                      {visibleColumns.Role && (
+                        <td style={{ padding: '0.75rem', color: 'var(--text-primary)' }}>
+                          {lead.Role || '-'}
+                        </td>
+                      )}
+                      {visibleColumns.Source && (
+                        <td style={{ padding: '0.75rem', color: 'var(--text-primary)' }}>
+                          {formatSourceDisplay(lead.Source)}
+                        </td>
+                      )}
+                      {visibleColumns.Registration_TS && (
+                        <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                          {lead.Registration_TS ? new Date(lead.Registration_TS).toLocaleDateString() : '-'}
+                        </td>
+                      )}
+                      {visibleColumns['Payment Status'] && (
+                        <td style={{ padding: '0.75rem' }}>
+                          <span 
+                            className={`badge ${getPaymentBadgeClass(lead['Payment Status'])}`}
+                            style={{
+                              display: 'inline-block',
+                              padding: '0.35rem 1rem',
+                              borderRadius: '9999px',
+                              fontSize: '0.75rem',
+                              fontWeight: '600',
+                              minWidth: '85px',
+                              textAlign: 'center',
+                              backgroundColor: getPaymentBadgeClass(lead['Payment Status']) === 'badge-success' ? 'var(--success)' :
+                                             getPaymentBadgeClass(lead['Payment Status']) === 'badge-warning' ? 'var(--warning)' :
+                                             getPaymentBadgeClass(lead['Payment Status']) === 'badge-error' ? 'var(--error)' : 'var(--surface-light)',
+                              color: getPaymentBadgeClass(lead['Payment Status']) === 'badge-success' || 
+                                     getPaymentBadgeClass(lead['Payment Status']) === 'badge-error' || 
+                                     getPaymentBadgeClass(lead['Payment Status']) === 'badge-warning' ? '#ffffff' : 'var(--text-secondary)'
+                            }}
+                          >
+                            {getPaymentStatusDisplay(lead['Payment Status'])}
+                          </span>
+                        </td>
+                      )}
+                      {visibleColumns.CouponCode && (
+                        <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                          {lead.CouponCode || '-'}
+                        </td>
+                      )}
+                      {visibleColumns.Nuturing && (
+                        <td style={{ padding: '0.75rem', color: 'var(--text-primary)' }}>
+                          {lead.Nuturing || '-'}
+                        </td>
+                      )}
+                      {visibleColumns.Interest && (
+                        <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                          {lead.Interest || '-'}
+                        </td>
+                      )}
                     </tr>
                   ))
                 )}
@@ -1584,7 +2683,6 @@ const AdminDashboard = () => {
             </div>
           )}
         </section>
-      </section>
     </div>
   );
 };

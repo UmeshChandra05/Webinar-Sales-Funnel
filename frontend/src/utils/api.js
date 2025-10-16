@@ -100,7 +100,7 @@ class ApiClient {
         name: userData.name,
         email: userData.email,
         password: userData.password,
-        mobile: userData.mobile || "",
+        mobile: userData.mobile || "NA",
         role: userData.role || "",
         rememberMe: userData.rememberMe || false,
       }),
