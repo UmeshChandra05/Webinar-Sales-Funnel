@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { fetchSheetData, fetchContactsData } from '../services/googleSheetsService';
 import {
   Chart as ChartJS,
@@ -249,11 +249,28 @@ const AdminDashboard = () => {
 
   const getDateRangeLabel = () => {
     if (dateRange === 'custom' && customStartDate && customEndDate) {
-      const start = new Date(customStartDate);
-      const end = new Date(customEndDate);
-      return `${start.getDate()} ${start.toLocaleString('default', { month: 'short' })} ${start.getFullYear().toString().slice(-2)} - ${end.getDate()} ${end.toLocaleString('default', { month: 'short' })} ${end.getFullYear().toString().slice(-2)}`;
+      // Parse dates properly to avoid timezone issues
+      const [startYear, startMonth, startDay] = customStartDate.split('-').map(Number);
+      const [endYear, endMonth, endDay] = customEndDate.split('-').map(Number);
+      
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      
+      // If same date, show only once
+      if (customStartDate === customEndDate) {
+        return `${startDay} ${monthNames[startMonth - 1]} ${startYear.toString().slice(-2)}`;
+      }
+      
+      return `${startDay} ${monthNames[startMonth - 1]} ${startYear.toString().slice(-2)} - ${endDay} ${monthNames[endMonth - 1]} ${endYear.toString().slice(-2)}`;
     }
     return dateRangeLabel;
+  };
+
+  // Helper function to convert Date to local YYYY-MM-DD string (no timezone conversion)
+  const dateToLocalString = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   // Calendar helper functions
@@ -333,8 +350,8 @@ const AdminDashboard = () => {
     
     setDateRange(range);
     setDateRangeLabel(label);
-    setCustomStartDate(start.toISOString().split('T')[0]);
-    setCustomEndDate(end.toISOString().split('T')[0]);
+    setCustomStartDate(dateToLocalString(start));
+    setCustomEndDate(dateToLocalString(end));
     setTempStartDate(start);
     setTempEndDate(end);
     setShowDropdown(false);
@@ -363,8 +380,8 @@ const AdminDashboard = () => {
       setTempEndDate(finalEnd);
       
       // Apply the selection (both dates are inclusive)
-      setCustomStartDate(finalStart.toISOString().split('T')[0]);
-      setCustomEndDate(finalEnd.toISOString().split('T')[0]);
+      setCustomStartDate(dateToLocalString(finalStart));
+      setCustomEndDate(dateToLocalString(finalEnd));
       setDateRange('custom');
       setDateRangeLabel('Custom Range');
       setShowDropdown(false);
@@ -398,6 +415,21 @@ const AdminDashboard = () => {
   // Filter and search leads
   useEffect(() => {
     let filtered = [...leadData];
+
+    // Apply date range filter first
+    if (dateRange !== 'alltime' && customStartDate && customEndDate) {
+      const startDate = new Date(customStartDate);
+      startDate.setHours(0, 0, 0, 0); // Start of day
+      
+      const endDate = new Date(customEndDate);
+      endDate.setHours(23, 59, 59, 999); // End of day (inclusive)
+      
+      filtered = filtered.filter(lead => {
+        if (!lead.Registration_TS) return false;
+        const regDate = new Date(lead.Registration_TS);
+        return !isNaN(regDate.getTime()) && regDate >= startDate && regDate <= endDate;
+      });
+    }
 
     // Apply source filter
     if (sourceFilter !== 'all') {
@@ -464,7 +496,7 @@ const AdminDashboard = () => {
 
     setFilteredLeads(filtered);
     setCurrentPage(1); // Reset to first page on filter change
-  }, [leadData, sourceFilter, paymentFilter, searchQuery, columnFilters]);
+  }, [leadData, dateRange, customStartDate, customEndDate, sourceFilter, paymentFilter, searchQuery, columnFilters]);
 
   // Sorting function
   const handleSort = (key) => {
@@ -553,6 +585,7 @@ const AdminDashboard = () => {
       resetFilters[col] = 'all';
     });
     setColumnFilters(resetFilters);
+    setShowAdvancedSelection(false); // Turn off advanced filters panel
   };
 
   // Download CSV function
@@ -662,6 +695,80 @@ const AdminDashboard = () => {
     });
   };
 
+  // Calculate dashboard metrics from date-filtered leads
+  const dateFilteredMetrics = useMemo(() => {
+    const dateFilteredLeads = getFilteredLeadData();
+    
+    // Calculate total leads
+    const totalLeads = dateFilteredLeads.length;
+    
+    // Calculate total revenue from successful payments
+    const totalRevenue = dateFilteredLeads.reduce((sum, lead) => {
+      const status = (lead['Payment Status'] || '').toLowerCase().trim();
+      const isSuccess = status === 'success' || status === 'successful' || status === 'paid' || status === 'completed';
+      if (isSuccess) {
+        // Try different possible field names for amount
+        let amountValue = lead['Amount'] || lead['Paid Amount'] || lead['PayableAmount'] || 
+                         lead['Payable Amount'] || lead['Revenue'] || lead['Price'] || '0';
+        
+        // Clean amount string - remove currency symbols, commas, and whitespace
+        const amountStr = String(amountValue).replace(/[₹$,\s]/g, '');
+        const amount = parseFloat(amountStr) || 0;
+        return sum + (isNaN(amount) ? 0 : amount);
+      }
+      return sum;
+    }, 0);
+    
+    // Calculate conversion rate (successful payments / total leads * 100)
+    const successfulPayments = dateFilteredLeads.filter(lead => {
+      const status = (lead['Payment Status'] || '').toLowerCase().trim();
+      return status === 'success' || status === 'successful' || status === 'paid' || status === 'completed';
+    }).length;
+    const conversionRate = totalLeads > 0 ? ((successfulPayments / totalLeads) * 100).toFixed(1) : 0;
+    
+    // Calculate engagement - percentage of interested leads
+    // (leads who have shown interest in the webinar)
+    const interestedLeads = dateFilteredLeads.filter(lead => {
+      const interest = (lead['Interest'] || '').toLowerCase().trim();
+      // Count leads marked as interested (not empty and not 'no' or 'not interested')
+      return interest !== '' && interest !== 'no' && interest !== 'not interested';
+    }).length;
+    const engagement = totalLeads > 0 ? ((interestedLeads / totalLeads) * 100).toFixed(1) : 0;
+    
+    // Calculate payment stats
+    const paymentStats = {
+      successful: dateFilteredLeads.filter(lead => {
+        const status = (lead['Payment Status'] || '').toLowerCase().trim();
+        return status === 'success' || status === 'successful' || status === 'paid' || status === 'completed';
+      }).length,
+      pending: dateFilteredLeads.filter(lead => {
+        const status = (lead['Payment Status'] || '').toLowerCase().trim();
+        return status === '' || status === 'pending' || status === 'processing';
+      }).length,
+      failed: dateFilteredLeads.filter(lead => {
+        const status = (lead['Payment Status'] || '').toLowerCase().trim();
+        return status === 'failed' || status === 'failure' || status === 'declined';
+      }).length
+    };
+    
+    // Calculate funnel stats
+    const funnel = {
+      leads: totalLeads,
+      registered: totalLeads, // All leads are registered
+      paid: successfulPayments,
+      completed: successfulPayments // Same as paid for now
+    };
+    
+    return {
+      totalLeads,
+      totalRevenue: totalRevenue.toFixed(2),
+      conversionRate,
+      engagement,
+      paymentStats,
+      funnel
+    };
+  }, [leadData, dateRange, customStartDate, customEndDate]);
+
   // Process chart data when filtered data changes
   useEffect(() => {
     if (leadData.length === 0) return;
@@ -672,23 +779,25 @@ const AdminDashboard = () => {
     // Process Registration Trend Data (based on selected time period)
     let trendData;
     
-    // Check if we should use hourly breakdown
+    // Check if we should use hourly breakdown (single day = 24 hours)
     let useHourlyBreakdown = false;
-    let hourlyDays = 1;
     
-    if ((dateRange === 'today' || dateRange === 'yesterday') && customStartDate && customEndDate) {
+    if (customStartDate && customEndDate) {
       const start = new Date(customStartDate);
       const end = new Date(customEndDate);
-      const daysDiff = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
-      if (daysDiff <= 2) {
+      start.setHours(0, 0, 0, 0);
+      end.setHours(0, 0, 0, 0);
+      const daysDiff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+      
+      // Use hourly breakdown for single day selections
+      if (daysDiff === 0) {
         useHourlyBreakdown = true;
-        hourlyDays = daysDiff;
       }
     }
     
     if (useHourlyBreakdown) {
       // For single day, show all 24 hours (12 AM to 12 AM next day)
-      const hourLabels = [];
+      const hourlyData = [];
       const registrationCounts = {};
       
       let startTime;
@@ -699,9 +808,9 @@ const AdminDashboard = () => {
       // Initialize all 24 hours (0-23)
       for (let hour = 0; hour < 24; hour++) {
         const hourDate = new Date(startTime);
-        hourDate.setHours(hour);
+        hourDate.setHours(hour, 0, 0, 0);
         const hourKey = hourDate.toISOString().slice(0, 13); // YYYY-MM-DDTHH
-        hourLabels.push(hourKey);
+        hourlyData.push({ hour, hourKey, hourDate });
         registrationCounts[hourKey] = 0;
       }
       
@@ -717,9 +826,8 @@ const AdminDashboard = () => {
       });
       
       trendData = {
-        labels: hourLabels.map((hourKey) => {
-          const date = new Date(hourKey);
-          const hours = date.getHours();
+        labels: hourlyData.map((item) => {
+          const hours = item.hour;
           const ampm = hours >= 12 ? 'PM' : 'AM';
           const displayHours = hours % 12 || 12;
           
@@ -729,7 +837,7 @@ const AdminDashboard = () => {
         datasets: [
           {
             label: 'Registrations',
-            data: hourLabels.map(hourKey => registrationCounts[hourKey]),
+            data: hourlyData.map(item => registrationCounts[item.hourKey]),
             borderColor: 'rgba(139, 92, 246, 1)',
             backgroundColor: 'rgba(139, 92, 246, 0.1)',
             fill: true,
@@ -1659,9 +1767,9 @@ const AdminDashboard = () => {
               <span style={{ flex: '1', backgroundColor: 'var(--error)' }}></span>
             </div>
             <div className="flex justify-between" style={{ fontSize: '0.875rem', marginTop: '0.5rem', color: 'var(--text-secondary)' }}>
-              <span>✓ Successful: {dashboardData.paymentStats.successful}</span>
-              <span>⏳ Pending: {dashboardData.paymentStats.pending}</span>
-              <span>✗ Failed: {dashboardData.paymentStats.failed}</span>
+              <span>✓ Successful: {dateFilteredMetrics.paymentStats.successful}</span>
+              <span>⏳ Pending: {dateFilteredMetrics.paymentStats.pending}</span>
+              <span>✗ Failed: {dateFilteredMetrics.paymentStats.failed}</span>
             </div>
           </section>
 
@@ -1756,25 +1864,25 @@ const AdminDashboard = () => {
               <div className="card" style={{ backgroundColor: 'var(--surface-light)', padding: '1.5rem', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderRadius: '0.5rem' }}>
                 <h3 style={{ fontWeight: '500', color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '0.75rem' }}>Total Revenue</h3>
                 <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--text-primary)', margin: '0' }}>
-                  ₹{dashboardData.totalRevenue}
+                  ₹{dateFilteredMetrics.totalRevenue}
                 </p>
               </div>
               <div className="card" style={{ backgroundColor: 'var(--surface-light)', padding: '1.5rem', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderRadius: '0.5rem' }}>
                 <h3 style={{ fontWeight: '500', color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '0.75rem' }}>Total Leads</h3>
                 <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--text-primary)', margin: '0' }}>
-                  {dashboardData.totalLeads}
+                  {dateFilteredMetrics.totalLeads}
                 </p>
               </div>
               <div className="card" style={{ backgroundColor: 'var(--surface-light)', padding: '1.5rem', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderRadius: '0.5rem' }}>
                 <h3 style={{ fontWeight: '500', color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '0.75rem' }}>Conversion Rate</h3>
                 <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--text-primary)', margin: '0' }}>
-                  {dashboardData.conversionRate}%
+                  {dateFilteredMetrics.conversionRate}%
                 </p>
               </div>
               <div className="card" style={{ backgroundColor: 'var(--surface-light)', padding: '1.5rem', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderRadius: '0.5rem' }}>
                 <h3 style={{ fontWeight: '500', color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '0.75rem' }}>Engagement</h3>
                 <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--text-primary)', margin: '0' }}>
-                  {dashboardData.engagement}%
+                  {dateFilteredMetrics.engagement}%
                 </p>
               </div>
             </div>
@@ -1787,16 +1895,16 @@ const AdminDashboard = () => {
             </h2>
             <div className="flex flex-col items-center justify-center" style={{ height: '20rem', backgroundColor: 'var(--surface-light)', borderRadius: '0.5rem', gap: '1rem', padding: '1rem 0' }}>
               <div style={{ width: '80%', height: '3rem', backgroundColor: 'var(--primary)', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '0.875rem', fontWeight: '600', boxShadow: '0 2px 8px rgba(139, 92, 246, 0.3)' }}>
-                Leads ({dashboardData.funnel.leads})
+                Leads ({dateFilteredMetrics.funnel.leads})
               </div>
               <div style={{ width: '70%', height: '3rem', backgroundColor: 'var(--primary)', opacity: '0.85', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '0.875rem', fontWeight: '600', boxShadow: '0 2px 8px rgba(139, 92, 246, 0.25)' }}>
-                Registered ({dashboardData.funnel.registered})
+                Registered ({dateFilteredMetrics.funnel.registered})
               </div>
               <div style={{ width: '55%', height: '3rem', backgroundColor: 'var(--primary)', opacity: '0.7', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '0.875rem', fontWeight: '600', boxShadow: '0 2px 8px rgba(139, 92, 246, 0.2)' }}>
-                Paid ({dashboardData.funnel.paid})
+                Paid ({dateFilteredMetrics.funnel.paid})
               </div>
               <div style={{ width: '40%', height: '3rem', backgroundColor: 'var(--primary)', opacity: '0.55', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '0.875rem', fontWeight: '600', boxShadow: '0 2px 8px rgba(139, 92, 246, 0.15)' }}>
-                Completed ({dashboardData.funnel.completed})
+                Completed ({dateFilteredMetrics.funnel.completed})
               </div>
             </div>
           </section>
@@ -1885,17 +1993,17 @@ const AdminDashboard = () => {
               {/* Search Box */}
               <input
                 type="text"
-                placeholder="Search by name, email, or mobile"
+                placeholder="Search"
                 className="form-input"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{
-                  padding: '0.5rem 1rem',
+                  padding: '0.5rem 0.75rem',
                   backgroundColor: 'var(--surface)',
                   color: 'var(--text-primary)',
                   border: '1px solid var(--border)',
                   borderRadius: '0.5rem',
-                  width: '16rem',
+                  width: '10rem',
                   fontSize: '0.875rem'
                 }}
               />
