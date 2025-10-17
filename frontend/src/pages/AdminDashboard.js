@@ -759,9 +759,13 @@ const AdminDashboard = () => {
       completed: successfulPayments // Same as paid for now
     };
     
+    // Calculate average revenue per successful payment
+    const avgRevenue = successfulPayments > 0 ? (totalRevenue / successfulPayments) : 0;
+    
     return {
       totalLeads,
       totalRevenue: totalRevenue.toFixed(2),
+      avgRevenue: avgRevenue.toFixed(2),
       conversionRate,
       engagement,
       paymentStats,
@@ -1868,9 +1872,9 @@ const AdminDashboard = () => {
                 </p>
               </div>
               <div className="card" style={{ backgroundColor: 'var(--surface-light)', padding: '1.5rem', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderRadius: '0.5rem' }}>
-                <h3 style={{ fontWeight: '500', color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '0.75rem' }}>Total Leads</h3>
+                <h3 style={{ fontWeight: '500', color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '0.75rem' }}>Average Revenue</h3>
                 <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--text-primary)', margin: '0' }}>
-                  {dateFilteredMetrics.totalLeads}
+                  ₹{dateFilteredMetrics.avgRevenue}
                 </p>
               </div>
               <div className="card" style={{ backgroundColor: 'var(--surface-light)', padding: '1.5rem', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderRadius: '0.5rem' }}>
