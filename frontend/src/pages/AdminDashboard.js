@@ -71,7 +71,7 @@ const AdminDashboard = () => {
   const [paymentFilter, setPaymentFilter] = useState('all');
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(25);
   
   // Advanced analytics state
   const [showAdvancedSelection, setShowAdvancedSelection] = useState(false);
@@ -80,11 +80,18 @@ const AdminDashboard = () => {
     Mobile: true,
     Email: true,
     Role: true,
+    Status: true,
+    'Nurture Level': true,
+    'Payment Status': false,
     Source: false,
-    'Registration_TS': true,
-    'Payment Status': true,
-    CouponCode: false,
-    Nuturing: false,
+    'Registration_TS': false,
+    Payable: false,
+    'Paid Amount': false,
+    'Discount %': false,
+    'Discount Amount': false,
+    'Coupon Code (G)': false,
+    'Coupon Code (A)': false,
+    Unsubscribed: false,
     Interest: false
   });
   
@@ -94,11 +101,18 @@ const AdminDashboard = () => {
     Mobile: 'all',
     Email: 'all',
     Role: 'all',
+    Status: 'all',
+    'Nurture Level': 'all',
+    'Payment Status': 'all',
     Source: 'all',
     'Registration_TS': 'all',
-    'Payment Status': 'all',
-    CouponCode: 'all',
-    Nuturing: 'all',
+    Payable: 'all',
+    'Paid Amount': 'all',
+    'Discount %': 'all',
+    'Discount Amount': 'all',
+    'Coupon Code (G)': 'all',
+    'Coupon Code (A)': 'all',
+    Unsubscribed: 'all',
     Interest: 'all'
   });
   
@@ -477,6 +491,60 @@ const AdminDashboard = () => {
             return leadDate === columnFilters[column];
           }
           
+          // Handle Nurture Level (might be stored as Nuturing)
+          if (column === 'Nurture Level') {
+            const value = (lead['Nurture Level'] || lead.Nuturing || '').toString().toLowerCase().trim();
+            const filterValue = columnFilters[column].toLowerCase().trim();
+            return value === filterValue;
+          }
+          
+          // Handle Coupon Code (G) - Given
+          if (column === 'Coupon Code (G)') {
+            const value = (lead['Coupon Code (G)'] || lead.CouponCodeGiven || lead['Coupon Given'] || '').toString().toLowerCase().trim();
+            const filterValue = columnFilters[column].toLowerCase().trim();
+            return value === filterValue;
+          }
+          
+          // Handle Coupon Code (A) - Applied
+          if (column === 'Coupon Code (A)') {
+            const value = (lead['Coupon Code (A)'] || lead.CouponCodeApplied || lead['Coupon Applied'] || lead.CouponCode || '').toString().toLowerCase().trim();
+            const filterValue = columnFilters[column].toLowerCase().trim();
+            return value === filterValue;
+          }
+          
+          // Handle Unsubscribed
+          if (column === 'Unsubscribed') {
+            const leadVal = lead.Unsubscribed;
+            let normalizedLeadVal = '';
+            if (leadVal === true || leadVal === 'true' || leadVal === 'Yes') normalizedLeadVal = 'yes';
+            else if (leadVal === false || leadVal === 'false' || leadVal === 'No') normalizedLeadVal = 'no';
+            else normalizedLeadVal = (leadVal || '').toString().toLowerCase().trim();
+            
+            const filterValue = columnFilters[column].toLowerCase().trim();
+            return normalizedLeadVal === filterValue;
+          }
+          
+          // Handle Status column - filter by payment status
+          if (column === 'Status') {
+            const paymentStatus = (lead['Payment Status'] || '').toLowerCase().trim();
+            const filterValue = columnFilters[column].toLowerCase().trim();
+            
+            // Map payment statuses to filter values
+            if (filterValue === 'success') {
+              return paymentStatus === 'success' || paymentStatus === 'successful' || 
+                     paymentStatus === 'paid' || paymentStatus === 'completed';
+            } else if (filterValue === 'failed') {
+              return paymentStatus === 'failed' || paymentStatus === 'failure' || 
+                     paymentStatus === 'declined';
+            } else if (filterValue === 'need time to confirm') {
+              return paymentStatus.includes('need time') || paymentStatus === 'need time to confirm';
+            } else if (filterValue === 'not attempted') {
+              return !paymentStatus || paymentStatus === '' || paymentStatus === 'pending' || 
+                     paymentStatus === 'not attempted';
+            }
+            return false;
+          }
+          
           const value = (lead[column] || '').toString().toLowerCase().trim();
           const filterValue = columnFilters[column].toLowerCase().trim();
           return value === filterValue;
@@ -512,12 +580,46 @@ const AdminDashboard = () => {
       if (key === 'Mobile') {
         aVal = a['Mobile'] || a['Phone'] || '';
         bVal = b['Mobile'] || b['Phone'] || '';
+      } else if (key === 'Nurture Level') {
+        // Handle Nurture Level (might be stored as Nuturing)
+        aVal = a['Nurture Level'] || a.Nuturing || '';
+        bVal = b['Nurture Level'] || b.Nuturing || '';
+      } else if (key === 'Coupon Code (G)') {
+        // Handle Coupon Code (G) - Given
+        aVal = a['Coupon Code (G)'] || a.CouponCodeGiven || a['Coupon Given'] || '';
+        bVal = b['Coupon Code (G)'] || b.CouponCodeGiven || b['Coupon Given'] || '';
+      } else if (key === 'Coupon Code (A)') {
+        // Handle Coupon Code (A) - Applied
+        aVal = a['Coupon Code (A)'] || a.CouponCodeApplied || a['Coupon Applied'] || a.CouponCode || '';
+        bVal = b['Coupon Code (A)'] || b.CouponCodeApplied || b['Coupon Applied'] || b.CouponCode || '';
+      } else if (key === 'Payable') {
+        // Handle Payable - numeric sorting
+        const aPayable = a.Payable || a.PayableAmount || '0';
+        const bPayable = b.Payable || b.PayableAmount || '0';
+        aVal = typeof aPayable === 'string' ? parseFloat(aPayable.replace(/[₹,]/g, '').trim()) || 0 : parseFloat(aPayable) || 0;
+        bVal = typeof bPayable === 'string' ? parseFloat(bPayable.replace(/[₹,]/g, '').trim()) || 0 : parseFloat(bPayable) || 0;
+      } else if (key === 'Paid Amount') {
+        // Handle Paid Amount - numeric sorting
+        const aPaid = a['Paid Amount'] || a.Amount || a.PaidAmount || '0';
+        const bPaid = b['Paid Amount'] || b.Amount || b.PaidAmount || '0';
+        aVal = typeof aPaid === 'string' ? parseFloat(aPaid.replace(/[₹,]/g, '').trim()) || 0 : parseFloat(aPaid) || 0;
+        bVal = typeof bPaid === 'string' ? parseFloat(bPaid.replace(/[₹,]/g, '').trim()) || 0 : parseFloat(bPaid) || 0;
+      } else if (key === 'Discount %') {
+        // Handle Discount % - numeric sorting
+        const aDiscount = a['Discount %'] || a['Discount Percentage'] || a.DiscountPercentage || '0';
+        const bDiscount = b['Discount %'] || b['Discount Percentage'] || b.DiscountPercentage || '0';
+        aVal = typeof aDiscount === 'string' ? parseFloat(aDiscount.replace(/%/g, '').trim()) || 0 : parseFloat(aDiscount) || 0;
+        bVal = typeof bDiscount === 'string' ? parseFloat(bDiscount.replace(/%/g, '').trim()) || 0 : parseFloat(bDiscount) || 0;
+      } else if (key === 'Discount Amount') {
+        // Handle Discount Amount - numeric sorting
+        const aDiscountAmt = a['Discount Amount'] || a.DiscountAmount || '0';
+        const bDiscountAmt = b['Discount Amount'] || b.DiscountAmount || '0';
+        aVal = typeof aDiscountAmt === 'string' ? parseFloat(aDiscountAmt.replace(/[₹,]/g, '').trim()) || 0 : parseFloat(aDiscountAmt) || 0;
+        bVal = typeof bDiscountAmt === 'string' ? parseFloat(bDiscountAmt.replace(/[₹,]/g, '').trim()) || 0 : parseFloat(bDiscountAmt) || 0;
       } else {
         aVal = a[key] || '';
         bVal = b[key] || '';
       }
-
-      // No numeric sorting needed anymore (removed Paid Amount, Discount, PayableAmount)
 
       if (aVal < bVal) return direction === 'asc' ? -1 : 1;
       if (aVal > bVal) return direction === 'asc' ? 1 : -1;
@@ -558,6 +660,27 @@ const AdminDashboard = () => {
           return date.toISOString().split('T')[0]; // Get YYYY-MM-DD format
         });
       return [...new Set(dates)].sort().reverse(); // Most recent first
+    }
+    // Handle Nurture Level (might be stored as Nuturing in data)
+    if (columnName === 'Nurture Level') {
+      return [...new Set(leadData.map(lead => lead['Nurture Level'] || lead.Nuturing).filter(Boolean))].sort();
+    }
+    // Handle Coupon Code (G) - Given
+    if (columnName === 'Coupon Code (G)') {
+      return [...new Set(leadData.map(lead => lead['Coupon Code (G)'] || lead.CouponCodeGiven || lead['Coupon Given']).filter(Boolean))].sort();
+    }
+    // Handle Coupon Code (A) - Applied
+    if (columnName === 'Coupon Code (A)') {
+      return [...new Set(leadData.map(lead => lead['Coupon Code (A)'] || lead.CouponCodeApplied || lead['Coupon Applied'] || lead.CouponCode).filter(Boolean))].sort();
+    }
+    // Handle Unsubscribed
+    if (columnName === 'Unsubscribed') {
+      return [...new Set(leadData.map(lead => {
+        const val = lead.Unsubscribed;
+        if (val === true || val === 'true' || val === 'Yes') return 'Yes';
+        if (val === false || val === 'false' || val === 'No') return 'No';
+        return val;
+      }).filter(Boolean))].sort();
     }
     return [...new Set(leadData.map(lead => lead[columnName]).filter(Boolean))].sort();
   };
@@ -653,6 +776,42 @@ const AdminDashboard = () => {
     if (s.includes('need time') || s === 'need time to confirm' || s === 'need time to confirm') return 'Need Time';
     // Otherwise return original status with proper capitalization
     return status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' ');
+  };
+
+  // Get Status display with color-coded amount
+  const getStatusDisplay = (lead) => {
+    const paymentStatus = (lead['Payment Status'] || '').toLowerCase().trim();
+    
+    // Try to find the payable amount field
+    let amountValue = lead['PayableAmount'] || lead['Payable Amount'] || 
+                     lead['Amount'] || lead['Paid Amount'] || 
+                     lead['Revenue'] || lead['Price'] || '0';
+    
+    // Clean amount string
+    const amountStr = String(amountValue).replace(/[₹$,\s]/g, '');
+    const amount = parseFloat(amountStr) || 0;
+    const formattedAmount = `₹${amount.toFixed(2)}`;
+    
+    // Determine color based on payment status
+    let color, statusText;
+    
+    if (paymentStatus === 'success' || paymentStatus === 'successful' || 
+        paymentStatus === 'paid' || paymentStatus === 'completed') {
+      // Green for successfully paid
+      color = '#10b981'; // green
+      statusText = 'Paid';
+    } else if (paymentStatus.includes('need time') || paymentStatus === 'need time to confirm' || 
+               paymentStatus === 'failed' || paymentStatus === 'failure' || paymentStatus === 'declined') {
+      // Orange for need time or payment failed
+      color = '#f59e0b'; // orange
+      statusText = paymentStatus.includes('need time') ? 'Need Time' : 'Failed';
+    } else {
+      // Red for not paid or not even tried
+      color = '#ef4444'; // red
+      statusText = 'Pending';
+    }
+    
+    return { amount: formattedAmount, color, statusText };
   };
 
   // Format source display text (e.g., "Registration Page" instead of "RegistrationPage")
@@ -1995,22 +2154,98 @@ const AdminDashboard = () => {
             {/* Right side actions - Search, Filters, Reset, Download */}
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
               {/* Search Box */}
-              <input
-                type="text"
-                placeholder="Search"
-                className="form-input"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{
-                  padding: '0.5rem 0.75rem',
-                  backgroundColor: 'var(--surface)',
-                  color: 'var(--text-primary)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '0.5rem',
-                  width: '10rem',
-                  fontSize: '0.875rem'
-                }}
-              />
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <input
+                  type="text"
+                  placeholder="Search leads by name, email, or mobile..."
+                  className="form-input"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{
+                    padding: '0.625rem 1rem',
+                    paddingLeft: '2.5rem',
+                    backgroundColor: 'var(--surface)',
+                    color: 'var(--text-primary)',
+                    border: '2px solid rgb(139, 92, 246)',
+                    borderRadius: '0.5rem',
+                    width: '20rem',
+                    fontSize: '0.875rem',
+                    outline: 'none',
+                    boxShadow: searchQuery ? '0 0 0 3px rgba(139, 92, 246, 0.1)' : 'none',
+                    transition: 'all 0.2s'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.boxShadow = '0 0 0 3px rgba(139, 92, 246, 0.2)';
+                    e.target.style.borderColor = 'rgb(139, 92, 246)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.boxShadow = searchQuery ? '0 0 0 3px rgba(139, 92, 246, 0.1)' : 'none';
+                  }}
+                />
+                {/* Search Icon */}
+                <svg
+                  style={{
+                    position: 'absolute',
+                    left: '0.75rem',
+                    width: '1rem',
+                    height: '1rem',
+                    color: 'rgb(139, 92, 246)',
+                    pointerEvents: 'none'
+                  }}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+                {/* Clear button */}
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    style={{
+                      position: 'absolute',
+                      right: '0.75rem',
+                      background: 'none',
+                      border: 'none',
+                      color: 'rgb(139, 92, 246)',
+                      cursor: 'pointer',
+                      padding: '0.25rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: '50%',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(139, 92, 246, 0.1)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }}
+                    title="Clear search"
+                  >
+                    <svg
+                      style={{ width: '1rem', height: '1rem' }}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                )}
+              </div>
               
               {/* Advanced Filters Toggle Button */}
               <div style={{
@@ -2188,14 +2423,52 @@ const AdminDashboard = () => {
             </div>
           )}
 
-          {/* Results count */}
+          {/* Results count and items per page selector */}
           <div style={{ 
-            marginBottom: '1rem', 
-            fontSize: '0.875rem', 
-            color: 'var(--text-secondary)' 
+            marginBottom: '1rem',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: '1rem',
+            flexWrap: 'wrap'
           }}>
-            Showing {currentLeads.length} of {filteredLeads.length} leads
-            {filteredLeads.length !== leadData.length && ` (filtered from ${leadData.length} total)`}
+            <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+              Showing {startIndex + 1}-{Math.min(endIndex, filteredLeads.length)} of {filteredLeads.length} leads
+              {filteredLeads.length !== leadData.length && ` (filtered from ${leadData.length} total)`}
+            </div>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <label style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                Show:
+              </label>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1); // Reset to first page
+                }}
+                style={{
+                  padding: '0.375rem 0.75rem',
+                  backgroundColor: 'var(--surface)',
+                  color: 'var(--text-primary)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '0.375rem',
+                  fontSize: '0.875rem',
+                  cursor: 'pointer',
+                  outline: 'none'
+                }}
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+                <option value={250}>250</option>
+                <option value={500}>500</option>
+              </select>
+              <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                per page
+              </span>
+            </div>
           </div>
 
           {/* Lead Details Table */}
@@ -2280,6 +2553,53 @@ const AdminDashboard = () => {
                       Role {sortConfig.key === 'Role' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
                   )}
+                  {visibleColumns.Status && (
+                    <th 
+                      style={{
+                        padding: '0.75rem',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: 'var(--text-primary)',
+                        borderBottom: '1px solid var(--border)'
+                      }}
+                    >
+                      Status
+                    </th>
+                  )}
+                  {visibleColumns['Nurture Level'] && (
+                    <th 
+                      className="cursor-pointer"
+                      onClick={() => handleSort('Nurture Level')}
+                      style={{
+                        padding: '0.75rem',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: 'var(--text-primary)',
+                        borderBottom: '1px solid var(--border)',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                    >
+                      Nurture Level {sortConfig.key === 'Nurture Level' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </th>
+                  )}
+                  {visibleColumns['Payment Status'] && (
+                    <th 
+                      className="cursor-pointer"
+                      onClick={() => handleSort('Payment Status')}
+                      style={{
+                        padding: '0.75rem',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: 'var(--text-primary)',
+                        borderBottom: '1px solid var(--border)',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                    >
+                      Payment Status {sortConfig.key === 'Payment Status' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </th>
+                  )}
                   {visibleColumns.Source && (
                     <th 
                       className="cursor-pointer"
@@ -2314,10 +2634,10 @@ const AdminDashboard = () => {
                       Registered {sortConfig.key === 'Registration_TS' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
                   )}
-                  {visibleColumns['Payment Status'] && (
+                  {visibleColumns.Payable && (
                     <th 
                       className="cursor-pointer"
-                      onClick={() => handleSort('Payment Status')}
+                      onClick={() => handleSort('Payable')}
                       style={{
                         padding: '0.75rem',
                         textAlign: 'left',
@@ -2328,13 +2648,13 @@ const AdminDashboard = () => {
                         userSelect: 'none'
                       }}
                     >
-                      Payment Status {sortConfig.key === 'Payment Status' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      Payable {sortConfig.key === 'Payable' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
                   )}
-                  {visibleColumns.CouponCode && (
+                  {visibleColumns['Paid Amount'] && (
                     <th 
                       className="cursor-pointer"
-                      onClick={() => handleSort('CouponCode')}
+                      onClick={() => handleSort('Paid Amount')}
                       style={{
                         padding: '0.75rem',
                         textAlign: 'left',
@@ -2345,13 +2665,13 @@ const AdminDashboard = () => {
                         userSelect: 'none'
                       }}
                     >
-                      Coupon Code {sortConfig.key === 'CouponCode' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      Paid Amount {sortConfig.key === 'Paid Amount' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
                   )}
-                  {visibleColumns.Nuturing && (
+                  {visibleColumns['Discount %'] && (
                     <th 
                       className="cursor-pointer"
-                      onClick={() => handleSort('Nuturing')}
+                      onClick={() => handleSort('Discount %')}
                       style={{
                         padding: '0.75rem',
                         textAlign: 'left',
@@ -2362,7 +2682,75 @@ const AdminDashboard = () => {
                         userSelect: 'none'
                       }}
                     >
-                      Nurturing {sortConfig.key === 'Nuturing' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      Discount % {sortConfig.key === 'Discount %' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </th>
+                  )}
+                  {visibleColumns['Discount Amount'] && (
+                    <th 
+                      className="cursor-pointer"
+                      onClick={() => handleSort('Discount Amount')}
+                      style={{
+                        padding: '0.75rem',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: 'var(--text-primary)',
+                        borderBottom: '1px solid var(--border)',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                    >
+                      Discount Amount {sortConfig.key === 'Discount Amount' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </th>
+                  )}
+                  {visibleColumns['Coupon Code (G)'] && (
+                    <th 
+                      className="cursor-pointer"
+                      onClick={() => handleSort('Coupon Code (G)')}
+                      style={{
+                        padding: '0.75rem',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: 'var(--text-primary)',
+                        borderBottom: '1px solid var(--border)',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                    >
+                      Coupon (Given) {sortConfig.key === 'Coupon Code (G)' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </th>
+                  )}
+                  {visibleColumns['Coupon Code (A)'] && (
+                    <th 
+                      className="cursor-pointer"
+                      onClick={() => handleSort('Coupon Code (A)')}
+                      style={{
+                        padding: '0.75rem',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: 'var(--text-primary)',
+                        borderBottom: '1px solid var(--border)',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                    >
+                      Coupon (Applied) {sortConfig.key === 'Coupon Code (A)' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </th>
+                  )}
+                  {visibleColumns.Unsubscribed && (
+                    <th 
+                      className="cursor-pointer"
+                      onClick={() => handleSort('Unsubscribed')}
+                      style={{
+                        padding: '0.75rem',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: 'var(--text-primary)',
+                        borderBottom: '1px solid var(--border)',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                    >
+                      Unsubscribed {sortConfig.key === 'Unsubscribed' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
                   )}
                   {visibleColumns.Interest && (
@@ -2436,6 +2824,82 @@ const AdminDashboard = () => {
                       </select>
                     </th>
                   )}
+                  {visibleColumns.Status && (
+                    <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
+                      <select
+                        value={columnFilters.Status || 'all'}
+                        onChange={(e) => handleColumnFilter('Status', e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          width: '100%',
+                          padding: '0.375rem 0.5rem',
+                          backgroundColor: 'var(--surface)',
+                          color: 'var(--text-primary)',
+                          border: '1px solid var(--border)',
+                          borderRadius: '0.25rem',
+                          fontSize: '0.75rem',
+                          cursor: 'pointer',
+                          outline: 'none'
+                        }}
+                      >
+                        <option value="all">All</option>
+                        <option value="success">Success</option>
+                        <option value="failed">Failed</option>
+                        <option value="need time to confirm">Need Time to Confirm</option>
+                        <option value="not attempted">Not Attempted</option>
+                      </select>
+                    </th>
+                  )}
+                  {visibleColumns['Nurture Level'] && (
+                    <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
+                      <select
+                        value={columnFilters['Nurture Level'] || 'all'}
+                        onChange={(e) => handleColumnFilter('Nurture Level', e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          width: '100%',
+                          padding: '0.375rem 0.5rem',
+                          backgroundColor: 'var(--surface)',
+                          color: 'var(--text-primary)',
+                          border: '1px solid var(--border)',
+                          borderRadius: '0.25rem',
+                          fontSize: '0.75rem',
+                          cursor: 'pointer',
+                          outline: 'none'
+                        }}
+                      >
+                        <option value="all">All</option>
+                        {getUniqueValuesForColumn('Nurture Level').map(value => (
+                          <option key={value} value={value}>{value}</option>
+                        ))}
+                      </select>
+                    </th>
+                  )}
+                  {visibleColumns['Payment Status'] && (
+                    <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
+                      <select
+                        value={columnFilters['Payment Status'] || 'all'}
+                        onChange={(e) => handleColumnFilter('Payment Status', e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          width: '100%',
+                          padding: '0.375rem 0.5rem',
+                          backgroundColor: 'var(--surface)',
+                          color: 'var(--text-primary)',
+                          border: '1px solid var(--border)',
+                          borderRadius: '0.25rem',
+                          fontSize: '0.75rem',
+                          cursor: 'pointer',
+                          outline: 'none'
+                        }}
+                      >
+                        <option value="all">All</option>
+                        {getUniqueValuesForColumn('Payment Status').map(value => (
+                          <option key={value} value={value}>{value}</option>
+                        ))}
+                      </select>
+                    </th>
+                  )}
                   {visibleColumns.Source && (
                     <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
                       <select
@@ -2493,11 +2957,39 @@ const AdminDashboard = () => {
                       </select>
                     </th>
                   )}
-                  {visibleColumns['Payment Status'] && (
+                  {visibleColumns.Payable && (
+                    <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                        Use search
+                      </div>
+                    </th>
+                  )}
+                  {visibleColumns['Paid Amount'] && (
+                    <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                        Use search
+                      </div>
+                    </th>
+                  )}
+                  {visibleColumns['Discount %'] && (
+                    <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                        Use search
+                      </div>
+                    </th>
+                  )}
+                  {visibleColumns['Discount Amount'] && (
+                    <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                        Use search
+                      </div>
+                    </th>
+                  )}
+                  {visibleColumns['Coupon Code (G)'] && (
                     <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
                       <select
-                        value={columnFilters['Payment Status'] || 'all'}
-                        onChange={(e) => handleColumnFilter('Payment Status', e.target.value)}
+                        value={columnFilters['Coupon Code (G)'] || 'all'}
+                        onChange={(e) => handleColumnFilter('Coupon Code (G)', e.target.value)}
                         onClick={(e) => e.stopPropagation()}
                         style={{
                           width: '100%',
@@ -2512,17 +3004,17 @@ const AdminDashboard = () => {
                         }}
                       >
                         <option value="all">All</option>
-                        {getUniqueValuesForColumn('Payment Status').map(value => (
+                        {getUniqueValuesForColumn('Coupon Code (G)').map(value => (
                           <option key={value} value={value}>{value}</option>
                         ))}
                       </select>
                     </th>
                   )}
-                  {visibleColumns.CouponCode && (
+                  {visibleColumns['Coupon Code (A)'] && (
                     <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
                       <select
-                        value={columnFilters.CouponCode || 'all'}
-                        onChange={(e) => handleColumnFilter('CouponCode', e.target.value)}
+                        value={columnFilters['Coupon Code (A)'] || 'all'}
+                        onChange={(e) => handleColumnFilter('Coupon Code (A)', e.target.value)}
                         onClick={(e) => e.stopPropagation()}
                         style={{
                           width: '100%',
@@ -2537,17 +3029,17 @@ const AdminDashboard = () => {
                         }}
                       >
                         <option value="all">All</option>
-                        {getUniqueValuesForColumn('CouponCode').map(value => (
+                        {getUniqueValuesForColumn('Coupon Code (A)').map(value => (
                           <option key={value} value={value}>{value}</option>
                         ))}
                       </select>
                     </th>
                   )}
-                  {visibleColumns.Nuturing && (
+                  {visibleColumns.Unsubscribed && (
                     <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
                       <select
-                        value={columnFilters.Nuturing || 'all'}
-                        onChange={(e) => handleColumnFilter('Nuturing', e.target.value)}
+                        value={columnFilters.Unsubscribed || 'all'}
+                        onChange={(e) => handleColumnFilter('Unsubscribed', e.target.value)}
                         onClick={(e) => e.stopPropagation()}
                         style={{
                           width: '100%',
@@ -2562,7 +3054,7 @@ const AdminDashboard = () => {
                         }}
                       >
                         <option value="all">All</option>
-                        {getUniqueValuesForColumn('Nuturing').map(value => (
+                        {getUniqueValuesForColumn('Unsubscribed').map(value => (
                           <option key={value} value={value}>{value}</option>
                         ))}
                       </select>
@@ -2646,14 +3138,33 @@ const AdminDashboard = () => {
                           {lead.Role || '-'}
                         </td>
                       )}
-                      {visibleColumns.Source && (
-                        <td style={{ padding: '0.75rem', color: 'var(--text-primary)' }}>
-                          {formatSourceDisplay(lead.Source)}
+                      {visibleColumns.Status && (
+                        <td style={{ padding: '0.75rem' }}>
+                          {(() => {
+                            const status = getStatusDisplay(lead);
+                            return (
+                              <span 
+                                style={{
+                                  display: 'inline-block',
+                                  padding: '0.35rem 1rem',
+                                  borderRadius: '9999px',
+                                  fontSize: '0.75rem',
+                                  fontWeight: '700',
+                                  minWidth: '85px',
+                                  textAlign: 'center',
+                                  backgroundColor: status.color,
+                                  color: '#ffffff'
+                                }}
+                              >
+                                {status.amount}
+                              </span>
+                            );
+                          })()}
                         </td>
                       )}
-                      {visibleColumns.Registration_TS && (
-                        <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                          {lead.Registration_TS ? new Date(lead.Registration_TS).toLocaleDateString() : '-'}
+                      {visibleColumns['Nurture Level'] && (
+                        <td style={{ padding: '0.75rem', color: 'var(--text-primary)' }}>
+                          {lead['Nurture Level'] || lead.Nuturing || '-'}
                         </td>
                       )}
                       {visibleColumns['Payment Status'] && (
@@ -2680,14 +3191,83 @@ const AdminDashboard = () => {
                           </span>
                         </td>
                       )}
-                      {visibleColumns.CouponCode && (
-                        <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                          {lead.CouponCode || '-'}
+                      {visibleColumns.Source && (
+                        <td style={{ padding: '0.75rem', color: 'var(--text-primary)' }}>
+                          {formatSourceDisplay(lead.Source)}
                         </td>
                       )}
-                      {visibleColumns.Nuturing && (
-                        <td style={{ padding: '0.75rem', color: 'var(--text-primary)' }}>
-                          {lead.Nuturing || '-'}
+                      {visibleColumns.Registration_TS && (
+                        <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                          {lead.Registration_TS ? new Date(lead.Registration_TS).toLocaleDateString() : '-'}
+                        </td>
+                      )}
+                      {visibleColumns.Payable && (
+                        <td style={{ padding: '0.75rem', color: 'var(--text-primary)', fontSize: '0.875rem' }}>
+                          {(() => {
+                            const payable = lead.Payable || lead.PayableAmount;
+                            if (!payable) return '-';
+                            const amount = typeof payable === 'string' ? payable.replace(/[₹,]/g, '').trim() : payable;
+                            return amount ? `₹${parseFloat(amount).toLocaleString('en-IN')}` : '-';
+                          })()}
+                        </td>
+                      )}
+                      {visibleColumns['Paid Amount'] && (
+                        <td style={{ padding: '0.75rem', color: 'var(--text-primary)', fontSize: '0.875rem' }}>
+                          {(() => {
+                            const paid = lead['Paid Amount'] || lead.Amount || lead.PaidAmount;
+                            if (!paid) return '-';
+                            const amount = typeof paid === 'string' ? paid.replace(/[₹,]/g, '').trim() : paid;
+                            return amount ? `₹${parseFloat(amount).toLocaleString('en-IN')}` : '-';
+                          })()}
+                        </td>
+                      )}
+                      {visibleColumns['Discount %'] && (
+                        <td style={{ padding: '0.75rem', color: 'var(--text-primary)', fontSize: '0.875rem' }}>
+                          {(() => {
+                            const discount = lead['Discount %'] || lead['Discount Percentage'] || lead.DiscountPercentage;
+                            if (!discount) return '-';
+                            const percent = typeof discount === 'string' ? discount.replace(/%/g, '').trim() : discount;
+                            return percent ? `${percent}%` : '-';
+                          })()}
+                        </td>
+                      )}
+                      {visibleColumns['Discount Amount'] && (
+                        <td style={{ padding: '0.75rem', color: 'var(--text-primary)', fontSize: '0.875rem' }}>
+                          {(() => {
+                            const discountAmt = lead['Discount Amount'] || lead.DiscountAmount;
+                            if (!discountAmt) return '-';
+                            const amount = typeof discountAmt === 'string' ? discountAmt.replace(/[₹,]/g, '').trim() : discountAmt;
+                            return amount ? `₹${parseFloat(amount).toLocaleString('en-IN')}` : '-';
+                          })()}
+                        </td>
+                      )}
+                      {visibleColumns['Coupon Code (G)'] && (
+                        <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                          {lead['Coupon Code (G)'] || lead.CouponCodeGiven || lead['Coupon Given'] || '-'}
+                        </td>
+                      )}
+                      {visibleColumns['Coupon Code (A)'] && (
+                        <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                          {lead['Coupon Code (A)'] || lead.CouponCodeApplied || lead['Coupon Applied'] || lead.CouponCode || '-'}
+                        </td>
+                      )}
+                      {visibleColumns.Unsubscribed && (
+                        <td style={{ padding: '0.75rem' }}>
+                          <span 
+                            style={{
+                              display: 'inline-block',
+                              padding: '0.25rem 0.75rem',
+                              borderRadius: '9999px',
+                              fontSize: '0.75rem',
+                              fontWeight: '600',
+                              backgroundColor: (lead.Unsubscribed === 'Yes' || lead.Unsubscribed === true || lead.Unsubscribed === 'true') 
+                                ? 'var(--error)' 
+                                : 'var(--success)',
+                              color: '#ffffff'
+                            }}
+                          >
+                            {(lead.Unsubscribed === 'Yes' || lead.Unsubscribed === true || lead.Unsubscribed === 'true') ? 'Yes' : 'No'}
+                          </span>
                         </td>
                       )}
                       {visibleColumns.Interest && (
@@ -2704,94 +3284,317 @@ const AdminDashboard = () => {
 
           {/* Pagination Controls */}
           {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-2 mt-4" style={{ gap: '0.5rem' }}>
-              <button 
-                className="btn btn-sm"
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                style={{
-                  padding: '0.5rem 0.75rem',
-                  backgroundColor: currentPage === 1 ? 'var(--surface-light)' : 'var(--surface)',
-                  color: 'var(--text-primary)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '0.5rem',
-                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                  opacity: currentPage === 1 ? 0.5 : 1
-                }}
-              >
-                ‹
-              </button>
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              marginTop: '1.5rem',
+              gap: '1rem',
+              flexWrap: 'wrap'
+            }}>
+              {/* Page info */}
+              <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                Page {currentPage} of {totalPages}
+              </div>
               
-              {/* Page numbers */}
-              {[...Array(Math.min(5, totalPages))].map((_, idx) => {
-                let pageNum;
-                if (totalPages <= 5) {
-                  pageNum = idx + 1;
-                } else if (currentPage <= 3) {
-                  pageNum = idx + 1;
-                } else if (currentPage >= totalPages - 2) {
-                  pageNum = totalPages - 4 + idx;
-                } else {
-                  pageNum = currentPage - 2 + idx;
-                }
+              {/* Page navigation */}
+              <div className="flex justify-center items-center gap-2" style={{ gap: '0.5rem' }}>
+                {/* First page button */}
+                <button 
+                  className="btn btn-sm"
+                  onClick={() => handlePageChange(1)}
+                  disabled={currentPage === 1}
+                  style={{
+                    padding: '0.5rem 0.75rem',
+                    backgroundColor: currentPage === 1 ? 'var(--surface-light)' : 'var(--surface)',
+                    color: 'var(--text-primary)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '0.5rem',
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                    opacity: currentPage === 1 ? 0.5 : 1,
+                    fontSize: '0.75rem'
+                  }}
+                  title="First page"
+                >
+                  ««
+                </button>
                 
-                return (
-                  <button 
-                    key={pageNum}
-                    className="btn btn-sm"
-                    onClick={() => handlePageChange(pageNum)}
-                    style={{
-                      padding: '0.5rem 0.75rem',
-                      backgroundColor: currentPage === pageNum ? 'var(--primary)' : 'var(--surface)',
-                      color: 'var(--text-primary)',
-                      border: '1px solid var(--border)',
-                      borderRadius: '0.5rem',
-                      cursor: 'pointer',
-                      minWidth: '2.5rem'
-                    }}
-                  >
-                    {pageNum}
-                  </button>
-                );
-              })}
+                {/* Previous page button */}
+                <button 
+                  className="btn btn-sm"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  style={{
+                    padding: '0.5rem 0.75rem',
+                    backgroundColor: currentPage === 1 ? 'var(--surface-light)' : 'var(--surface)',
+                    color: 'var(--text-primary)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '0.5rem',
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                    opacity: currentPage === 1 ? 0.5 : 1
+                  }}
+                  title="Previous page"
+                >
+                  ‹
+                </button>
+                
+                {/* Page number buttons */}
+                {(() => {
+                  const pageButtons = [];
+                  const maxButtons = 7; // Show max 7 page buttons
+                  
+                  if (totalPages <= maxButtons) {
+                    // Show all pages if total is small
+                    for (let i = 1; i <= totalPages; i++) {
+                      pageButtons.push(
+                        <button 
+                          key={i}
+                          className="btn btn-sm"
+                          onClick={() => handlePageChange(i)}
+                          style={{
+                            padding: '0.5rem 0.75rem',
+                            backgroundColor: currentPage === i ? 'var(--primary)' : 'var(--surface)',
+                            color: currentPage === i ? '#ffffff' : 'var(--text-primary)',
+                            border: '1px solid var(--border)',
+                            borderRadius: '0.5rem',
+                            cursor: 'pointer',
+                            minWidth: '2.5rem',
+                            fontWeight: currentPage === i ? '600' : '400'
+                          }}
+                        >
+                          {i}
+                        </button>
+                      );
+                    }
+                  } else {
+                    // Smart pagination for large page counts
+                    const showFirst = currentPage <= 4;
+                    const showLast = currentPage >= totalPages - 3;
+                    const showMiddle = !showFirst && !showLast;
+                    
+                    if (showFirst) {
+                      // Show first 5 pages
+                      for (let i = 1; i <= 5; i++) {
+                        pageButtons.push(
+                          <button 
+                            key={i}
+                            className="btn btn-sm"
+                            onClick={() => handlePageChange(i)}
+                            style={{
+                              padding: '0.5rem 0.75rem',
+                              backgroundColor: currentPage === i ? 'var(--primary)' : 'var(--surface)',
+                              color: currentPage === i ? '#ffffff' : 'var(--text-primary)',
+                              border: '1px solid var(--border)',
+                              borderRadius: '0.5rem',
+                              cursor: 'pointer',
+                              minWidth: '2.5rem',
+                              fontWeight: currentPage === i ? '600' : '400'
+                            }}
+                          >
+                            {i}
+                          </button>
+                        );
+                      }
+                      pageButtons.push(<span key="dots1" style={{ color: 'var(--text-secondary)' }}>...</span>);
+                      pageButtons.push(
+                        <button 
+                          key={totalPages}
+                          className="btn btn-sm"
+                          onClick={() => handlePageChange(totalPages)}
+                          style={{
+                            padding: '0.5rem 0.75rem',
+                            backgroundColor: 'var(--surface)',
+                            color: 'var(--text-primary)',
+                            border: '1px solid var(--border)',
+                            borderRadius: '0.5rem',
+                            cursor: 'pointer',
+                            minWidth: '2.5rem'
+                          }}
+                        >
+                          {totalPages}
+                        </button>
+                      );
+                    } else if (showLast) {
+                      // Show last 5 pages
+                      pageButtons.push(
+                        <button 
+                          key={1}
+                          className="btn btn-sm"
+                          onClick={() => handlePageChange(1)}
+                          style={{
+                            padding: '0.5rem 0.75rem',
+                            backgroundColor: 'var(--surface)',
+                            color: 'var(--text-primary)',
+                            border: '1px solid var(--border)',
+                            borderRadius: '0.5rem',
+                            cursor: 'pointer',
+                            minWidth: '2.5rem'
+                          }}
+                        >
+                          1
+                        </button>
+                      );
+                      pageButtons.push(<span key="dots1" style={{ color: 'var(--text-secondary)' }}>...</span>);
+                      for (let i = totalPages - 4; i <= totalPages; i++) {
+                        pageButtons.push(
+                          <button 
+                            key={i}
+                            className="btn btn-sm"
+                            onClick={() => handlePageChange(i)}
+                            style={{
+                              padding: '0.5rem 0.75rem',
+                              backgroundColor: currentPage === i ? 'var(--primary)' : 'var(--surface)',
+                              color: currentPage === i ? '#ffffff' : 'var(--text-primary)',
+                              border: '1px solid var(--border)',
+                              borderRadius: '0.5rem',
+                              cursor: 'pointer',
+                              minWidth: '2.5rem',
+                              fontWeight: currentPage === i ? '600' : '400'
+                            }}
+                          >
+                            {i}
+                          </button>
+                        );
+                      }
+                    } else {
+                      // Show middle pages (current - 2 to current + 2)
+                      pageButtons.push(
+                        <button 
+                          key={1}
+                          className="btn btn-sm"
+                          onClick={() => handlePageChange(1)}
+                          style={{
+                            padding: '0.5rem 0.75rem',
+                            backgroundColor: 'var(--surface)',
+                            color: 'var(--text-primary)',
+                            border: '1px solid var(--border)',
+                            borderRadius: '0.5rem',
+                            cursor: 'pointer',
+                            minWidth: '2.5rem'
+                          }}
+                        >
+                          1
+                        </button>
+                      );
+                      pageButtons.push(<span key="dots1" style={{ color: 'var(--text-secondary)' }}>...</span>);
+                      for (let i = currentPage - 2; i <= currentPage + 2; i++) {
+                        pageButtons.push(
+                          <button 
+                            key={i}
+                            className="btn btn-sm"
+                            onClick={() => handlePageChange(i)}
+                            style={{
+                              padding: '0.5rem 0.75rem',
+                              backgroundColor: currentPage === i ? 'var(--primary)' : 'var(--surface)',
+                              color: currentPage === i ? '#ffffff' : 'var(--text-primary)',
+                              border: '1px solid var(--border)',
+                              borderRadius: '0.5rem',
+                              cursor: 'pointer',
+                              minWidth: '2.5rem',
+                              fontWeight: currentPage === i ? '600' : '400'
+                            }}
+                          >
+                            {i}
+                          </button>
+                        );
+                      }
+                      pageButtons.push(<span key="dots2" style={{ color: 'var(--text-secondary)' }}>...</span>);
+                      pageButtons.push(
+                        <button 
+                          key={totalPages}
+                          className="btn btn-sm"
+                          onClick={() => handlePageChange(totalPages)}
+                          style={{
+                            padding: '0.5rem 0.75rem',
+                            backgroundColor: 'var(--surface)',
+                            color: 'var(--text-primary)',
+                            border: '1px solid var(--border)',
+                            borderRadius: '0.5rem',
+                            cursor: 'pointer',
+                            minWidth: '2.5rem'
+                          }}
+                        >
+                          {totalPages}
+                        </button>
+                      );
+                    }
+                  }
+                  
+                  return pageButtons;
+                })()}
+                
+                {/* Next page button */}
+                <button 
+                  className="btn btn-sm"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  style={{
+                    padding: '0.5rem 0.75rem',
+                    backgroundColor: currentPage === totalPages ? 'var(--surface-light)' : 'var(--surface)',
+                    color: 'var(--text-primary)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '0.5rem',
+                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                    opacity: currentPage === totalPages ? 0.5 : 1
+                  }}
+                  title="Next page"
+                >
+                  ›
+                </button>
+                
+                {/* Last page button */}
+                <button 
+                  className="btn btn-sm"
+                  onClick={() => handlePageChange(totalPages)}
+                  disabled={currentPage === totalPages}
+                  style={{
+                    padding: '0.5rem 0.75rem',
+                    backgroundColor: currentPage === totalPages ? 'var(--surface-light)' : 'var(--surface)',
+                    color: 'var(--text-primary)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '0.5rem',
+                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                    opacity: currentPage === totalPages ? 0.5 : 1,
+                    fontSize: '0.75rem'
+                  }}
+                  title="Last page"
+                >
+                  »»
+                </button>
+              </div>
               
-              {totalPages > 5 && currentPage < totalPages - 2 && (
-                <>
-                  <span style={{ color: 'var(--text-secondary)' }}>...</span>
-                  <button 
-                    className="btn btn-sm"
-                    onClick={() => handlePageChange(totalPages)}
-                    style={{
-                      padding: '0.5rem 0.75rem',
-                      backgroundColor: 'var(--surface)',
-                      color: 'var(--text-primary)',
-                      border: '1px solid var(--border)',
-                      borderRadius: '0.5rem',
-                      cursor: 'pointer',
-                      minWidth: '2.5rem'
-                    }}
-                  >
-                    {totalPages}
-                  </button>
-                </>
-              )}
-              
-              <button 
-                className="btn btn-sm"
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                style={{
-                  padding: '0.5rem 0.75rem',
-                  backgroundColor: currentPage === totalPages ? 'var(--surface-light)' : 'var(--surface)',
-                  color: 'var(--text-primary)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '0.5rem',
-                  cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-                  opacity: currentPage === totalPages ? 0.5 : 1
-                }}
-              >
-                ›
-              </button>
+              {/* Quick jump to page */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <label style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                  Go to:
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max={totalPages}
+                  placeholder={currentPage}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      const page = parseInt(e.target.value);
+                      if (page >= 1 && page <= totalPages) {
+                        handlePageChange(page);
+                        e.target.value = '';
+                      }
+                    }
+                  }}
+                  style={{
+                    width: '4rem',
+                    padding: '0.375rem 0.5rem',
+                    backgroundColor: 'var(--surface)',
+                    color: 'var(--text-primary)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '0.375rem',
+                    fontSize: '0.875rem',
+                    textAlign: 'center',
+                    outline: 'none'
+                  }}
+                />
+              </div>
             </div>
           )}
         </section>
