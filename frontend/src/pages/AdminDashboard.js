@@ -885,14 +885,18 @@ const AdminDashboard = () => {
     }).length;
     const conversionRate = totalLeads > 0 ? ((successfulPayments / totalLeads) * 100).toFixed(1) : 0;
     
-    // Calculate engagement - percentage of interested leads
-    // (leads who have shown interest in the webinar)
-    const interestedLeads = dateFilteredLeads.filter(lead => {
-      const interest = (lead['Interest'] || '').toLowerCase().trim();
-      // Count leads marked as interested (not empty and not 'no' or 'not interested')
-      return interest !== '' && interest !== 'no' && interest !== 'not interested';
+    // Calculate engagement - percentage of engaged leads
+    // (leads whose Client Status is NOT "Unsubscribed" are considered engaged)
+    const engagedLeads = dateFilteredLeads.filter(lead => {
+      const clientStatus = (lead['Client Status'] || '').toLowerCase().trim();
+      // Check if client status is unsubscribed
+      if (clientStatus === 'unsubscribed' || clientStatus === 'un-subscribed' || 
+          clientStatus === 'unsubscribe' || clientStatus === 'inactive') {
+        return false; // This lead is unsubscribed, not engaged
+      }
+      return true; // All other leads are considered engaged
     }).length;
-    const engagement = totalLeads > 0 ? ((interestedLeads / totalLeads) * 100).toFixed(1) : 0;
+    const engagement = totalLeads > 0 ? ((engagedLeads / totalLeads) * 100).toFixed(1) : 0;
     
     // Calculate payment stats
     const paymentStats = {
@@ -1925,9 +1929,123 @@ const AdminDashboard = () => {
               Payment Stats
             </h2>
             <div className="flex" style={{ height: '1.5rem', borderRadius: '0.5rem', overflow: 'hidden' }}>
-              <span style={{ flex: '1', backgroundColor: 'var(--success)' }}></span>
-              <span style={{ flex: '1', backgroundColor: 'var(--warning)' }}></span>
-              <span style={{ flex: '1', backgroundColor: 'var(--error)' }}></span>
+              {(() => {
+                const successful = dateFilteredMetrics.paymentStats.successful;
+                const pending = dateFilteredMetrics.paymentStats.pending;
+                const failed = dateFilteredMetrics.paymentStats.failed;
+                const total = successful + pending + failed;
+                
+                // Calculate dynamic percentages with minimum 5% for each category
+                const minPercent = 5;
+                let successPercent, pendingPercent, failedPercent;
+                
+                if (total === 0) {
+                  // All empty - equal distribution
+                  successPercent = 33.33;
+                  pendingPercent = 33.33;
+                  failedPercent = 33.34;
+                } else {
+                  // Count how many categories have data
+                  const hasSuccessful = successful > 0;
+                  const hasPending = pending > 0;
+                  const hasFailed = failed > 0;
+                  const activeCategories = [hasSuccessful, hasPending, hasFailed].filter(Boolean).length;
+                  
+                  if (activeCategories === 0) {
+                    // No data - equal distribution
+                    successPercent = 33.33;
+                    pendingPercent = 33.33;
+                    failedPercent = 33.34;
+                  } else if (activeCategories === 1) {
+                    // Only one category has data - give it 90%, others 5% each
+                    successPercent = hasSuccessful ? 90 : 5;
+                    pendingPercent = hasPending ? 90 : 5;
+                    failedPercent = hasFailed ? 90 : 5;
+                  } else if (activeCategories === 2) {
+                    // Two categories have data - split 95% between them, other gets 5%
+                    const availablePercent = 95;
+                    const category1Ratio = hasSuccessful ? successful : (hasPending ? pending : 0);
+                    const category2Ratio = hasFailed ? failed : pending;
+                    const totalRatio = category1Ratio + category2Ratio;
+                    
+                    if (hasSuccessful && hasPending) {
+                      successPercent = (successful / totalRatio) * availablePercent;
+                      pendingPercent = (pending / totalRatio) * availablePercent;
+                      failedPercent = 5;
+                    } else if (hasSuccessful && hasFailed) {
+                      successPercent = (successful / totalRatio) * availablePercent;
+                      failedPercent = (failed / totalRatio) * availablePercent;
+                      pendingPercent = 5;
+                    } else {
+                      // pending and failed
+                      pendingPercent = (pending / totalRatio) * availablePercent;
+                      failedPercent = (failed / totalRatio) * availablePercent;
+                      successPercent = 5;
+                    }
+                  } else {
+                    // All three categories have data - distribute proportionally with min 5% each
+                    const rawSuccessPercent = (successful / total) * 100;
+                    const rawPendingPercent = (pending / total) * 100;
+                    const rawFailedPercent = (failed / total) * 100;
+                    
+                    // Check if any category is below minimum
+                    const needsAdjustment = rawSuccessPercent < minPercent || rawPendingPercent < minPercent || rawFailedPercent < minPercent;
+                    
+                    if (needsAdjustment) {
+                      // Calculate available percentage after reserving minimums
+                      const reservedPercent = 
+                        (rawSuccessPercent < minPercent ? minPercent : 0) +
+                        (rawPendingPercent < minPercent ? minPercent : 0) +
+                        (rawFailedPercent < minPercent ? minPercent : 0);
+                      
+                      const availablePercent = 100 - reservedPercent;
+                      
+                      // Distribute available percentage proportionally among categories above minimum
+                      const totalAboveMin = 
+                        (rawSuccessPercent >= minPercent ? successful : 0) +
+                        (rawPendingPercent >= minPercent ? pending : 0) +
+                        (rawFailedPercent >= minPercent ? failed : 0);
+                      
+                      successPercent = rawSuccessPercent < minPercent ? minPercent : (successful / totalAboveMin) * availablePercent;
+                      pendingPercent = rawPendingPercent < minPercent ? minPercent : (pending / totalAboveMin) * availablePercent;
+                      failedPercent = rawFailedPercent < minPercent ? minPercent : (failed / totalAboveMin) * availablePercent;
+                    } else {
+                      successPercent = rawSuccessPercent;
+                      pendingPercent = rawPendingPercent;
+                      failedPercent = rawFailedPercent;
+                    }
+                  }
+                }
+                
+                return (
+                  <>
+                    <span 
+                      style={{ 
+                        width: `${successPercent}%`, 
+                        backgroundColor: 'var(--success)',
+                        transition: 'width 0.3s ease'
+                      }}
+                      title={`Successful: ${successPercent.toFixed(1)}%`}
+                    ></span>
+                    <span 
+                      style={{ 
+                        width: `${pendingPercent}%`, 
+                        backgroundColor: 'var(--warning)',
+                        transition: 'width 0.3s ease'
+                      }}
+                      title={`Pending: ${pendingPercent.toFixed(1)}%`}
+                    ></span>
+                    <span 
+                      style={{ 
+                        width: `${failedPercent}%`, 
+                        backgroundColor: 'var(--error)',
+                        transition: 'width 0.3s ease'
+                      }}
+                      title={`Failed: ${failedPercent.toFixed(1)}%`}
+                    ></span>
+                  </>
+                );
+              })()}
             </div>
             <div className="flex justify-between" style={{ fontSize: '0.875rem', marginTop: '0.5rem', color: 'var(--text-secondary)' }}>
               <span>✓ Successful: {dateFilteredMetrics.paymentStats.successful}</span>
@@ -1989,27 +2107,76 @@ const AdminDashboard = () => {
             {/* Visual Bar Chart */}
             <div style={{ marginTop: '1rem' }}>
               <div className="flex" style={{ height: '2rem', borderRadius: '0.5rem', overflow: 'hidden' }}>
-                <div 
-                  style={{ 
-                    width: ticketData.total > 0 ? `${(ticketData.open / ticketData.total) * 100}%` : '50%',
-                    backgroundColor: 'var(--warning)',
-                    transition: 'width 0.3s ease'
-                  }}
-                ></div>
-                <div 
-                  style={{ 
-                    width: ticketData.total > 0 ? `${(ticketData.closed / ticketData.total) * 100}%` : '50%',
-                    backgroundColor: 'var(--success)',
-                    transition: 'width 0.3s ease'
-                  }}
-                ></div>
+                {(() => {
+                  const open = ticketData.open;
+                  const closed = ticketData.closed;
+                  const total = ticketData.total;
+                  
+                  // Calculate dynamic percentages with minimum 5% for each category
+                  const minPercent = 5;
+                  let openPercent, closedPercent;
+                  
+                  if (total === 0) {
+                    // No tickets - equal distribution
+                    openPercent = 50;
+                    closedPercent = 50;
+                  } else if (open === 0 && closed === 0) {
+                    // Edge case: no tickets but total exists
+                    openPercent = 50;
+                    closedPercent = 50;
+                  } else if (open === 0) {
+                    // Only closed tickets
+                    openPercent = 5;
+                    closedPercent = 95;
+                  } else if (closed === 0) {
+                    // Only open tickets
+                    openPercent = 95;
+                    closedPercent = 5;
+                  } else {
+                    // Both have tickets - distribute proportionally with min 5% each
+                    const rawOpenPercent = (open / total) * 100;
+                    const rawClosedPercent = (closed / total) * 100;
+                    
+                    if (rawOpenPercent < minPercent) {
+                      openPercent = minPercent;
+                      closedPercent = 100 - minPercent;
+                    } else if (rawClosedPercent < minPercent) {
+                      closedPercent = minPercent;
+                      openPercent = 100 - minPercent;
+                    } else {
+                      openPercent = rawOpenPercent;
+                      closedPercent = rawClosedPercent;
+                    }
+                  }
+                  
+                  return (
+                    <>
+                      <div 
+                        style={{ 
+                          width: `${openPercent}%`,
+                          backgroundColor: 'var(--warning)',
+                          transition: 'width 0.3s ease'
+                        }}
+                        title={`Open: ${openPercent.toFixed(1)}%`}
+                      ></div>
+                      <div 
+                        style={{ 
+                          width: `${closedPercent}%`,
+                          backgroundColor: 'var(--success)',
+                          transition: 'width 0.3s ease'
+                        }}
+                        title={`Resolved: ${closedPercent.toFixed(1)}%`}
+                      ></div>
+                    </>
+                  );
+                })()}
               </div>
               <div className="flex justify-between" style={{ fontSize: '0.875rem', marginTop: '0.5rem', color: 'var(--text-secondary)' }}>
                 <span>
-                  ⚠️ Open: {ticketData.total > 0 ? ((ticketData.open / ticketData.total) * 100).toFixed(1) : 0}%
+                  ⚠️ Open: {ticketData.open} ({ticketData.total > 0 ? ((ticketData.open / ticketData.total) * 100).toFixed(1) : 0}%)
                 </span>
                 <span>
-                  ✓ Resolved: {ticketData.total > 0 ? ((ticketData.closed / ticketData.total) * 100).toFixed(1) : 0}%
+                  ✓ Resolved: {ticketData.closed} ({ticketData.total > 0 ? ((ticketData.closed / ticketData.total) * 100).toFixed(1) : 0}%)
                 </span>
               </div>
             </div>

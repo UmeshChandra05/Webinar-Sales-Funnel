@@ -1,687 +1,778 @@
-# PyStack Analytics - Webinar Sales Funnel App
+# Webinar Sales Funnel Application
 
-🚀 **Complete Professional Webinar Sales Funnel with Advanced Authentication & Real-Time Analytics** - A sophisticated React-based application that transforms visitors into paying customers through a strategically designed conversion journey. Features a comprehensive admin panel with JWT authentication, **persistent cookie-based user authentication system**, AI chat support, and **enterprise-grade Google Sheets-powered analytics dashboard** for real-time business insights.
+A comprehensive full-stack webinar registration and sales funnel platform designed for managing Python Full Stack Development webinars. Built with React and Node.js, featuring advanced analytics, payment processing, and lead management capabilities.
 
-## 🎯 Complete Sales Funnel Features
+## Table of Contents
 
-### **📊 NEW: Zero-Setup Enterprise Analytics Dashboard**
-- **🎉 NO API KEYS REQUIRED!** - Direct Google Sheets CSV integration with zero configuration
-- **Real-Time Data Sync** with 30-second auto-refresh for live business intelligence
-- **2-Minute Setup** - Just make your Google Sheet public and update one line of code
-- **Comprehensive KPI Tracking** - leads, conversion rates, revenue, pipeline value
-- **Interactive Data Visualizations** with Chart.js, Recharts, and custom sales funnel
-- **Export Capabilities** - Excel, CSV, and PDF reports with professional formatting
-- **Advanced Analytics Engine** with role distribution, source analysis, and coupon performance
-- **Mobile-Responsive Dashboard** with framer-motion animations and modern UI
-- **Admin-Only Access** with enhanced security and session management
-- **Smart Column Detection** - Works with any Google Sheets column naming convention
+- [Overview](#overview)
+- [Architecture](#architecture)
+- [Features](#features)
+- [Technology Stack](#technology-stack)
+- [Project Structure](#project-structure)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Usage](#usage)
+- [API Documentation](#api-documentation)
+- [Security](#security)
+- [Deployment](#deployment)
+- [Contributing](#contributing)
+- [License](#license)
 
-### **🔐 Advanced Authentication System**
-- **Cookie-Based Persistent Login** with 30-day "Remember Me" functionality
-- **Secure HTTP-Only Cookies** with CSRF protection and auto-expiration
-- **Dual Authentication Support** - JWT tokens + secure cookies for maximum compatibility
-- **Smart Session Management** with automatic token refresh and seamless re-authentication
-- **Enhanced Security** with bcrypt password hashing and secure cookie flags
-- **Intelligent Error Handling** with user guidance for duplicate emails and account issues
+## Overview
 
-### **🔥 Advanced Lead Generation System**
-- **High-Converting Landing Page** with 2x2 instructor showcase grid for social proof
-- **Smart Lead Capture** with role-based segmentation (Student, Faculty, Industry Professional)
-- **Interactive FAQ Accordion** addressing objections and building trust
-- **Professional Contact Forms** with intelligent validation and real-time feedback
+This application provides a complete sales funnel solution for webinar management, from initial lead capture through payment processing to post-purchase engagement. The system integrates with external services for data persistence, payment validation, and AI-powered customer support.
 
-### **💳 Sophisticated Payment & Conversion System**
-- **Dynamic Coupon Engine** with n8n webhook validation for personalized offers
-- **Professional Payment Flow** with strikethrough pricing and clear success/failure messaging
-- **Customer Journey Optimization** with contextual guidance at every step
-- **Conversion Tracking** through integrated lead capture workflows
+### Key Capabilities
 
-### **🛡️ Secure Admin Dashboard System**
-- **JWT Authentication** with 24-hour session management and secure token handling
-- **PyStack Analytics Platform** with comprehensive performance metrics
-- **Protected Admin Routes** with automatic session validation and cleanup
-- **Professional Split-Screen Login** with gradient backgrounds and responsive design
-- **Real-time Dashboard** with lead management, payment tracking, and analytics
-- **Session Security** with automatic logout and token expiration handling
+- Multi-stage user registration and authentication system
+- Dynamic payment processing with coupon code validation
+- Real-time analytics dashboard with data visualization
+- AI-powered chat support for user queries
+- Integration with Google Sheets for data management
+- Comprehensive admin panel for business intelligence
+- Role-based access control and secure authentication
 
-### **🤖 AI-Powered User Support**
-- **Floating AI Chat Widget** with n8n integration for real-time user assistance
-- **Smart Session Management** with toast notifications and user guidance
-- **Contextual Help System** providing instant answers to common questions
-- **Seamless Integration** with backend analytics and user tracking
+## Architecture
 
-### **⚡ Professional User Experience**
-- **Advanced Toast Notification System** with icons, progress bars, and animations
-- **Smart Form Validation** with positive UX patterns and character limits
-- **Persistent Authentication** - users stay logged in across browser sessions
-- **Real-time Feedback** for all user interactions with enhanced error handling
-- **Mobile-Responsive Design** ensuring conversions across all devices
-- **Simplified Navigation** with intelligent login/logout state management
+### System Components
 
-### **🏗️ Enterprise-Grade Technical Architecture**
-- **React 18.2.0** with modern hooks, context providers, and component architecture
-- **Advanced JWT + Cookie Authentication** with secure session management and auto-refresh
-- **Cookie-Parser Integration** with HTTP-only cookies and CSRF protection
-- **AuthContext Provider** for centralized authentication state management
-- **Enhanced Error Handling** with user-friendly messages and actionable suggestions
-- **Custom Animation Engine** with CSS keyframes and smooth transitions
-- **n8n Workflow Integration** for real-time validation, AI chat, and lead automation
-- **Express.js Backend** with comprehensive validation middleware and secure endpoints
-- **Professional Notification Framework** with progress tracking and user guidance
-- **Advanced Form Engine** with character counting and real-time validation
-- **RESTful API Design** with proper error handling and JWT + cookie middleware protection
-- **PyStack Analytics Engine** with comprehensive dashboard and metrics tracking
-- **Google Sheets API Integration** for real-time data synchronization and analytics
+**Frontend Application**
+- Single Page Application (SPA) built with React 18
+- Responsive UI with mobile-first design
+- Client-side routing with React Router v6
+- Context-based state management for authentication
+- Real-time data synchronization
 
-## 🛠️ Tech Stack
+**Backend Services**
+- RESTful API server built with Express.js
+- JWT-based authentication and authorization
+- Rate limiting and security middleware
+- Integration layer for external services (n8n webhooks)
+- Comprehensive error handling and logging
 
-- **Frontend**: React 18.2.0, React Router, AuthContext Provider, Axios, CSS Grid & Flexbox, Custom Animations
-- **Backend**: Node.js, Express 4.18.2, express-validator, **cookie-parser**, CORS, Helmet, **bcryptjs** for password hashing
-- **Authentication**: **Dual JWT + Cookie system** with 7-30 day expiration, **HTTP-only secure cookies**, automatic refresh, persistent sessions
-- **Analytics**: **Google Sheets CSV Direct Feed (No API Keys!)**, Chart.js, Recharts, react-table, framer-motion, date-fns
-- **Data Export**: jsPDF, XLSX, file-saver for comprehensive reporting capabilities
-- **Integration**: n8n webhooks for automation, AI chat support, and user authentication validation
-- **UI/UX**: Professional toast system with icons & progress bars, accordion components, real-time form validation, floating AI chat widget
-- **Admin System**: PyStack Analytics dashboard with secure login and comprehensive metrics
-- **Validation**: Frontend & backend validation with user-friendly error handling, duplicate email detection, and actionable user guidance
-- **Security**: bcrypt password hashing, secure HTTP-only cookies, CSRF protection, automatic session cleanup
+**External Integrations**
+- n8n workflow automation for data processing
+- Google Sheets for data persistence and analytics
+- Third-party payment validation services
+- AI chat services for customer support
 
-## 📊 Analytics Dashboard Features
+## Features
 
-### **Real-Time KPI Monitoring**
-- **Total Leads** - Complete lead tracking with growth trends
-- **Conversion Rate** - Lead-to-customer conversion analysis
-- **Total Revenue** - Real-time revenue tracking with currency formatting
-- **Pipeline Value** - Pending payment opportunities
-- **Average Deal Size** - Per-customer revenue analysis
-- **Payment Status Distribution** - Success/pending/failed breakdown
+### User-Facing Features
 
-### **Advanced Data Visualizations**
-- **Sales Funnel Visualization** - Interactive conversion flow with stage-by-stage analytics
-- **Role Distribution Charts** - Doughnut charts showing customer segmentation
-- **Registration Trends** - Time-based line charts for lead generation patterns
-- **Revenue Analysis** - Cumulative and daily revenue tracking
-- **Source Analysis** - Lead source performance with bar charts
-- **Coupon Performance** - Discount code usage and ROI analysis
+#### 1. Landing Page
+- Dynamic countdown timer to webinar date
+- Feature showcase with course curriculum
+- Responsive design optimized for all devices
+- Call-to-action buttons for registration
 
-### **Export & Reporting**
-- **Excel Export** - Professional spreadsheets with XLSX format
-- **CSV Export** - Data-friendly format for external analysis
-- **PDF Reports** - Executive summaries with KPIs and charts
-- **Real-Time Updates** - 15s to 5-minute refresh intervals
-- **Data Table** - Sortable, searchable, paginated transaction records
+#### 2. User Registration System
+- Multi-field registration form with validation
+- Email uniqueness verification
+- Mobile number collection
+- Role-based user classification (Student, Faculty, Entrepreneur, Industry Professional)
+- Remember Me functionality for persistent sessions
+- Duplicate email detection with user-friendly error messages
 
-### **Google Sheets Zero-Setup Integration**
+#### 3. User Authentication
+- Secure login with JWT tokens
+- Session persistence with HTTP-only cookies
+- Automatic token refresh for extended sessions
+- Password validation and security
+- Account verification workflow
+- Logout functionality with session cleanup
 
-**🎉 No API Keys Required! 2-Minute Setup:**
+#### 4. Payment Processing
+- Simulated payment flow with multiple outcomes (Success, Failed, Need Time to Confirm)
+- Real-time coupon code validation
+- Dynamic price calculation based on discounts
+- Transaction ID generation and tracking
+- Payment status notifications
+- Integration with backend validation services
 
-1. **Make Your Sheet Public:**
-   - Open your Google Sheet
-   - Click "Share" → "Anyone with the link can view"
-   - Copy the Sheet ID from URL
+#### 5. Post-Payment Experience
+- Success page with WhatsApp community group access
+- Failed payment page with retry options
+- Thank you page for confirmed participants
+- Status tracking and confirmation emails
 
-2. **Update Configuration:**
-   ```javascript
-   // In frontend/src/services/googleSheetsService.js
-   this.SHEET_ID = 'YOUR_SHEET_ID_HERE';
+#### 6. AI Chat Support
+- Floating chat widget on all public pages
+- Context-aware responses
+- Session management
+- Integration with AI processing backend
+- Fallback responses for service unavailability
+- Professional error handling with alternative support options
+
+#### 7. Contact Management
+- Contact form with validation
+- Message submission tracking
+- Integration with ticketing system
+- Status updates and follow-ups
+
+### Admin Features
+
+#### 1. Admin Dashboard
+- Comprehensive analytics overview
+- Real-time data synchronization (30-second refresh)
+- Date range filtering with calendar interface
+- Custom date range selection
+- Multiple visualization charts
+
+#### 2. Key Performance Metrics
+- Total revenue tracking with date filtering
+- Lead count and conversion rates
+- Payment success/pending/failed statistics
+- Engagement metrics
+- Sales funnel visualization
+
+#### 3. Data Visualization
+- Registration trend analysis (line charts)
+- Lead source distribution (horizontal bar charts)
+- Role distribution analysis (donut charts)
+- Payment statistics with visual indicators
+- Query analytics with ticket tracking
+
+#### 4. Lead Management Table
+- Advanced search and filtering
+- Multi-column sorting
+- Pagination with customizable page size
+- Column visibility controls
+- Individual column filters with unique value detection
+- Status indicators with color coding
+- Export to CSV functionality
+
+#### 5. Advanced Analytics
+- Date range comparison
+- Hourly breakdown for single-day analysis
+- Monthly trends for all-time view
+- Source tracking and attribution
+- Role-based segmentation
+- Payment status tracking
+
+#### 6. Query Analytics
+- Open ticket tracking
+- Closed ticket monitoring
+- Total query count
+- Visual ticket status distribution
+- Direct link to Google Sheets ticket management
+
+#### 7. Data Management
+- Direct Google Sheets integration
+- Real-time CSV export
+- Filtered data export based on current view
+- Column selection for custom exports
+
+### Security Features
+
+#### 1. Authentication Security
+- JWT token-based authentication
+- HTTP-only secure cookies
+- Token expiration and refresh mechanism
+- Bcrypt password hashing
+- Session management
+
+#### 2. API Security
+- Helmet.js security headers
+- CORS configuration
+- Rate limiting (100 requests per 15 minutes per IP)
+- Request validation with express-validator
+- SQL injection prevention
+- XSS protection
+
+#### 3. Data Security
+- Input sanitization
+- Email normalization
+- Mobile number validation
+- Environment variable isolation
+- Secure credential management
+
+### Integration Features
+
+#### 1. n8n Webhook Integration
+- Lead capture webhook
+- Payment processing webhook
+- Contact form submission
+- User registration verification
+- Login authentication
+- Admin authentication
+- Coupon validation
+- AI chat processing
+
+#### 2. Google Sheets Integration
+- Real-time data fetching via CSV export
+- Lead data synchronization
+- Contact form submissions tracking
+- Admin dashboard data source
+- Automated data parsing and processing
+
+## Technology Stack
+
+### Frontend Technologies
+
+**Core Framework**
+- React 18.2.0 - UI library
+- React Router DOM 6.20.1 - Client-side routing
+- React Context API - State management
+
+**Data Visualization**
+- Chart.js 4.5.0 - Charting library
+- React-Chartjs-2 5.3.0 - React wrapper for Chart.js
+- Recharts 3.2.1 - Alternative charting solution
+- chartjs-plugin-datalabels 2.2.0 - Data label plugin
+
+**UI Components**
+- Framer Motion 12.23.22 - Animation library
+- Lucide React 0.294.0 - Icon library
+- React Table 7.8.0 - Table component
+
+**Utilities**
+- Axios 1.6.2 - HTTP client
+- date-fns 4.1.0 - Date manipulation
+- file-saver 2.0.5 - File download utility
+- jspdf 3.0.3 - PDF generation
+- xlsx 0.18.5 - Excel file handling
+
+**Google Services**
+- googleapis 161.0.0 - Google Sheets API integration
+
+### Backend Technologies
+
+**Core Framework**
+- Node.js 16+ - Runtime environment
+- Express 4.18.2 - Web framework
+- Nodemon 3.0.2 - Development server
+
+**Security**
+- Helmet 7.1.0 - Security headers
+- CORS 2.8.5 - Cross-origin resource sharing
+- Express-rate-limit 7.1.5 - Rate limiting
+- bcryptjs 3.0.2 - Password hashing
+- jsonwebtoken 9.0.2 - JWT authentication
+- cookie-parser 1.4.7 - Cookie handling
+
+**Validation**
+- Express-validator 7.0.1 - Request validation
+
+**Utilities**
+- Axios 1.12.2 - HTTP client
+- dotenv 16.3.1 - Environment variable management
+- Morgan 1.10.0 - HTTP request logger
+
+### Development Tools
+
+- Concurrently 8.2.2 - Run multiple commands
+- React Scripts 5.0.1 - Create React App tooling
+
+## Project Structure
+
+```
+webinar-sales-funnel-app/
+├── backend/
+│   ├── controllers/
+│   │   ├── adminController.js      # Admin authentication and dashboard
+│   │   ├── authController.js       # User authentication logic
+│   │   ├── leadController.js       # Lead capture and contact forms
+│   │   ├── paymentController.js    # Payment simulation and validation
+│   │   └── webinarController.js    # Webinar information
+│   ├── middleware/
+│   │   └── axios.js                # Axios instance configuration
+│   ├── routes/
+│   │   └── api.js                  # API route definitions
+│   ├── .env                        # Environment variables (development)
+│   ├── .env.production             # Production environment variables
+│   ├── package.json                # Backend dependencies
+│   └── server.js                   # Express server entry point
+├── frontend/
+│   ├── public/
+│   │   ├── index.html              # HTML template
+│   │   └── Python.png              # Python logo asset
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── AIChatWidget.js    # Floating AI chat component
+│   │   │   └── Navigation.js       # Main navigation bar
+│   │   ├── contexts/
+│   │   │   └── AuthContext.js      # Authentication context provider
+│   │   ├── pages/
+│   │   │   ├── AboutPage.js        # About information
+│   │   │   ├── AdminDashboard.js   # Complete analytics dashboard
+│   │   │   ├── AdminLoginPage.js   # Admin login interface
+│   │   │   ├── ContactPage.js      # Contact form
+│   │   │   ├── LandingPage.js      # Main landing page
+│   │   │   ├── LoginPage.js        # User login
+│   │   │   ├── NotFoundPage.js     # 404 error page
+│   │   │   ├── PaymentFailedPage.js # Failed payment handling
+│   │   │   ├── PaymentPage.js      # Payment processing interface
+│   │   │   ├── PaymentSuccessPage.js # Success confirmation
+│   │   │   ├── RegisterPage.js     # User registration
+│   │   │   └── ThankYouPage.js     # Post-registration thank you
+│   │   ├── services/
+│   │   │   └── googleSheetsService.js # Google Sheets integration
+│   │   ├── utils/
+│   │   │   └── api.js              # API client utilities
+│   │   ├── App.js                  # Main application component
+│   │   ├── index.css               # Global styles
+│   │   └── index.js                # Application entry point
+│   ├── package.json                # Frontend dependencies
+│   └── README.md                   # Frontend-specific documentation
+├── .gitignore                      # Git ignore rules
+├── package.json                    # Root package configuration
+└── README.md                       # This file
+```
+
+## Installation
+
+### Prerequisites
+
+- Node.js v16.0.0 or higher
+- npm v7.0.0 or higher
+- Git
+
+### Step-by-Step Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd webinar-sales-funnel-app
    ```
 
-3. **That's it!** - The dashboard will automatically:
-   - ✅ Fetch real-time data via CSV export
-   - ✅ Parse any column naming convention
-   - ✅ Cache data for performance
-   - ✅ Show live analytics instantly
+2. **Install all dependencies**
+   ```bash
+   npm run install:all
+   ```
+   This command installs dependencies for root, backend, and frontend simultaneously.
 
-**Supported Data Formats:**
-- Payment Status: `Payment Status`, `PaymentStatus`
-- Revenue: `Paid Amount`, `PaidAmount`, `PayableAmount`, `Cost`
-- Timestamps: `Registration_TS`, `Transaction_TS`, etc.
-- User Info: `Name`, `Email`, `Phone`, `Role`
-- Coupons: `CouponCode`, `DiscountAmount`
+3. **Configure environment variables**
+   
+   **Backend Configuration** (`backend/.env`):
+   ```env
+   PORT=5000
+   NODE_ENV=development
+   
+   # Frontend URL for CORS
+   FRONTEND_URL=http://localhost:3000
+   
+   # n8n Webhook Base URL
+   API_BASE_URL=https://your-n8n-instance.com/webhook
+   
+   # JWT Secret
+   JWT_SECRET=your-super-secret-jwt-key-change-this
+   
+   # Rate Limiting
+   RATE_LIMIT_WINDOW_MS=900000
+   RATE_LIMIT_MAX_REQUESTS=100
+   ```
 
-**Benefits:**
-- 🚀 Zero configuration complexity
-- 🔒 Read-only secure access
-- ⚡ Real-time updates every 30 seconds
-- 🎯 Works with any Google Sheets structure
-- 📊 Automatic data parsing and analytics
+   **Frontend Configuration** (`frontend/.env`):
+   ```env
+   REACT_APP_API_URL=/api
+   ```
 
-## 🎯 Sales Funnel Optimization Features
+4. **Verify Installation**
+   ```bash
+   # Check backend
+   cd backend && npm list
+   
+   # Check frontend
+   cd ../frontend && npm list
+   ```
 
-**Conversion-Focused Design:**
-- **Social Proof Integration**: 2x2 instructor showcase with expertise display
-- **Objection Handling**: Interactive FAQ accordion addressing common concerns
-- **Friction Reduction**: One-click coupon application with instant feedback
-- **Trust Building**: Professional UI with clear progress indicators
-- **Lead Segmentation**: Role-based categorization for targeted follow-up
-- **Payment Optimization**: Streamlined checkout with dynamic pricing
+## Configuration
 
-**Advanced Analytics & Automation:**
-- **Real-time Lead Capture**: Instant webhook triggers to n8n workflows
-- **Conversion Tracking**: Complete funnel analytics from landing to payment
-- **Personalized Offers**: Dynamic coupon system with user validation
-- **Automated Follow-up**: Integrated lead nurturing through n8n
+### Backend Configuration
 
-## 📋 Project Overview
+The backend uses environment variables for configuration. Key configurations include:
 
-This application handles the complete customer journey from landing page to webinar registration, plus comprehensive admin management:
+**Server Settings**
+- `PORT`: Server port (default: 5000)
+- `NODE_ENV`: Environment mode (development/production)
+- `FRONTEND_URL`: Frontend URL for CORS
 
-### **🎯 Customer Journey:**
-- **Webinar Registration**: Role-based registration forms for webinar interest with real-time validation
-- **User Authentication**: Secure login system with persistent sessions and "Remember Me" functionality
-- **Payment Processing**: Simulated payment flow (₹4999 webinar fee) with dynamic coupon system and strikethrough pricing
-- **AI Support**: Floating chat widget for instant user assistance and question resolution
-- **Coupon Validation**: Dynamic coupon code validation through n8n integration
-- **Interactive UI**: Professional toast notifications with icons, progress bars, actionable buttons, and animations
-- **Form Validation**: Real-time character validation with user-friendly feedback and duplicate email handling
-- **Persistent Sessions**: Users stay logged in across browser sessions with automatic token refresh
-- **Contact Forms**: Advanced message validation with character counting and error states
+**Security Settings**
+- `JWT_SECRET`: Secret key for JWT token signing
+- `RATE_LIMIT_WINDOW_MS`: Rate limit time window
+- `RATE_LIMIT_MAX_REQUESTS`: Maximum requests per window
 
-### **🛡️ Admin Management:**
-- **Secure Authentication**: JWT-based login with environment variable credentials
-- **PyStack Analytics Dashboard**: Comprehensive metrics and performance tracking with Google Sheets integration
-- **Real-Time Data Visualization**: Interactive charts and KPI cards with automatic refresh
-- **Export Capabilities**: Professional reports in Excel, CSV, and PDF formats
-- **Protected Routes**: Automatic session validation and secure access control
-- **Professional Admin UI**: Modern dashboard with data tables, charts, and analytics
-- **Session Management**: 24-hour token expiration with automatic cleanup
-- **Lead & Payment Tracking**: Real-time monitoring of conversions and revenue with detailed analytics
+**Integration Settings**
+- `API_BASE_URL`: n8n webhook base URL for external integrations
 
-### **🔗 Integration:**
-- **n8n Webhooks**: Automated workflow triggers for payments, coupons, and lead capture
-- **Google Sheets API**: Real-time data synchronization and analytics
-- **Backend API**: Secure endpoints with JWT middleware protection
+### Frontend Configuration
 
-## 🗂️ Project Structure
+The frontend proxies API requests to the backend during development via the `proxy` setting in `package.json`.
 
-```
-Webinar-Sales-Funnel-App/
-├── frontend/                     # React application
-│   ├── src/
-│   │   ├── components/          # Reusable UI components
-│   │   │   ├── KPICard.js       # Dashboard KPI cards
-│   │   │   ├── Charts.js        # Chart components
-│   │   │   ├── SalesFunnel.js   # Sales funnel visualization
-│   │   │   ├── DataTable.js     # Advanced data table
-│   │   │   └── Navigation.js    # Navigation component
-│   │   ├── services/            # API services
-│   │   │   └── googleSheetsService.js  # Google Sheets integration
-│   │   ├── pages/               # All app pages including AdminDashboard
-│   │   ├── contexts/            # React contexts (AuthContext)
-│   │   └── utils/               # API utilities
-│   ├── .env.example             # Environment variables template
-│   └── package.json
-├── backend/                      # Node.js Express server
-│   ├── controllers/             # Business logic
-│   ├── routes/                  # API endpoints
-│   ├── middleware/              # Axios configuration
-│   └── server.js
-└── package.json                 # Root scripts
-```
+**Production Configuration**
+- Update `REACT_APP_API_URL` to point to production backend
+- Configure build output directory
+- Set up proper CORS headers
 
-## 🔄 Application Flow
+### Google Sheets Integration
 
-```
-Landing Page → Login/Register Flow → Authenticated Experience
-     ↓
-Webinar Registration → Payment Page → Success/Failed → Thank You
-     ↓
-Contact/About Pages + AI Chat Support
+The admin dashboard reads data from Google Sheets:
+- Sheet ID is configured in `frontend/src/services/googleSheetsService.js`
+- Public CSV export URL is used for data fetching
+- No authentication required for public sheets
+- Update `SHEET_ID` constant for different sheets
 
-Authentication Flow:
-New Users: Landing → /register (Webinar Interest) → /login (If needed)
-Existing Users: Landing → /login → Persistent Session (Remember Me)
+## Usage
 
-Admin Route:
-/admin → JWT Login → PyStack Analytics Dashboard with Google Sheets Integration
-```
+### Development Mode
 
-**Key Pages:**
-- **Landing**: Hero section with countdown timer and authentication-aware navigation
-- **About**: Team showcase with 2x2 instructor grid and professional layout
-- **Register**: Webinar interest capture form with role selection (Student, Faculty, Industry Professional, etc.)
-- **Login**: User authentication with "Remember Me" functionality and persistent sessions
-- **Payment**: ₹4999 payment simulation with advanced coupon system, strikethrough pricing, and professional toast notifications
-- **Success**: Payment confirmation with email delivery timeline information
-- **Contact**: Support form with message validation (10-1000 chars), interactive FAQ accordion, and AI chat widget
-- **Thank You**: Conditional display based on payment status with proper user guidance
-- **Admin Login**: Secure JWT authentication with PyStack branding and split-screen design
-- **Admin Dashboard**: PyStack Analytics with Google Sheets integration, real-time charts, KPI tracking, export capabilities, and comprehensive business intelligence
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Node.js 16.0.0+
-- npm
-- Google Cloud Console account for Sheets API
-
-### Installation
-
-1. **Clone and install:**
-```bash
-git clone https://github.com/UmeshChandra05/Webinar-Sales-Funnel.git
-cd Webinar-Sales-Funnel-App
-npm run install:all
-```
-
-2. **Environment setup:**
-
-**Backend** - Create `backend/.env`:
-```env
-PORT=5000
-NODE_ENV=development
-FRONTEND_URL=http://localhost:3000
-API_BASE_URL=https://your-n8n-webhook-url.com/webhook
-
-# User Authentication (n8n-based validation)
-JWT_SECRET=your-super-secure-jwt-secret-key-for-user-auth
-BCRYPT_ROUNDS=10
-
-# Admin Authentication (n8n-based validation)
-ADMIN_AUTH_WEBHOOK_URL=https://your-n8n-webhook-url.com/webhook/admin-auth
-ADMIN_JWT_SECRET=your-super-secure-admin-jwt-secret-key
-
-# Rate Limiting
-RATE_LIMIT_WINDOW_MS=900000
-RATE_LIMIT_MAX_REQUESTS=100
-```
-
-**Frontend** - Create `frontend/.env` (Optional - no environment variables needed for analytics!):
-```env
-# 🎉 NO GOOGLE SHEETS API KEYS REQUIRED!
-# Analytics dashboard works out-of-the-box with zero setup
-
-# Optional: Backend API Configuration
-# REACT_APP_API_BASE_URL=http://localhost:5000
-
-# Optional: Admin user configuration
-# REACT_APP_ADMIN_EMAIL=admin@pystack.com
-```
-
-3. **Quick Analytics Setup (2 minutes):**
-   - Make your Google Sheet publicly viewable
-   - Update SHEET_ID in `frontend/src/services/googleSheetsService.js`
-   - Done! See `ANALYTICS_SETUP.md` for details
-
-4. **Start the application:**
+**Start both servers concurrently:**
 ```bash
 npm run dev
 ```
 
-Access at: `http://localhost:3000`
+This starts:
+- Backend server on `http://localhost:5000`
+- Frontend development server on `http://localhost:3000`
 
-## 🛡️ Admin Access
-
-**PyStack Analytics Dashboard:**
-- **URL**: `http://localhost:3000/admin`
-- **Authentication**: Dynamic validation through N8n webhook
-- **Credentials**: Managed centrally in N8n workflow (no hardcoded values)
-- **Features**: Real-time Google Sheets CSV analytics, KPI tracking, interactive charts, export capabilities
-- **Data Sources**: Live Google Sheets integration with zero-setup CSV feed (no API keys!)
-- **Analytics**: Sales funnel, role distribution, revenue trends, coupon performance
-- **Session**: 24-hour JWT token with automatic expiration
-- **Security**: Protected routes with N8n-based credential validation
-- **Export Options**: Excel, CSV, PDF reports with professional formatting
-
-## 🎯 Sales Funnel Optimization Features
-
-**Conversion-Focused Design:**
-- **Social Proof Integration**: 2x2 instructor showcase with expertise display
-- **Objection Handling**: Interactive FAQ accordion addressing common concerns
-- **Friction Reduction**: One-click coupon application with instant feedback
-- **Trust Building**: Professional UI with clear progress indicators
-- **Lead Segmentation**: Role-based categorization for targeted follow-up
-- **Payment Optimization**: Streamlined checkout with dynamic pricing
-
-**Advanced Analytics & Automation:**
-- **Real-time Lead Capture**: Instant webhook triggers to n8n workflows
-- **Conversion Tracking**: Complete funnel analytics from landing to payment
-- **Personalized Offers**: Dynamic coupon system with user validation
-- **Automated Follow-up**: Integrated lead nurturing through n8n
-
-## 📋 Project Overview
-
-This application handles the complete customer journey from landing page to webinar registration, plus comprehensive admin management:
-
-### **🎯 Customer Journey:**
-- **Webinar Registration**: Role-based registration forms for webinar interest with real-time validation
-- **User Authentication**: Secure login system with persistent sessions and "Remember Me" functionality
-- **Payment Processing**: Simulated payment flow (₹4999 webinar fee) with dynamic coupon system and strikethrough pricing
-- **AI Support**: Floating chat widget for instant user assistance and question resolution
-- **Coupon Validation**: Dynamic coupon code validation through n8n integration
-- **Interactive UI**: Professional toast notifications with icons, progress bars, actionable buttons, and animations
-- **Form Validation**: Real-time character validation with user-friendly feedback and duplicate email handling
-- **Persistent Sessions**: Users stay logged in across browser sessions with automatic token refresh
-- **Contact Forms**: Advanced message validation with character counting and error states
-
-### **🛡️ Admin Management:**
-- **Secure Authentication**: JWT-based login with environment variable credentials
-- **PyStack Analytics Dashboard**: Comprehensive metrics and performance tracking
-- **Protected Routes**: Automatic session validation and secure access control
-- **Professional Admin UI**: Split-screen design with PyStack branding and analytics cards
-- **Session Management**: 24-hour token expiration with automatic cleanup
-- **Lead & Payment Tracking**: Real-time monitoring of conversions and revenue
-
-### **🔗 Integration:**
-- **n8n Webhooks**: Automated workflow triggers for payments, coupons, and lead capture
-- **Backend API**: Secure endpoints with JWT middleware protection
-
-## 🗂️ Project Structure
-
-```
-Webinar-Sales-Funnel-App/
-├── frontend/                 # React application
-│   ├── src/
-│   │   ├── components/       # Navigation component
-│   │   ├── pages/           # All app pages
-│   │   └── utils/           # API utilities
-│   └── package.json
-├── backend/                  # Node.js Express server
-│   ├── controllers/         # Business logic
-│   ├── routes/              # API endpoints
-│   ├── middleware/          # Axios configuration
-│   └── server.js
-└── package.json             # Root scripts
-```
-
-## 🔄 Application Flow
-
-```
-Landing Page → Login/Register Flow → Authenticated Experience
-     ↓
-Webinar Registration → Payment Page → Success/Failed → Thank You
-     ↓
-Contact/About Pages + AI Chat Support
-
-Authentication Flow:
-New Users: Landing → /register (Webinar Interest) → /login (If needed)
-Existing Users: Landing → /login → Persistent Session (Remember Me)
-
-Admin Route:
-/admin → JWT Login → PyStack Analytics Dashboard
-```
-
-**Key Pages:**
-- **Landing**: Hero section with countdown timer and authentication-aware navigation
-- **About**: Team showcase with 2x2 instructor grid and professional layout
-- **Register**: Webinar interest capture form with role selection (Student, Faculty, Industry Professional, etc.)
-- **Login**: User authentication with "Remember Me" functionality and persistent sessions
-- **Payment**: ₹4999 payment simulation with advanced coupon system, strikethrough pricing, and professional toast notifications
-- **Success**: Payment confirmation with email delivery timeline information
-- **Contact**: Support form with message validation (10-1000 chars), interactive FAQ accordion, and AI chat widget
-- **Thank You**: Conditional display based on payment status with proper user guidance
-- **Admin Login**: Secure JWT authentication with PyStack branding and split-screen design
-- **Admin Dashboard**: PyStack Analytics with lead management, payment tracking, and performance metrics
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Node.js 16.0.0+
-- npm
-
-### Installation
-
-1. **Clone and install:**
+**Start servers individually:**
 ```bash
-git clone https://github.com/UmeshChandra05/Webinar-Sales-Funnel.git
-cd Webinar-Sales-Funnel-App
-npm run install:all
+# Backend only
+npm run dev:backend
+
+# Frontend only
+npm run dev:frontend
 ```
 
-2. **Environment setup:**
-Create `backend/.env`:
-```env
-PORT=5000
-NODE_ENV=development
-FRONTEND_URL=http://localhost:3000
-API_BASE_URL=https://your-n8n-webhook-url.com/webhook
+### Production Mode
 
-# User Authentication (n8n-based validation)
-JWT_SECRET=your-super-secure-jwt-secret-key-for-user-auth
-BCRYPT_ROUNDS=10
-
-# Admin Authentication (n8n-based validation)
-ADMIN_AUTH_WEBHOOK_URL=https://your-n8n-webhook-url.com/webhook/admin-auth
-ADMIN_JWT_SECRET=your-super-secure-admin-jwt-secret-key
-
-# Rate Limiting
-RATE_LIMIT_WINDOW_MS=900000
-RATE_LIMIT_MAX_REQUESTS=100
-```
-
-3. **Start the application:**
+**Build all components:**
 ```bash
-npm run dev
+npm run build
 ```
 
-Access at: `http://localhost:3000`
+**Start production server:**
+```bash
+npm start
+```
 
-## 🛡️ Admin Access
+### Accessing the Application
 
-**PyStack Analytics Dashboard:**
-- **URL**: `http://localhost:3000/admin`
-- **Authentication**: Dynamic validation through N8n webhook
-- **Credentials**: Managed centrally in N8n workflow (no hardcoded values)
-- **Features**: Lead management, payment tracking, PyStack analytics with Python-focused metrics
-- **Session**: 24-hour JWT token with automatic expiration
-- **Security**: Protected routes with N8n-based credential validation
+**Public Routes:**
+- `/` - Landing page
+- `/register` - User registration
+- `/login` - User login
+- `/payment` - Payment processing
+- `/about` - About page
+- `/contact` - Contact form
 
-## 🌐 API Endpoints
+**Protected Routes:**
+- `/payment-success` - Post-payment success page
+- `/payment-failed` - Payment failure page
+- `/thank-you` - Registration confirmation
 
-### **Public Endpoints:**
-| Endpoint | Purpose | n8n Webhook |
-|----------|---------|-------------|
-| `POST /api/capture-lead` | Webinar registration | `/capture-lead` |
-| `POST /api/simulate-payment` | Payment processing | `/simulate-payment` |
-| `POST /api/validate-coupon` | Coupon validation | `/validate-coupon` |
-| `POST /api/contact` | Contact forms | `/contact-form` |
-| `POST /api/ai-chat` | AI chat support | `/ai-chat` |
-| `GET /api/webinar-info` | Webinar details | - |
+**Admin Routes:**
+- `/admin` - Admin login
+- `/admin/dashboard` - Analytics dashboard (requires admin authentication)
 
-### **User Authentication Endpoints:**
-| Endpoint | Purpose | Features |
-|----------|---------|----------|
-| `POST /api/auth/login` | User login | Cookie + JWT, Remember Me, bcrypt validation |
-| `POST /api/auth/register` | User registration | Password hashing, duplicate email detection |
-| `GET /api/auth/verify` | Token verification | Dual JWT + Cookie support |
-| `POST /api/auth/refresh` | Token refresh | Automatic session extension |
-| `POST /api/auth/logout` | User logout | Complete session cleanup, cookie clearing |
+## API Documentation
 
-### **Admin Endpoints (JWT Protected):**
-| Endpoint | Purpose | Authentication |
-|----------|---------|----------------|
-| `POST /api/admin/login` | Admin authentication | N8n webhook validation |
-| `GET /api/admin/dashboard` | Dashboard data | JWT Bearer token |
-| `GET /api/admin/verify-token` | Token validation | JWT Bearer token |
+### Base URL
+```
+Development: http://localhost:5000/api
+Production: https://your-domain.com/api
+```
 
-## 🔧 n8n Integration
+### Public Endpoints
 
-The app sends data to multiple n8n webhook endpoints:
+#### Health Check
+```
+GET /health
+Response: { status: "OK", timestamp: "ISO-8601", uptime: number }
+```
 
-**User Authentication Data:**
-```json
-{
-  "name": "John Doe",
-  "email": "john@example.com",
-  "password": "hashed_password_bcrypt",
-  "phone": "+1234567890",
-  "role": "Industry Professional",
-  "rememberMe": true,
-  "type": "user_registration",
-  "timestamp": "2025-10-06T10:30:00Z",
-  "ip_address": "192.168.1.100",
-  "user_agent": "Mozilla/5.0..."
+#### Capture Lead
+```
+POST /api/capture-lead
+Body: {
+  name: string (2-100 chars),
+  email: string (valid email),
+  mobile: string (optional, valid mobile),
+  role: string (1-50 chars),
+  source: string (optional)
 }
+Response: { success: boolean, message: string, data: { id: string, timestamp: string } }
 ```
 
-**User Login Data:**
-```json
-{
-  "email": "john@example.com",
-  "password": "plain_password",
-  "type": "user_login",
-  "timestamp": "2025-10-06T10:30:00Z",
-  "ip_address": "192.168.1.100",
-  "user_agent": "Mozilla/5.0..."
+#### Simulate Payment
+```
+POST /api/simulate-payment
+Body: {
+  email: string (valid email),
+  status: "success" | "failed" | "need_time_to_confirm",
+  transaction_id: string (optional),
+  couponCode: string (optional),
+  discount: number (optional, 0-100)
 }
+Response: { success: boolean, message: string, data: { transaction_id, status, timestamp, whatsapp_link } }
 ```
 
-**AI Chat Data:**
-```json
-{
-  "message": "How can I join the webinar?",
-  "sessionId": "session_123456",
-  "userId": "user_789",
-  "timestamp": "2025-10-06T10:30:00Z",
-  "type": "ai_chat_request"
+#### Validate Coupon
+```
+POST /api/validate-coupon
+Body: {
+  couponCode: string (1-20 chars),
+  email: string (valid email)
 }
+Response: { success: boolean, message: string, discount: number, couponCode: string }
 ```
 
-**Lead Capture Data:**
-```json
-{
-  "name": "John Doe",
-  "email": "john@example.com",
-  "phone": "+1234567890",
-  "role": "Industry Professional",
-  "source": "website",
-  "timestamp": "2025-09-24T10:30:00Z",
-  "ip_address": "192.168.1.100"
-}
+#### Get Webinar Info
 ```
-
-**Payment Data:**
-```json
-{
-  "email": "john@example.com",
-  "status": "success",
-  "transaction_id": "txn_123456789",
-  "amount": 3999,
-  "originalAmount": 4999,
-  "couponCode": "SAVE20",
-  "discount": 20,
-  "currency": "INR",
-  "timestamp": "2025-09-24T10:30:00Z"
-}
-```
-
-**Coupon Validation Data:**
-```json
-{
-  "couponCode": "SAVE20",
-  "email": "john@example.com",
-  "timestamp": "2025-09-24T10:30:00Z",
-  "action": "validate_coupon"
-}
-```
-
-**Contact Form Data:**
-```json
-{
-  "name": "John Doe",
-  "email": "john@example.com",
-  "message": "I have a question about the webinar content and schedule.",
-  "timestamp": "2025-09-24T10:30:00Z",
-  "source": "contact_form"
-}
-```
-
-**Admin Authentication Data:**
-```json
-{
-  "username": "admin_user",
-  "password": "secure_password",
-  "timestamp": "2025-09-24T10:30:00Z",
-  "source": "admin-login",
-  "action": "validate_credentials"
-}
-```
-
-**Expected N8n Response for Admin Auth:**
-```json
-{
-  "valid": true,
-  "userInfo": {
-    "username": "admin_user",
-    "role": "admin",
-    "permissions": ["dashboard", "analytics", "user_management"]
+GET /api/webinar-info
+Response: {
+  success: boolean,
+  data: {
+    title: string,
+    date: string (ISO-8601),
+    duration: string,
+    instructor: string,
+    topics: string[],
+    timezone: string,
+    registration_count: number
   }
 }
 ```
 
-## � N8n Admin Authentication Setup
-
-**Required N8n Workflow for Admin Authentication:**
-
-1. **Webhook Trigger**: `/admin-auth`
-2. **Credential Validation Logic**: Check username/password against your secure data source
-3. **Response Format**: Return JSON with `valid: true/false` and optional `userInfo`
-
-**Sample N8n Workflow Response:**
-- **Valid Login**: `{ "valid": true, "userInfo": { "username": "admin", "role": "admin" } }`
-- **Invalid Login**: `{ "valid": false, "message": "Invalid credentials" }`
-
-## �📦 Available Scripts
-
-```bash
-npm run dev              # Start both frontend & backend
-npm run dev:frontend     # Frontend only (port 3000)
-npm run dev:backend      # Backend only (port 5000)
-npm run install:all      # Install all dependencies
-npm run build            # Production build
+#### Contact Form
+```
+POST /api/contact
+Body: {
+  name: string (2-100 chars),
+  email: string (valid email),
+  message: string (10-1000 chars)
+}
+Response: { success: boolean, message: string }
 ```
 
-## ✨ Complete Sales Funnel Features
-
-### **🚀 Lead Generation & Conversion**
-- **🎯 High-Converting Landing Page**: Strategic layout with social proof and urgency
-- **👥 2x2 Instructor Showcase**: Professional team display building credibility
-- **📋 Interactive FAQ System**: Objection handling with accordion UI (8-10 questions)
-- **� Smart Lead Capture**: Role-based forms with real-time validation
-
-### **💰 Revenue Optimization**
-- **🎟️ Dynamic Coupon Engine**: Real-time validation with n8n webhook integration
-- **💳 Streamlined Payment Flow**: Reduced friction checkout with clear feedback
-- **💰 Dynamic Pricing Display**: Instant price updates with discount calculation
-- **🔄 Conversion Analytics**: Complete tracking from lead to payment
-
-### **⚡ Professional User Experience**
-- **🍞 Advanced Toast System**: Icons, progress bars, slide-in animations
-- **✅ Smart Form Validation**: Character limits (10-1000), positive UX patterns
-- **📱 Mobile-First Design**: Conversion optimization across all devices
-- **🎨 Professional UI**: Consistent design language with micro-interactions
-
-## �🛠️ Tech Stack
-
-- **Frontend**: React 18.2.0, React Router, Axios, CSS Grid & Flexbox
-- **Backend**: Node.js, Express 4.18.2, express-validator, CORS, Helmet
-- **Integration**: n8n webhooks for automation and coupon validation
-- **UI/UX**: Toast notifications, accordion components, inline styling for reliability
-
-## 🔧 Troubleshooting
-
-**Port in use:**
-```bash
-# Windows
-netstat -ano | findstr :5000
-taskkill /PID <PID> /F
-
-# macOS/Linux
-lsof -ti:5000 | xargs kill -9
+#### AI Chat
+```
+POST /api/ai-chat
+Body: {
+  message: string (1-1000 chars),
+  sessionId: string (optional),
+  userId: string (optional)
+}
+Response: { success: boolean, response: string, sessionId: string, timestamp: string }
 ```
 
-**Dependencies issues:**
-```bash
-rm -rf node_modules package-lock.json
-npm run install:all
+### User Authentication Endpoints
+
+#### Register User
+```
+POST /api/auth/register
+Body: {
+  name: string (2-100 chars),
+  email: string (valid email),
+  password: string (min 6 chars),
+  mobile: string (optional, valid mobile),
+  role: string (optional)
+}
+Response: { success: boolean, message: string, token: string, user: object }
 ```
 
-## 📞 Support
+#### Login User
+```
+POST /api/auth/login
+Body: {
+  email: string (valid email),
+  password: string,
+  rememberMe: boolean (optional)
+}
+Response: { success: boolean, message: string, token: string, user: object }
+```
 
-- Check `/health` endpoint: `http://localhost:5000/health`
-- Review console logs for errors
-- Ensure `.env` file is configured correctly
+#### Verify Token
+```
+GET /api/auth/verify
+Headers: { Authorization: "Bearer <token>" }
+Response: { success: boolean, message: string, user: object }
+```
 
----
+#### Refresh Token
+```
+POST /api/auth/refresh
+Headers: { Authorization: "Bearer <token>" }
+Response: { success: boolean, message: string, token: string, user: object }
+```
 
-**Built with ❤️ using React and Node.js**
+#### Logout User
+```
+POST /api/auth/logout
+Headers: { Authorization: "Bearer <token>" }
+Response: { success: boolean, message: string }
+```
+
+### Admin Endpoints
+
+#### Admin Login
+```
+POST /api/admin/login
+Body: {
+  username: string,
+  password: string
+}
+Response: { success: boolean, message: string, token: string, user: object }
+```
+
+#### Get Dashboard Data
+```
+GET /api/admin/dashboard
+Headers: { Authorization: "Bearer <admin-token>" }
+Response: { success: boolean, data: { stats, recentActivity, lastUpdated } }
+```
+
+#### Refresh Admin Token
+```
+POST /api/admin/refresh-token
+Headers: { Authorization: "Bearer <admin-token>" }
+Response: { success: boolean, message: string, token: string }
+```
+
+### Rate Limiting
+
+All `/api/*` endpoints are rate-limited to:
+- 100 requests per 15 minutes per IP address
+- Configurable via environment variables
+- Returns 429 status code when limit exceeded
+
+### Error Responses
+
+Standard error response format:
+```json
+{
+  "error": "Error message",
+  "details": [] 
+}
+```
+
+HTTP Status Codes:
+- `200` - Success
+- `201` - Created
+- `400` - Bad Request (validation error)
+- `401` - Unauthorized
+- `403` - Forbidden
+- `404` - Not Found
+- `429` - Too Many Requests
+- `500` - Internal Server Error
+
+## Security
+
+### Authentication Mechanisms
+
+**JWT Tokens**
+- Signed with HS256 algorithm
+- 24-hour expiration for admin tokens
+- 7-day expiration for user tokens (30 days with Remember Me)
+- Stored in HTTP-only cookies for enhanced security
+
+**Password Security**
+- Bcrypt hashing with 10 salt rounds
+- Minimum password length: 6 characters
+- Password validation on registration
+
+### Security Headers
+
+Implemented via Helmet.js:
+- Content Security Policy
+- X-Frame-Options
+- X-Content-Type-Options
+- Referrer-Policy
+- Strict-Transport-Security (HSTS)
+
+### Input Validation
+
+- Express-validator for request validation
+- Email normalization and sanitization
+- Mobile number format validation
+- SQL injection prevention
+- XSS protection through input sanitization
+
+### CORS Configuration
+
+- Restricted origin (configurable via environment)
+- Credentials support enabled
+- Pre-flight request handling
+
+## Deployment
+
+### Production Build
+
+1. **Build frontend:**
+   ```bash
+   cd frontend
+   npm run build
+   ```
+
+2. **Configure environment:**
+   - Set `NODE_ENV=production` in backend
+   - Update `API_BASE_URL` to production n8n instance
+   - Configure `FRONTEND_URL` for CORS
+   - Set strong `JWT_SECRET`
+
+3. **Deploy backend:**
+   - Use process manager (PM2, Forever)
+   - Configure reverse proxy (Nginx)
+   - Set up SSL/TLS certificates
+   - Enable HTTPS
+
+4. **Deploy frontend:**
+   - Serve `build` directory via static server
+   - Configure CDN (optional)
+   - Enable gzip compression
+
+### Environment-Specific Configuration
+
+**Development:**
+- Hot reloading enabled
+- Detailed error messages
+- Morgan logging in dev mode
+- CORS origin: `http://localhost:3000`
+
+**Production:**
+- Minified builds
+- Generic error messages
+- Production logging
+- CORS restricted to production domain
+- Rate limiting enforced
+
+### Recommended Infrastructure
+
+**Backend:**
+- Node.js hosting (Heroku, AWS, DigitalOcean)
+- Reverse proxy (Nginx)
+- SSL termination
+- Process monitoring (PM2)
+
+**Frontend:**
+- Static hosting (Netlify, Vercel, AWS S3)
+- CDN integration
+- Automatic deployments
+
+**Database/Storage:**
+- Google Sheets for data persistence
+- n8n for workflow automation
+- Redis for session storage (optional)
+
+## Contributing
+
+This is a proprietary company project. Internal contributions should follow:
+
+1. Create feature branch from `main`
+2. Implement changes with comprehensive tests
+3. Update documentation
+4. Submit pull request for review
+5. Ensure CI/CD pipeline passes
+
+### Code Standards
+
+- ESLint configuration for consistent code style
+- Prettier for code formatting
+- Meaningful commit messages
+- Component and function documentation
+- Error handling best practices
+
+**Document Version:** 1.0.0  
+**Last Updated:** October 18, 2025  
+**Maintained By:** Development Team
