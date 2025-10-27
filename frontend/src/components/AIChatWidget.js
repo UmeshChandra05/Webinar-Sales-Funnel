@@ -64,7 +64,7 @@ const AIChatWidget = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: userMessage.text,
+          query: userMessage.text,
           timestamp: userMessage.timestamp.toISOString(),
           sessionId: `chat_${Date.now()}`,
           userId: localStorage.getItem('userEmail') || 'anonymous'

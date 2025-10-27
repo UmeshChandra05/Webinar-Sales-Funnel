@@ -5,55 +5,79 @@ const API_BASE_URL = process.env.API_BASE_URL
 const paymentController = {
   simulatePaymentAsync: async (req, res) => {
     try {
-      const { email, status, transaction_id, couponCode, discount } = req.body
+      const { email, payment_status, txn_id, couponcode_applied, discount_percentage } = req.body
 
       // Calculate final amount based on coupon discount
-      const originalAmount = 4999
-      const finalAmount = couponCode && discount > 0 ? 
-        originalAmount - (originalAmount * discount / 100) : 
-        originalAmount
+      const reg_fee = 4999
+      const discount_amt = couponcode_applied && discount_percentage > 0 ? 
+        Math.round(reg_fee * discount_percentage / 100) : 
+        0
+      const payable_amt = reg_fee - discount_amt
+      const paid_amt = payment_status === "Success" ? payable_amt : (payment_status === "Need Time" ? 0 : 0)
 
       const paymentData = {
         email,
-        status,
-        transaction_id: transaction_id || `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        timestamp: new Date().toISOString(),
-        amount: status === "success" ? finalAmount : (status === "need_time_to_confirm" ? finalAmount : 0),
-        originalAmount: originalAmount,
-        couponCode: couponCode || null,
-        discount: discount || 0,
+        payment_status,
+        txn_id: txn_id || `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        txn_timestamp: new Date().toISOString(),
+        paid_amt,
+        reg_fee,
+        couponcode_applied: couponcode_applied || null,
+        discount_percentage: discount_percentage || 0,
+        discount_amt,
+        payable_amt,
         currency: "INR",
       }
 
-      console.log(`💳 Payment simulation: ${status} for ${email}`)
+      console.log(`💳 Payment simulation: ${payment_status} for ${email}`)
 
-      // Special handling for need_time_to_confirm - always succeed locally
+      // Special handling for need_time_to_confirm
       if (status === "need_time_to_confirm") {
         console.log("🕐 Processing need_time_to_confirm request")
         
-        // Try to send to n8n but don't fail if it doesn't work
+        // Send to n8n and wait for response
         if (API_BASE_URL && API_BASE_URL !== "API_URL") {
           try {
-            await axios.post(`${API_BASE_URL}/simulate-payment`, paymentData, {
+            const response = await axios.post(`${API_BASE_URL}/simulate-payment`, paymentData, {
               timeout: 10000,
               headers: {
                 "Content-Type": "application/json",
               },
             })
             console.log("✅ Need time to confirm data sent to n8n successfully")
+            
+            // Return success with n8n response
+            return res.status(200).json({
+              success: true,
+              message: response.data?.message || "Time to confirm request recorded successfully",
+              data: {
+                txn_id: paymentData.txn_id,
+                payment_status: paymentData.payment_status,
+                txn_timestamp: paymentData.txn_timestamp,
+                whatsapp_link: null,
+                confirmation_pending: true,
+              },
+            })
           } catch (apiError) {
-            console.warn("⚠️ n8n API unavailable for need_time_to_confirm, continuing locally:", apiError.message)
+            console.error("❌ n8n API Error for need_time_to_confirm:", apiError.message)
+            
+            // Return error if n8n fails
+            return res.status(503).json({
+              success: false,
+              error: "Payment service temporarily unavailable",
+              message: "Unable to record your request. Please try again later.",
+            })
           }
         }
 
-        // Always return success for need_time_to_confirm
+        // Local fallback when n8n is not configured
         return res.status(200).json({
           success: true,
           message: "Time to confirm request recorded successfully",
           data: {
-            transaction_id: paymentData.transaction_id,
-            status: paymentData.status,
-            timestamp: paymentData.timestamp,
+            txn_id: paymentData.txn_id,
+            payment_status: paymentData.payment_status,
+            txn_timestamp: paymentData.txn_timestamp,
             whatsapp_link: null,
             confirmation_pending: true,
           },
@@ -74,31 +98,45 @@ const paymentController = {
 
           return res.status(200).json({
             success: true,
-            message: `Payment ${status} processed successfully`,
+            message: `Payment ${payment_status} processed successfully`,
             data: {
-              transaction_id: paymentData.transaction_id,
-              status: paymentData.status,
-              timestamp: paymentData.timestamp,
-              whatsapp_link: status === "success" ? "https://chat.whatsapp.com/sample-group-link" : null,
-              confirmation_pending: status === "need_time_to_confirm",
+              txn_id: paymentData.txn_id,
+              payment_status: paymentData.payment_status,
+              txn_timestamp: paymentData.txn_timestamp,
+              paid_amt: paymentData.paid_amt,
+              reg_fee: paymentData.reg_fee,
+              payable_amt: paymentData.payable_amt,
+              discount_amt: paymentData.discount_amt,
+              whatsapp_link: payment_status === "Success" ? "https://chat.whatsapp.com/sample-group-link" : null,
+              confirmation_pending: payment_status === "Need Time",
             },
           })
         } catch (apiError) {
           console.error("❌ Payment n8n API Error:", apiError.message)
-          // Continue with local success response even if external API fails
+          
+          // Return error if n8n fails
+          return res.status(503).json({
+            success: false,
+            error: "Payment service temporarily unavailable",
+            message: "Unable to process payment. Please try again later.",
+          })
         }
       }
 
-      // Return success response (local fallback)
+      // Local fallback response (when n8n is not configured)
       res.status(200).json({
         success: true,
-        message: `Payment ${status} processed successfully`,
+        message: `Payment ${payment_status} processed successfully`,
         data: {
-          transaction_id: paymentData.transaction_id,
-          status: paymentData.status,
-          timestamp: paymentData.timestamp,
-          whatsapp_link: status === "success" ? "https://chat.whatsapp.com/sample-group-link" : null,
-          confirmation_pending: status === "need_time_to_confirm",
+          txn_id: paymentData.txn_id,
+          payment_status: paymentData.payment_status,
+          txn_timestamp: paymentData.txn_timestamp,
+          paid_amt: paymentData.paid_amt,
+          reg_fee: paymentData.reg_fee,
+          payable_amt: paymentData.payable_amt,
+          discount_amt: paymentData.discount_amt,
+          whatsapp_link: payment_status === "Success" ? "https://chat.whatsapp.com/sample-group-link" : null,
+          confirmation_pending: payment_status === "Need Time",
         },
       })
     } catch (error) {
@@ -113,12 +151,12 @@ const paymentController = {
 
   validateCouponAsync: async (req, res) => {
     try {
-      const { couponCode, email } = req.body
+      const { couponcode_applied, email } = req.body
 
-      console.log(`🎟️ Validating coupon: ${couponCode} for ${email}`)
+      console.log(`🎟️ Validating coupon: ${couponcode_applied} for ${email}`)
 
       const couponData = {
-        couponCode: couponCode.trim().toUpperCase(),
+        couponcode_applied: couponcode_applied.trim().toUpperCase(),
         email: email.toLowerCase(),
         timestamp: new Date().toISOString(),
         action: "validate_coupon"
@@ -127,7 +165,7 @@ const paymentController = {
       // If API_BASE_URL is configured, send to n8n for validation
       if (API_BASE_URL && API_BASE_URL !== "API_URL") {
         try {
-          console.log(`🔄 Sending coupon validation request to n8n: ${couponCode}`)
+          console.log(`🔄 Sending coupon validation request to n8n: ${couponcode_applied}`)
           
           const response = await axios.post(`${API_BASE_URL}/validate-coupon`, couponData, {
             timeout: 15000,
@@ -138,13 +176,13 @@ const paymentController = {
 
           console.log("✅ n8n coupon validation response:", response.data)
 
-          // n8n should return: { success: true/false, discount: number, message: string }
+          // n8n should return: { success: true/false, discount_percentage: number, message: string }
           if (response.data && response.data.success) {
             return res.status(200).json({
               success: true,
               message: response.data.message || "Coupon applied successfully",
-              discount: response.data.discount || 0,
-              couponCode: couponCode.toUpperCase(),
+              discount_percentage: response.data.discount_percentage || 0,
+              couponcode_applied: couponcode_applied.toUpperCase(),
             })
           } else {
             return res.status(200).json({

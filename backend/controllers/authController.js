@@ -22,7 +22,7 @@ const authController = {
         mobile: mobile || "NA",
         role: role || "",
         type: "user_registration",
-        timestamp: new Date().toISOString(),
+        reg_timestamp: new Date().toISOString(),
         ip_address: req.ip,
         user_agent: req.get("User-Agent"),
       };
@@ -76,7 +76,7 @@ const authController = {
                 email: email,
                 mobile: mobile,
                 role: role,
-                timestamp: userData.timestamp
+                reg_timestamp: userData.reg_timestamp
               }
             });
           } else {
@@ -120,11 +120,16 @@ const authController = {
             });
           }
           
-          // Fall through to local success response for other errors
+          // Return generic error for other cases
+          return res.status(500).json({
+            success: false,
+            message: "Registration failed. Please try again later.",
+            errorCode: "REGISTRATION_ERROR"
+          });
         }
       }
 
-      // Local fallback response
+      // Local fallback response (when n8n is not configured)
       const tokenExpiry = rememberMe ? '30d' : '7d';
       const token = jwt.sign(
         { 
@@ -157,7 +162,7 @@ const authController = {
           email: email,
           mobile: mobile,
           role: role,
-          timestamp: userData.timestamp
+          reg_timestamp: userData.reg_timestamp
         }
       });
 
@@ -180,7 +185,7 @@ const authController = {
         email,
         password, // We'll send the plain password to n8n for verification
         type: "user_login",
-        timestamp: new Date().toISOString(),
+        reg_timestamp: new Date().toISOString(),
         ip_address: req.ip,
         user_agent: req.get("User-Agent"),
       };
@@ -253,14 +258,29 @@ const authController = {
             });
           }
           
-          // Fall through to local error response
+          // Network or server errors
+          if (apiError.code === 'ECONNREFUSED' || apiError.code === 'ETIMEDOUT') {
+            return res.status(503).json({
+              success: false,
+              message: "Authentication service temporarily unavailable. Please try again later.",
+              errorCode: "SERVICE_UNAVAILABLE"
+            });
+          }
+          
+          // Return generic error for other cases
+          return res.status(500).json({
+            success: false,
+            message: "Login failed. Please try again later.",
+            errorCode: "LOGIN_ERROR"
+          });
         }
       }
 
-      // Local fallback - always fail since we don't have local user database
-      res.status(401).json({
+      // Local fallback (when n8n is not configured) - fail since we don't have local user database
+      res.status(503).json({
         success: false,
-        message: "Authentication service temporarily unavailable. Please try again later."
+        message: "Authentication service is not configured. Please contact support.",
+        errorCode: "SERVICE_NOT_CONFIGURED"
       });
 
     } catch (error) {

@@ -70,7 +70,7 @@ const PaymentPage = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          couponCode: trimmedCode,
+          couponcode_applied: trimmedCode,
           email: userEmail,
         }),
       })
@@ -79,10 +79,10 @@ const PaymentPage = () => {
 
       if (result.success) {
         setCouponApplied(true)
-        setCouponDiscount(result.discount || 0)
+        setCouponDiscount(result.discount_percentage || 0)
         setCouponError("")
-        showToast(`Coupon applied! ${result.discount}% discount`, "success")
-        console.log(`✅ Coupon ${trimmedCode} applied: ${result.discount}% discount`)
+        showToast(`Coupon applied! ${result.discount_percentage}% discount`, "success")
+        console.log(`✅ Coupon ${trimmedCode} applied: ${result.discount_percentage}% discount`)
       } else {
         setCouponApplied(false)
         setCouponDiscount(0)
@@ -131,14 +131,14 @@ const PaymentPage = () => {
       
       const requestBody = {
         email: userEmail,
-        status: status,
-        transaction_id: `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        payment_status: status === "success" ? "Success" : status === "need_time_to_confirm" ? "Need Time" : "Failure",
+        txn_id: `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       }
 
       // Only add coupon data if a coupon is applied
       if (couponApplied && couponCode.trim()) {
-        requestBody.couponCode = couponCode.trim()
-        requestBody.discount = couponDiscount
+        requestBody.couponcode_applied = couponCode.trim()
+        requestBody.discount_percentage = couponDiscount
       }
       
       console.log('Request body:', requestBody) // Debug log

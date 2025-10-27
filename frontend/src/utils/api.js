@@ -52,8 +52,10 @@ class ApiClient {
       method: "POST",
       body: JSON.stringify({
         email: paymentData.email,
-        status: paymentData.status,
-        transaction_id: paymentData.transaction_id,
+        payment_status: paymentData.payment_status,
+        txn_id: paymentData.txn_id,
+        couponcode_applied: paymentData.couponcode_applied,
+        discount_percentage: paymentData.discount_percentage,
       }),
     })
   }
@@ -66,7 +68,7 @@ class ApiClient {
         name: formData.name,
         email: formData.email,
         mobile: formData.mobile || "NA",
-        message: formData.message,
+        query: formData.query,
       }),
     })
   }

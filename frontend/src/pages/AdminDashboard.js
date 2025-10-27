@@ -76,44 +76,44 @@ const AdminDashboard = () => {
   // Advanced analytics state
   const [showAdvancedSelection, setShowAdvancedSelection] = useState(false);
   const [visibleColumns, setVisibleColumns] = useState({
-    Name: true,
-    Mobile: true,
-    Email: true,
-    Role: true,
-    Status: true,
-    'Nurture Level': true,
-    'Payment Status': false,
-    Source: false,
-    'Registration_TS': false,
-    Payable: false,
-    'Paid Amount': false,
-    'Discount %': false,
-    'Discount Amount': false,
-    'Coupon Code (G)': false,
-    'Coupon Code (A)': false,
-    Unsubscribed: false,
-    Interest: false
+    name: true,
+    mobile: true,
+    email: true,
+    role: true,
+    client_status: true,
+    nuturing: true,
+    payment_status: false,
+    source: false,
+    reg_timestamp: false,
+    payable_amt: false,
+    paid_amt: false,
+    discount_percentage: false,
+    discount_amt: false,
+    couponcode_given: false,
+    couponcode_applied: false,
+    unsubscribed: false,
+    interest: false
   });
   
   // Column-specific filters
   const [columnFilters, setColumnFilters] = useState({
-    Name: 'all',
-    Mobile: 'all',
-    Email: 'all',
-    Role: 'all',
-    Status: 'all',
-    'Nurture Level': 'all',
-    'Payment Status': 'all',
-    Source: 'all',
-    'Registration_TS': 'all',
-    Payable: 'all',
-    'Paid Amount': 'all',
-    'Discount %': 'all',
-    'Discount Amount': 'all',
-    'Coupon Code (G)': 'all',
-    'Coupon Code (A)': 'all',
-    Unsubscribed: 'all',
-    Interest: 'all'
+    name: 'all',
+    mobile: 'all',
+    email: 'all',
+    role: 'all',
+    client_status: 'all',
+    nuturing: 'all',
+    payment_status: 'all',
+    source: 'all',
+    reg_timestamp: 'all',
+    payable_amt: 'all',
+    paid_amt: 'all',
+    discount_percentage: 'all',
+    discount_amt: 'all',
+    couponcode_given: 'all',
+    couponcode_applied: 'all',
+    unsubscribed: 'all',
+    interest: 'all'
   });
   
   // Chart data state
@@ -439,8 +439,8 @@ const AdminDashboard = () => {
       endDate.setHours(23, 59, 59, 999); // End of day (inclusive)
       
       filtered = filtered.filter(lead => {
-        if (!lead.Registration_TS) return false;
-        const regDate = new Date(lead.Registration_TS);
+        if (!lead.reg_timestamp) return false;
+        const regDate = new Date(lead.reg_timestamp);
         return !isNaN(regDate.getTime()) && regDate >= startDate && regDate <= endDate;
       });
     }
@@ -448,16 +448,16 @@ const AdminDashboard = () => {
     // Apply source filter
     if (sourceFilter !== 'all') {
       filtered = filtered.filter(lead => 
-        (lead.Source || '').toLowerCase() === sourceFilter.toLowerCase()
+        (lead.source || '').toLowerCase() === sourceFilter.toLowerCase()
       );
     }
 
     // Apply payment status filter
     if (paymentFilter !== 'all') {
       filtered = filtered.filter(lead => {
-        const status = (lead['Payment Status'] || '').toLowerCase().trim();
+        const status = (lead.payment_status || '').toLowerCase().trim();
         
-        // Map filter values to actual CSV values
+        // Map filter values to actual CSV values (support both old and new formats)
         if (paymentFilter === 'success') {
           return status === 'success' || status === 'successful' || status === 'paid' || status === 'completed';
         } else if (paymentFilter === 'pending') {
@@ -477,37 +477,37 @@ const AdminDashboard = () => {
     Object.keys(columnFilters).forEach(column => {
       if (columnFilters[column] !== 'all') {
         filtered = filtered.filter(lead => {
-          // Handle Mobile column with Phone fallback
+          // Handle Mobile column
           if (column === 'Mobile') {
-            const mobileValue = (lead.Mobile || lead.Phone || '').toString().toLowerCase().trim();
+            const mobileValue = (lead.mobile || '').toString().toLowerCase().trim();
             const filterValue = columnFilters[column].toLowerCase().trim();
             return mobileValue === filterValue;
           }
           
           // Handle Registration_TS with date comparison
           if (column === 'Registration_TS') {
-            if (!lead.Registration_TS) return false;
-            const leadDate = new Date(lead.Registration_TS).toISOString().split('T')[0];
+            if (!lead.reg_timestamp) return false;
+            const leadDate = new Date(lead.reg_timestamp).toISOString().split('T')[0];
             return leadDate === columnFilters[column];
           }
           
-          // Handle Nurture Level (might be stored as Nuturing)
+          // Handle Nurture Level
           if (column === 'Nurture Level') {
-            const value = (lead['Nurture Level'] || lead.Nuturing || '').toString().toLowerCase().trim();
+            const value = (lead.nurturing || '').toString().toLowerCase().trim();
             const filterValue = columnFilters[column].toLowerCase().trim();
             return value === filterValue;
           }
           
           // Handle Coupon Code (G) - Given
           if (column === 'Coupon Code (G)') {
-            const value = (lead['Coupon Code (G)'] || lead.CouponCodeGiven || lead['Coupon Given'] || '').toString().toLowerCase().trim();
+            const value = (lead.couponcode_given || '').toString().toLowerCase().trim();
             const filterValue = columnFilters[column].toLowerCase().trim();
             return value === filterValue;
           }
           
           // Handle Coupon Code (A) - Applied
           if (column === 'Coupon Code (A)') {
-            const value = (lead['Coupon Code (A)'] || lead.CouponCodeApplied || lead['Coupon Applied'] || lead.CouponCode || '').toString().toLowerCase().trim();
+            const value = (lead.couponcode_applied || '').toString().toLowerCase().trim();
             const filterValue = columnFilters[column].toLowerCase().trim();
             return value === filterValue;
           }
@@ -526,7 +526,7 @@ const AdminDashboard = () => {
           
           // Handle Status column - filter by payment status
           if (column === 'Status') {
-            const paymentStatus = (lead['Payment Status'] || '').toLowerCase().trim();
+            const paymentStatus = (lead.payment_status || '').toLowerCase().trim();
             const filterValue = columnFilters[column].toLowerCase().trim();
             
             // Map payment statuses to filter values
@@ -556,9 +556,9 @@ const AdminDashboard = () => {
     if (searchQuery.trim() !== '') {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(lead => 
-        (lead.Name || '').toLowerCase().includes(query) ||
-        (lead.Email || '').toLowerCase().includes(query) ||
-        (lead.Mobile || lead.Phone || '').toLowerCase().includes(query)
+        (lead.name || '').toLowerCase().includes(query) ||
+        (lead.email || '').toLowerCase().includes(query) ||
+        (lead.mobile || '').toLowerCase().includes(query)
       );
     }
 
@@ -575,45 +575,45 @@ const AdminDashboard = () => {
     setSortConfig({ key, direction });
 
     const sorted = [...filteredLeads].sort((a, b) => {
-      // Handle Mobile column specially - check both Mobile and Phone fields for backward compatibility
+      // Handle Mobile column
       let aVal, bVal;
       if (key === 'Mobile') {
-        aVal = a['Mobile'] || a['Phone'] || '';
-        bVal = b['Mobile'] || b['Phone'] || '';
+        aVal = a.mobile || '';
+        bVal = b.mobile || '';
       } else if (key === 'Nurture Level') {
-        // Handle Nurture Level (might be stored as Nuturing)
-        aVal = a['Nurture Level'] || a.Nuturing || '';
-        bVal = b['Nurture Level'] || b.Nuturing || '';
+        // Handle Nurture Level
+        aVal = a.nurturing || '';
+        bVal = b.nurturing || '';
       } else if (key === 'Coupon Code (G)') {
         // Handle Coupon Code (G) - Given
-        aVal = a['Coupon Code (G)'] || a.CouponCodeGiven || a['Coupon Given'] || '';
-        bVal = b['Coupon Code (G)'] || b.CouponCodeGiven || b['Coupon Given'] || '';
+        aVal = a.couponcode_given || '';
+        bVal = b.couponcode_given || '';
       } else if (key === 'Coupon Code (A)') {
         // Handle Coupon Code (A) - Applied
-        aVal = a['Coupon Code (A)'] || a.CouponCodeApplied || a['Coupon Applied'] || a.CouponCode || '';
-        bVal = b['Coupon Code (A)'] || b.CouponCodeApplied || b['Coupon Applied'] || b.CouponCode || '';
+        aVal = a.couponcode_applied || '';
+        bVal = b.couponcode_applied || '';
       } else if (key === 'Payable') {
         // Handle Payable - numeric sorting
-        const aPayable = a.Payable || a.PayableAmount || '0';
-        const bPayable = b.Payable || b.PayableAmount || '0';
+        const aPayable = a.payable_amt || '0';
+        const bPayable = b.payable_amt || '0';
         aVal = typeof aPayable === 'string' ? parseFloat(aPayable.replace(/[₹,]/g, '').trim()) || 0 : parseFloat(aPayable) || 0;
         bVal = typeof bPayable === 'string' ? parseFloat(bPayable.replace(/[₹,]/g, '').trim()) || 0 : parseFloat(bPayable) || 0;
       } else if (key === 'Paid Amount') {
         // Handle Paid Amount - numeric sorting
-        const aPaid = a['Paid Amount'] || a.Amount || a.PaidAmount || '0';
-        const bPaid = b['Paid Amount'] || b.Amount || b.PaidAmount || '0';
+        const aPaid = a.paid_amt || '0';
+        const bPaid = b.paid_amt || '0';
         aVal = typeof aPaid === 'string' ? parseFloat(aPaid.replace(/[₹,]/g, '').trim()) || 0 : parseFloat(aPaid) || 0;
         bVal = typeof bPaid === 'string' ? parseFloat(bPaid.replace(/[₹,]/g, '').trim()) || 0 : parseFloat(bPaid) || 0;
       } else if (key === 'Discount %') {
         // Handle Discount % - numeric sorting
-        const aDiscount = a['Discount %'] || a['Discount Percentage'] || a.DiscountPercentage || '0';
-        const bDiscount = b['Discount %'] || b['Discount Percentage'] || b.DiscountPercentage || '0';
+        const aDiscount = a.discount_percentage || '0';
+        const bDiscount = b.discount_percentage || '0';
         aVal = typeof aDiscount === 'string' ? parseFloat(aDiscount.replace(/%/g, '').trim()) || 0 : parseFloat(aDiscount) || 0;
         bVal = typeof bDiscount === 'string' ? parseFloat(bDiscount.replace(/%/g, '').trim()) || 0 : parseFloat(bDiscount) || 0;
       } else if (key === 'Discount Amount') {
         // Handle Discount Amount - numeric sorting
-        const aDiscountAmt = a['Discount Amount'] || a.DiscountAmount || '0';
-        const bDiscountAmt = b['Discount Amount'] || b.DiscountAmount || '0';
+        const aDiscountAmt = a.discount_amt || '0';
+        const bDiscountAmt = b.discount_amt || '0';
         aVal = typeof aDiscountAmt === 'string' ? parseFloat(aDiscountAmt.replace(/[₹,]/g, '').trim()) || 0 : parseFloat(aDiscountAmt) || 0;
         bVal = typeof bDiscountAmt === 'string' ? parseFloat(bDiscountAmt.replace(/[₹,]/g, '').trim()) || 0 : parseFloat(bDiscountAmt) || 0;
       } else {
@@ -642,18 +642,18 @@ const AdminDashboard = () => {
   };
 
   // Get unique sources for filter dropdown
-  const uniqueSources = [...new Set(leadData.map(lead => lead.Source).filter(Boolean))];
+  const uniqueSources = [...new Set(leadData.map(lead => lead.source).filter(Boolean))];
 
   // Get unique values for a column
   const getUniqueValuesForColumn = (columnName) => {
     if (columnName === 'Mobile') {
-      // Handle Mobile with Phone fallback
-      return [...new Set(leadData.map(lead => lead.Mobile || lead.Phone).filter(Boolean))].sort();
+      // Handle Mobile
+      return [...new Set(leadData.map(lead => lead.mobile).filter(Boolean))].sort();
     }
     // For Registration_TS, extract unique dates (not timestamps)
     if (columnName === 'Registration_TS') {
       const dates = leadData
-        .map(lead => lead.Registration_TS)
+        .map(lead => lead.reg_timestamp)
         .filter(Boolean)
         .map(timestamp => {
           const date = new Date(timestamp);
@@ -661,17 +661,17 @@ const AdminDashboard = () => {
         });
       return [...new Set(dates)].sort().reverse(); // Most recent first
     }
-    // Handle Nurture Level (might be stored as Nuturing in data)
+    // Handle Nurture Level
     if (columnName === 'Nurture Level') {
-      return [...new Set(leadData.map(lead => lead['Nurture Level'] || lead.Nuturing).filter(Boolean))].sort();
+      return [...new Set(leadData.map(lead => lead.nurturing).filter(Boolean))].sort();
     }
     // Handle Coupon Code (G) - Given
     if (columnName === 'Coupon Code (G)') {
-      return [...new Set(leadData.map(lead => lead['Coupon Code (G)'] || lead.CouponCodeGiven || lead['Coupon Given']).filter(Boolean))].sort();
+      return [...new Set(leadData.map(lead => lead.couponcode_given).filter(Boolean))].sort();
     }
     // Handle Coupon Code (A) - Applied
     if (columnName === 'Coupon Code (A)') {
-      return [...new Set(leadData.map(lead => lead['Coupon Code (A)'] || lead.CouponCodeApplied || lead['Coupon Applied'] || lead.CouponCode).filter(Boolean))].sort();
+      return [...new Set(leadData.map(lead => lead.couponcode_applied).filter(Boolean))].sort();
     }
     // Handle Unsubscribed
     if (columnName === 'Unsubscribed') {
@@ -780,12 +780,10 @@ const AdminDashboard = () => {
 
   // Get Status display with color-coded amount
   const getStatusDisplay = (lead) => {
-    const paymentStatus = (lead['Payment Status'] || '').toLowerCase().trim();
+    const paymentStatus = (lead.payment_status || '').toLowerCase().trim();
     
-    // Try to find the payable amount field
-    let amountValue = lead['PayableAmount'] || lead['Payable Amount'] || 
-                     lead['Amount'] || lead['Paid Amount'] || 
-                     lead['Revenue'] || lead['Price'] || '0';
+    // Get the payable amount
+    let amountValue = lead.payable_amt || '0';
     
     // Clean amount string
     const amountStr = String(amountValue).replace(/[₹$,\s]/g, '');
@@ -848,8 +846,8 @@ const AdminDashboard = () => {
     endDate.setHours(23, 59, 59, 999); // End of day (inclusive)
     
     return leadData.filter(lead => {
-      if (!lead.Registration_TS) return false;
-      const regDate = new Date(lead.Registration_TS);
+      if (!lead.reg_timestamp) return false;
+      const regDate = new Date(lead.reg_timestamp);
       return !isNaN(regDate.getTime()) && regDate >= startDate && regDate <= endDate;
     });
   };
@@ -863,12 +861,11 @@ const AdminDashboard = () => {
     
     // Calculate total revenue from successful payments
     const totalRevenue = dateFilteredLeads.reduce((sum, lead) => {
-      const status = (lead['Payment Status'] || '').toLowerCase().trim();
+      const status = (lead.payment_status || '').toLowerCase().trim();
       const isSuccess = status === 'success' || status === 'successful' || status === 'paid' || status === 'completed';
       if (isSuccess) {
-        // Try different possible field names for amount
-        let amountValue = lead['Amount'] || lead['Paid Amount'] || lead['PayableAmount'] || 
-                         lead['Payable Amount'] || lead['Revenue'] || lead['Price'] || '0';
+        // Get paid amount
+        let amountValue = lead.paid_amt || '0';
         
         // Clean amount string - remove currency symbols, commas, and whitespace
         const amountStr = String(amountValue).replace(/[₹$,\s]/g, '');
@@ -880,7 +877,7 @@ const AdminDashboard = () => {
     
     // Calculate conversion rate (successful payments / total leads * 100)
     const successfulPayments = dateFilteredLeads.filter(lead => {
-      const status = (lead['Payment Status'] || '').toLowerCase().trim();
+      const status = (lead.payment_status || '').toLowerCase().trim();
       return status === 'success' || status === 'successful' || status === 'paid' || status === 'completed';
     }).length;
     const conversionRate = totalLeads > 0 ? ((successfulPayments / totalLeads) * 100).toFixed(1) : 0;
@@ -888,7 +885,7 @@ const AdminDashboard = () => {
     // Calculate engagement - percentage of engaged leads
     // (leads whose Client Status is NOT "Unsubscribed" are considered engaged)
     const engagedLeads = dateFilteredLeads.filter(lead => {
-      const clientStatus = (lead['Client Status'] || '').toLowerCase().trim();
+      const clientStatus = (lead.client_status || '').toLowerCase().trim();
       // Check if client status is unsubscribed
       if (clientStatus === 'unsubscribed' || clientStatus === 'un-subscribed' || 
           clientStatus === 'unsubscribe' || clientStatus === 'inactive') {
@@ -901,15 +898,15 @@ const AdminDashboard = () => {
     // Calculate payment stats
     const paymentStats = {
       successful: dateFilteredLeads.filter(lead => {
-        const status = (lead['Payment Status'] || '').toLowerCase().trim();
+        const status = (lead.payment_status || '').toLowerCase().trim();
         return status === 'success' || status === 'successful' || status === 'paid' || status === 'completed';
       }).length,
       pending: dateFilteredLeads.filter(lead => {
-        const status = (lead['Payment Status'] || '').toLowerCase().trim();
+        const status = (lead.payment_status || '').toLowerCase().trim();
         return status === '' || status === 'pending' || status === 'processing';
       }).length,
       failed: dateFilteredLeads.filter(lead => {
-        const status = (lead['Payment Status'] || '').toLowerCase().trim();
+        const status = (lead.payment_status || '').toLowerCase().trim();
         return status === 'failed' || status === 'failure' || status === 'declined';
       }).length
     };
@@ -983,8 +980,8 @@ const AdminDashboard = () => {
       
       // Count registrations per hour from date-filtered data
       dateFilteredLeads.forEach(lead => {
-        if (lead.Registration_TS) {
-          const regDate = new Date(lead.Registration_TS);
+        if (lead.reg_timestamp) {
+          const regDate = new Date(lead.reg_timestamp);
           const hourKey = regDate.toISOString().slice(0, 13); // YYYY-MM-DDTHH
           if (registrationCounts.hasOwnProperty(hourKey)) {
             registrationCounts[hourKey]++;
@@ -1035,8 +1032,8 @@ const AdminDashboard = () => {
         
         // Group all leads by month (only current year)
         dateFilteredLeads.forEach(lead => {
-          if (lead.Registration_TS) {
-            const regDate = new Date(lead.Registration_TS);
+          if (lead.reg_timestamp) {
+            const regDate = new Date(lead.reg_timestamp);
             if (regDate.getFullYear() === currentYear) {
               const monthKey = `${regDate.getFullYear()}-${String(regDate.getMonth() + 1).padStart(2, '0')}`;
               if (monthlyData[monthKey] !== undefined) {
@@ -1086,8 +1083,8 @@ const AdminDashboard = () => {
         
         // Count registrations per day from date-filtered data
         dateFilteredLeads.forEach(lead => {
-          if (lead.Registration_TS) {
-            const regDate = new Date(lead.Registration_TS);
+          if (lead.reg_timestamp) {
+            const regDate = new Date(lead.reg_timestamp);
             const dateStr = regDate.toISOString().split('T')[0];
             if (registrationCounts.hasOwnProperty(dateStr)) {
               registrationCounts[dateStr]++;
@@ -1124,7 +1121,7 @@ const AdminDashboard = () => {
     // Process Lead Sources Data from date-filtered data
     const sourceCounts = {};
     dateFilteredLeads.forEach(lead => {
-      const source = lead.Source || 'Unknown';
+      const source = lead.source || 'Unknown';
       sourceCounts[source] = (sourceCounts[source] || 0) + 1;
     });
 
@@ -1183,7 +1180,7 @@ const AdminDashboard = () => {
     let totalCount = 0;
     
     dateFilteredLeads.forEach(lead => {
-      const role = lead.Role || 'Unknown';
+      const role = lead.role || 'Unknown';
       roleCounts[role] = (roleCounts[role] || 0) + 1;
       totalCount++;
     });
@@ -3287,22 +3284,22 @@ const AdminDashboard = () => {
                     >
                       {visibleColumns.Name && (
                         <td style={{ padding: '0.75rem', color: 'var(--text-primary)' }}>
-                          {lead.Name || '-'}
+                          {lead.name || '-'}
                         </td>
                       )}
                       {visibleColumns.Mobile && (
                         <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                          {lead.Mobile || lead.Phone || '-'}
+                          {lead.mobile || '-'}
                         </td>
                       )}
                       {visibleColumns.Email && (
                         <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                          {lead.Email || '-'}
+                          {lead.email || '-'}
                         </td>
                       )}
                       {visibleColumns.Role && (
                         <td style={{ padding: '0.75rem', color: 'var(--text-primary)' }}>
-                          {lead.Role || '-'}
+                          {lead.role || '-'}
                         </td>
                       )}
                       {visibleColumns.Status && (
@@ -3331,13 +3328,13 @@ const AdminDashboard = () => {
                       )}
                       {visibleColumns['Nurture Level'] && (
                         <td style={{ padding: '0.75rem', color: 'var(--text-primary)' }}>
-                          {lead['Nurture Level'] || lead.Nuturing || '-'}
+                          {lead.nurturing || '-'}
                         </td>
                       )}
                       {visibleColumns['Payment Status'] && (
                         <td style={{ padding: '0.75rem' }}>
                           <span 
-                            className={`badge ${getPaymentBadgeClass(lead['Payment Status'])}`}
+                            className={`badge ${getPaymentBadgeClass(lead.payment_status)}`}
                             style={{
                               display: 'inline-block',
                               padding: '0.35rem 1rem',
@@ -3346,32 +3343,32 @@ const AdminDashboard = () => {
                               fontWeight: '600',
                               minWidth: '85px',
                               textAlign: 'center',
-                              backgroundColor: getPaymentBadgeClass(lead['Payment Status']) === 'badge-success' ? 'var(--success)' :
-                                             getPaymentBadgeClass(lead['Payment Status']) === 'badge-warning' ? 'var(--warning)' :
-                                             getPaymentBadgeClass(lead['Payment Status']) === 'badge-error' ? 'var(--error)' : 'var(--surface-light)',
-                              color: getPaymentBadgeClass(lead['Payment Status']) === 'badge-success' || 
-                                     getPaymentBadgeClass(lead['Payment Status']) === 'badge-error' || 
-                                     getPaymentBadgeClass(lead['Payment Status']) === 'badge-warning' ? '#ffffff' : 'var(--text-secondary)'
+                              backgroundColor: getPaymentBadgeClass(lead.payment_status) === 'badge-success' ? 'var(--success)' :
+                                             getPaymentBadgeClass(lead.payment_status) === 'badge-warning' ? 'var(--warning)' :
+                                             getPaymentBadgeClass(lead.payment_status) === 'badge-error' ? 'var(--error)' : 'var(--surface-light)',
+                              color: getPaymentBadgeClass(lead.payment_status) === 'badge-success' || 
+                                     getPaymentBadgeClass(lead.payment_status) === 'badge-error' || 
+                                     getPaymentBadgeClass(lead.payment_status) === 'badge-warning' ? '#ffffff' : 'var(--text-secondary)'
                             }}
                           >
-                            {getPaymentStatusDisplay(lead['Payment Status'])}
+                            {getPaymentStatusDisplay(lead.payment_status)}
                           </span>
                         </td>
                       )}
                       {visibleColumns.Source && (
                         <td style={{ padding: '0.75rem', color: 'var(--text-primary)' }}>
-                          {formatSourceDisplay(lead.Source)}
+                          {formatSourceDisplay(lead.source)}
                         </td>
                       )}
                       {visibleColumns.Registration_TS && (
                         <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                          {lead.Registration_TS ? new Date(lead.Registration_TS).toLocaleDateString() : '-'}
+                          {lead.reg_timestamp ? new Date(lead.reg_timestamp).toLocaleDateString() : '-'}
                         </td>
                       )}
                       {visibleColumns.Payable && (
                         <td style={{ padding: '0.75rem', color: 'var(--text-primary)', fontSize: '0.875rem' }}>
                           {(() => {
-                            const payable = lead.Payable || lead.PayableAmount;
+                            const payable = lead.payable_amt;
                             if (!payable) return '-';
                             const amount = typeof payable === 'string' ? payable.replace(/[₹,]/g, '').trim() : payable;
                             return amount ? `₹${parseFloat(amount).toLocaleString('en-IN')}` : '-';
@@ -3381,7 +3378,7 @@ const AdminDashboard = () => {
                       {visibleColumns['Paid Amount'] && (
                         <td style={{ padding: '0.75rem', color: 'var(--text-primary)', fontSize: '0.875rem' }}>
                           {(() => {
-                            const paid = lead['Paid Amount'] || lead.Amount || lead.PaidAmount;
+                            const paid = lead.paid_amt;
                             if (!paid) return '-';
                             const amount = typeof paid === 'string' ? paid.replace(/[₹,]/g, '').trim() : paid;
                             return amount ? `₹${parseFloat(amount).toLocaleString('en-IN')}` : '-';
@@ -3391,7 +3388,7 @@ const AdminDashboard = () => {
                       {visibleColumns['Discount %'] && (
                         <td style={{ padding: '0.75rem', color: 'var(--text-primary)', fontSize: '0.875rem' }}>
                           {(() => {
-                            const discount = lead['Discount %'] || lead['Discount Percentage'] || lead.DiscountPercentage;
+                            const discount = lead.discount_percentage;
                             if (!discount) return '-';
                             const percent = typeof discount === 'string' ? discount.replace(/%/g, '').trim() : discount;
                             return percent ? `${percent}%` : '-';
@@ -3401,7 +3398,7 @@ const AdminDashboard = () => {
                       {visibleColumns['Discount Amount'] && (
                         <td style={{ padding: '0.75rem', color: 'var(--text-primary)', fontSize: '0.875rem' }}>
                           {(() => {
-                            const discountAmt = lead['Discount Amount'] || lead.DiscountAmount;
+                            const discountAmt = lead.discount_amt;
                             if (!discountAmt) return '-';
                             const amount = typeof discountAmt === 'string' ? discountAmt.replace(/[₹,]/g, '').trim() : discountAmt;
                             return amount ? `₹${parseFloat(amount).toLocaleString('en-IN')}` : '-';
@@ -3410,12 +3407,12 @@ const AdminDashboard = () => {
                       )}
                       {visibleColumns['Coupon Code (G)'] && (
                         <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                          {lead['Coupon Code (G)'] || lead.CouponCodeGiven || lead['Coupon Given'] || '-'}
+                          {lead.couponcode_given || '-'}
                         </td>
                       )}
                       {visibleColumns['Coupon Code (A)'] && (
                         <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                          {lead['Coupon Code (A)'] || lead.CouponCodeApplied || lead['Coupon Applied'] || lead.CouponCode || '-'}
+                          {lead.couponcode_applied || '-'}
                         </td>
                       )}
                       {visibleColumns.Unsubscribed && (

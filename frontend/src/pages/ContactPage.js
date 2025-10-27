@@ -7,12 +7,12 @@ const ContactPage = () => {
     name: "",
     email: "",
     mobile: "",
-    message: "",
+    query: "",
   })
   const [isLoading, setIsLoading] = useState(false)
   const [openFAQ, setOpenFAQ] = useState(null)
   const [toast, setToast] = useState({ show: false, message: "", type: "" })
-  const [messageError, setMessageError] = useState("")
+  const [queryError, setQueryError] = useState("")
   const [hasSubmitted, setHasSubmitted] = useState(false)
 
   const showToast = (message, type = "success") => {
@@ -80,23 +80,23 @@ const ContactPage = () => {
       [name]: value,
     }))
     
-    // Real-time validation for message field
-    if (name === 'message') {
-      validateMessage(value)
+    // Real-time validation for query field
+    if (name === 'query') {
+      validateQuery(value)
     }
   }
   
-  const validateMessage = (message) => {
-    const trimmedMessage = message.trim()
-    if (trimmedMessage.length === 0) {
-      setMessageError("")
-    } else if (trimmedMessage.length > 1000) {
-      setMessageError(`Maximum 1000 characters allowed (${trimmedMessage.length}/1000)`)
-    } else if (hasSubmitted && trimmedMessage.length < 10) {
+  const validateQuery = (query) => {
+    const trimmedQuery = query.trim()
+    if (trimmedQuery.length === 0) {
+      setQueryError("")
+    } else if (trimmedQuery.length > 1000) {
+      setQueryError(`Maximum 1000 characters allowed (${trimmedQuery.length}/1000)`)
+    } else if (hasSubmitted && trimmedQuery.length < 10) {
       // Only show minimum character error after user has tried to submit
-      setMessageError(`Minimum 10 characters required (${trimmedMessage.length}/10)`)
+      setQueryError(`Minimum 10 characters required (${trimmedQuery.length}/10)`)
     } else {
-      setMessageError("")
+      setQueryError("")
     }
   }
 
@@ -105,14 +105,14 @@ const ContactPage = () => {
     setHasSubmitted(true)
     
     // Frontend validation before submission
-    const trimmedMessage = formData.message.trim()
-    if (trimmedMessage.length < 10) {
-      validateMessage(formData.message) // This will now show the error since hasSubmitted is true
-      showToast("Message must be at least 10 characters long", "error")
+    const trimmedQuery = formData.query.trim()
+    if (trimmedQuery.length < 10) {
+      validateQuery(formData.query) // This will now show the error since hasSubmitted is true
+      showToast("Query must be at least 10 characters long", "error")
       return
     }
-    if (trimmedMessage.length > 1000) {
-      showToast("Message must be less than 1000 characters", "error")
+    if (trimmedQuery.length > 1000) {
+      showToast("Query must be less than 1000 characters", "error")
       return
     }
     
@@ -134,9 +134,9 @@ const ContactPage = () => {
           result.message || "Thank you for your message. We will get back to you soon!", 
           "success"
         )
-        setFormData({ name: "", email: "", mobile: "", message: "" })
+        setFormData({ name: "", email: "", mobile: "", query: "" })
         setHasSubmitted(false)
-        setMessageError("")
+        setQueryError("")
       } else {
         showToast(
           result.error || "Failed to send message. Please try again.", 
@@ -337,26 +337,26 @@ const ContactPage = () => {
 
               <div className="form-group">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <label htmlFor="message" className="form-label">
+                  <label htmlFor="query" className="form-label">
                     Message *
                   </label>
                   <span style={{ 
                     fontSize: '12px', 
-                    color: formData.message.trim().length > 1000 ? '#ef4444' : 
-                           formData.message.trim().length < 10 && formData.message.trim().length > 0 ? '#f59e0b' : '#9ca3af'
+                    color: formData.query.trim().length > 1000 ? '#ef4444' : 
+                           formData.query.trim().length < 10 && formData.query.trim().length > 0 ? '#f59e0b' : '#9ca3af'
                   }}>
-                    {formData.message.trim().length}/1000
+                    {formData.query.trim().length}/1000
                   </span>
                 </div>
                 <textarea
-                  id="message"
-                  name="message"
-                  value={formData.message}
+                  id="query"
+                  name="query"
+                  value={formData.query}
                   onChange={handleInputChange}
                   className="form-input form-textarea"
                   style={{
-                    borderColor: messageError ? '#ef4444' : '#374151',
-                    backgroundColor: messageError ? '#1f1f1f' : '#1a1a1a',
+                    borderColor: queryError ? '#ef4444' : '#374151',
+                    backgroundColor: queryError ? '#1f1f1f' : '#1a1a1a',
                     borderWidth: '2px',
                     color: '#ffffff'
                   }}
@@ -364,7 +364,7 @@ const ContactPage = () => {
                   placeholder="Tell us how we can help you... (minimum 10 characters)"
                   rows="5"
                 ></textarea>
-                {messageError && (
+                {queryError && (
                   <div style={{
                     color: '#ef4444',
                     fontSize: '14px',
@@ -374,7 +374,7 @@ const ContactPage = () => {
                     gap: '4px'
                   }}>
                     <span>⚠</span>
-                    {messageError}
+                    {queryError}
                   </div>
                 )}
               </div>

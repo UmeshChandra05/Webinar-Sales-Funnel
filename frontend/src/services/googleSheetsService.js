@@ -153,7 +153,7 @@ const filterDataByDateRange = (data, dateRange) => {
   console.log(`Filtering data for ${dateRange}, cutoff date:`, cutoffDate);
   
   // Check if any rows have date fields
-  const dateFields = ['Registration_TS', 'timestamp', 'Timestamp', 'date', 'Date', 'createdAt', 'created_at', 'created', 'Created'];
+  const dateFields = ['reg_timestamp', 'timestamp', 'Timestamp', 'date', 'Date', 'createdAt', 'created_at', 'created', 'Created'];
   let hasDateColumn = false;
   let dateFieldUsed = null;
   
@@ -230,7 +230,7 @@ const processSheetData = (data, dateRange = 'all') => {
   };
   
   filteredData.forEach(row => {
-    const status = (row['Payment Status'] || row.paymentStatus || '').toLowerCase().trim();
+    const status = (row.payment_status || '').toLowerCase().trim();
     if (status === 'success' || status === 'successful' || status === 'completed' || status === 'paid') {
       paymentStats.successful++;
     } else if (status === 'pending' || status === 'processing') {
@@ -242,20 +242,20 @@ const processSheetData = (data, dateRange = 'all') => {
   
   const totalRevenue = filteredData.reduce((sum, row) => {
     // Use actual column names from your sheet
-    const paidAmountValue = row['Paid Amount'] || row['PaidAmount'] || '0';
+    const paidAmountValue = row.paid_amt || '0';
     const paidAmount = parseFloat(paidAmountValue);
     
     // Debug: Log if price parsing fails
     if (isNaN(paidAmount) && paidAmountValue !== '0' && paidAmountValue !== '') {
-      console.log('Invalid Paid Amount value:', paidAmountValue, 'in row:', row.Name);
+      console.log('Invalid Paid Amount value:', paidAmountValue, 'in row:', row.name);
     }
     
-    const status = (row['Payment Status'] || '').toLowerCase().trim();
+    const status = (row.payment_status || '').toLowerCase().trim();
     
     if (status === 'success' || status === 'successful' || status === 'completed' || status === 'paid') {
       const validAmount = isNaN(paidAmount) ? 0 : paidAmount;
       if (validAmount > 0) {
-        console.log(`Adding ₹${validAmount} from ${row.Name || 'Unknown'} with status: ${status}`);
+        console.log(`Adding ₹${validAmount} from ${row.name || 'Unknown'} with status: ${status}`);
       }
       return sum + validAmount;
     }
@@ -270,12 +270,10 @@ const processSheetData = (data, dateRange = 'all') => {
   // Paid: Count of successful payments
   const paid = paymentStats.successful;
   
-  // Completed: Check Client Status or Type for completion
+  // Completed: Check Client Status for completion
   const completed = filteredData.filter(row => {
-    const clientStatus = (row['Client Status'] || '').toLowerCase().trim();
-    const type = (row.Type || '').toLowerCase().trim();
-    return clientStatus === 'completed' || clientStatus === 'enrolled' || 
-           type === 'completed' || type === 'enrolled';
+    const clientStatus = (row.client_status || '').toLowerCase().trim();
+    return clientStatus === 'completed' || clientStatus === 'enrolled' || clientStatus === 'closed';
   }).length;
   
   const conversionRate = totalLeads > 0 ? ((paid / totalLeads) * 100).toFixed(2) : 0;
@@ -284,9 +282,9 @@ const processSheetData = (data, dateRange = 'all') => {
   // Only count users who took action BEYOND just registering
   // Exclude users who unsubscribed
   const engagedUsers = filteredData.filter(row => {
-    const paymentStatus = (row['Payment Status'] || '').toLowerCase().trim();
-    const clientStatus = (row['Client Status'] || '').toLowerCase().trim();
-    const nurturing = (row.Nuturing || '').toLowerCase().trim();
+    const paymentStatus = (row.payment_status || '').toLowerCase().trim();
+    const clientStatus = (row.client_status || '').toLowerCase().trim();
+    const nurturing = (row.nurturing || '').toLowerCase().trim();
     const unsubscribed = (row.Unsubscribed || '').toLowerCase().trim();
     
     // EXCLUDE: If user unsubscribed (yes/true values)

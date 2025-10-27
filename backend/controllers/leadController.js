@@ -1,11 +1,19 @@
 const axios = require("../middleware/axios")
+const bcrypt = require("bcryptjs")
 
 const API_BASE_URL = process.env.API_BASE_URL
 
 const leadController = {
   captureLeadAsync: async (req, res) => {
     try {
-      const { name, email, mobile, source, role } = req.body
+      const { name, email, mobile, source, role, password } = req.body
+
+      // Hash password if provided
+      let hashedPassword = null
+      if (password) {
+        const saltRounds = 10
+        hashedPassword = await bcrypt.hash(password, saltRounds)
+      }
 
       const leadData = {
         name,
@@ -13,12 +21,13 @@ const leadController = {
         mobile: mobile || "NA", // Default to NA if mobile is not provided
         role: role || "",
         source: source || "website",
-        timestamp: new Date().toISOString(),
+        password: hashedPassword || "", // Include hashed password
+        reg_timestamp: new Date().toISOString(),
         ip_address: req.ip,
         user_agent: req.get("User-Agent"),
       }
 
-      console.log("📝 Capturing lead:", { email, name, role, source })
+      console.log("📝 Capturing lead:", { email, name, role, source, hasPassword: !!password })
 
       // If API_BASE_URL is configured, send to n8n webhook
       if (API_BASE_URL && API_BASE_URL !== "API_URL") {
@@ -37,22 +46,28 @@ const leadController = {
             message: "Lead captured successfully",
             data: {
               id: response.data?.id || `lead_${Date.now()}`,
-              timestamp: leadData.timestamp,
+              reg_timestamp: leadData.reg_timestamp,
             },
           })
         } catch (apiError) {
           console.error("❌ n8n API Error:", apiError.message)
-          // Continue with local success response even if external API fails
+          
+          // Return error if n8n fails
+          return res.status(503).json({
+            success: false,
+            error: "Registration service temporarily unavailable",
+            message: "Unable to complete registration. Please try again later.",
+          })
         }
       }
 
-      // Return success response (local fallback)
+      // Local fallback response (when n8n is not configured)
       res.status(200).json({
         success: true,
         message: "Lead captured successfully",
         data: {
           id: `lead_${Date.now()}`,
-          timestamp: leadData.timestamp,
+          reg_timestamp: leadData.reg_timestamp,
         },
       })
     } catch (error) {
@@ -70,10 +85,10 @@ const leadController = {
       const { name, email, mobile, message } = req.body
 
       const contactData = {
+        query: message,
         name,
         email,
         mobile: mobile || "NA",
-        message,
         type: "contact_form",
         timestamp: new Date().toISOString(),
         ip_address: req.ip,
@@ -84,21 +99,44 @@ const leadController = {
       // If API_BASE_URL is configured, send to n8n webhook
       if (API_BASE_URL && API_BASE_URL !== "API_URL") {
         try {
-          await axios.post(`${API_BASE_URL}/contact-form`, contactData, {
+          const response = await axios.post(`${API_BASE_URL}/contact-form`, contactData, {
             timeout: 10000,
             headers: {
               "Content-Type": "application/json",
             },
           })
+          
           console.log("✅ Contact form sent to n8n successfully")
+          
+          // Return response from n8n if available
+          return res.status(200).json({
+            success: true,
+            message: response.data?.message || "Thank you for your message. We will get back to you soon!",
+            data: {
+              id: response.data?.id || `contact_${Date.now()}`,
+              timestamp: contactData.timestamp,
+            },
+          })
         } catch (apiError) {
           console.error("❌ Contact form n8n API Error:", apiError.message)
+          
+          // Return error if n8n fails
+          return res.status(503).json({
+            success: false,
+            error: "Failed to send message",
+            message: "Contact form service temporarily unavailable. Please try again later.",
+          })
         }
       }
 
+      // Local fallback response (when n8n is not configured)
       res.status(200).json({
         success: true,
         message: "Thank you for your message. We will get back to you soon!",
+        data: {
+          id: `contact_${Date.now()}`,
+          timestamp: contactData.timestamp,
+        },
       })
     } catch (error) {
       console.error("❌ Contact form error:", error)
@@ -177,12 +215,21 @@ const leadController = {
             statusText: apiError.response?.statusText,
             data: apiError.response?.data
           })
-          // Fall through to local response
+          
+          // Return error response when n8n fails
+          return res.status(503).json({
+            success: false,
+            error: "AI service temporarily unavailable",
+            message: "I'm currently down for maintenance. You can directly contact us from our Contact page or search in our FAQs for quick answers.",
+            sessionId: chatData.sessionId,
+            timestamp: chatData.timestamp,
+            source: "error"
+          })
         }
       }
 
-      // Local fallback response when n8n is not available
-      console.log("⚠️ Using fallback response - n8n not available or failed")
+      // Local fallback response when n8n is not configured
+      console.log("⚠️ Using fallback response - n8n not configured")
       
       const fallbackResponses = [
         "I'm currently down for maintenance. You can directly contact us from our Contact page or search in our FAQs for quick answers.",

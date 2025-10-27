@@ -10,9 +10,12 @@ const RegisterPage = () => {
     email: "",
     mobile: "",
     role: "",
+    password: "",
+    confirmPassword: "",
   })
   const [isLoading, setIsLoading] = useState(false)
   const [toastMessage, setToastMessage] = useState(null)
+  const [passwordError, setPasswordError] = useState("")
 
   const showToast = (message, type = 'info') => {
     setToastMessage({ message, type })
@@ -29,10 +32,30 @@ const RegisterPage = () => {
       ...prev,
       [name]: value,
     }))
+    
+    // Clear password error when user types
+    if (name === 'password' || name === 'confirmPassword') {
+      setPasswordError("")
+    }
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    // Validate passwords match
+    if (formData.password !== formData.confirmPassword) {
+      setPasswordError("Passwords do not match")
+      showToast("Passwords do not match. Please try again.", "error")
+      return
+    }
+    
+    // Validate password strength
+    if (formData.password.length < 6) {
+      setPasswordError("Password must be at least 6 characters long")
+      showToast("Password must be at least 6 characters long.", "error")
+      return
+    }
+    
     setIsLoading(true)
 
     try {
@@ -42,7 +65,11 @@ const RegisterPage = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          ...formData,
+          name: formData.name,
+          email: formData.email,
+          mobile: formData.mobile,
+          role: formData.role,
+          password: formData.password,
           source: "registration_page",
         }),
       })
@@ -51,7 +78,12 @@ const RegisterPage = () => {
 
       if (result.success) {
         // Store user data in localStorage
-        localStorage.setItem("userData", JSON.stringify(formData))
+        localStorage.setItem("userData", JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          mobile: formData.mobile,
+          role: formData.role,
+        }))
         localStorage.setItem("userEmail", formData.email)
 
         showToast("Registration successful!", "success")
@@ -60,7 +92,8 @@ const RegisterPage = () => {
           navigate("/payment")
         }, 2000)
       } else {
-        showToast(result.error || "Registration failed. Please try again.", "error")
+        const errorMessage = result.details?.[0]?.msg || result.error || "Registration failed. Please try again."
+        showToast(errorMessage, "error")
       }
     } catch (error) {
       console.error("Registration error:", error)
@@ -262,6 +295,43 @@ const RegisterPage = () => {
                 <option value="Entrepreneur">Entrepreneur</option>
                 <option value="Other">Other</option>
               </select>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="password" className="form-label">
+                Password *
+              </label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                className={`form-input ${passwordError ? 'border-red-500' : ''}`}
+                required
+                minLength={6}
+                placeholder="Enter password (minimum 6 characters)"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="confirmPassword" className="form-label">
+                Confirm Password *
+              </label>
+              <input
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+                className={`form-input ${passwordError ? 'border-red-500' : ''}`}
+                required
+                minLength={6}
+                placeholder="Re-enter your password"
+              />
+              {passwordError && (
+                <p className="text-red-500 text-sm mt-1">{passwordError}</p>
+              )}
             </div>
 
             <button type="submit" className="btn btn-primary btn-lg w-full" disabled={isLoading}>
