@@ -148,10 +148,10 @@ const leadController = {
 
   handleAIChat: async (req, res) => {
     try {
-      const { message, sessionId, userId } = req.body
+      const { query, sessionId, userId } = req.body
 
       const chatData = {
-        message,
+        query,
         sessionId: sessionId || `chat_${Date.now()}`,
         userId: userId || 'anonymous',
         timestamp: new Date().toISOString(),
@@ -160,7 +160,7 @@ const leadController = {
         type: "ai_chat"
       }
 
-      console.log("🤖 AI Chat request:", { userId, sessionId, messageLength: message.length })
+      console.log("🤖 AI Chat request:", { userId, sessionId, messageLength: query.length })
 
       // If API_BASE_URL is configured, send to n8n webhook for AI processing
       if (API_BASE_URL && API_BASE_URL !== "API_URL") {

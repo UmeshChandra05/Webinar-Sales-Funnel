@@ -68,7 +68,7 @@ class ApiClient {
         name: formData.name,
         email: formData.email,
         mobile: formData.mobile || "NA",
-        query: formData.query,
+        message: formData.message || formData.query, // Support both field names
       }),
     })
   }
@@ -81,64 +81,6 @@ class ApiClient {
   // Health check
   async healthCheck() {
     return this.request("/health")
-  }
-
-  // User authentication APIs
-  async loginUser(loginData) {
-    return this.request("/auth/login", {
-      method: "POST",
-      body: JSON.stringify({
-        email: loginData.email,
-        password: loginData.password,
-        rememberMe: loginData.rememberMe || false,
-      }),
-    })
-  }
-
-  async registerUser(userData) {
-    return this.request("/auth/register", {
-      method: "POST",
-      body: JSON.stringify({
-        name: userData.name,
-        email: userData.email,
-        password: userData.password,
-        mobile: userData.mobile || "NA",
-        role: userData.role || "",
-        rememberMe: userData.rememberMe || false,
-      }),
-    })
-  }
-
-  async verifyToken(token) {
-    return this.request("/auth/verify", {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-      },
-    })
-  }
-
-  async refreshToken(token) {
-    return this.request("/auth/refresh", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-      },
-    })
-  }
-
-  // Verify token from cookie (no Authorization header needed)
-  async verifyTokenFromCookie() {
-    return this.request("/auth/verify", {
-      method: "GET",
-    })
-  }
-
-  // Logout user and clear cookies
-  async logoutUser() {
-    return this.request("/auth/logout", {
-      method: "POST",
-    })
   }
 }
 

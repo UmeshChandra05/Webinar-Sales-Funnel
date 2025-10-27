@@ -58,10 +58,10 @@ router.post(
   [
     body("name").trim().isLength({ min: 2, max: 100 }).withMessage("Name is required"),
     body("email").isEmail().normalizeEmail().withMessage("Valid email is required"),
-    body("query")
+    body("message")
       .trim()
       .isLength({ min: 10, max: 1000 })
-      .withMessage("Query must be between 10 and 1000 characters"),
+      .withMessage("Message must be between 10 and 1000 characters"),
   ],
   handleValidationErrors,
   leadController.handleContactForm,
