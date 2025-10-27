@@ -45,7 +45,6 @@ const leadController = {
             success: true,
             message: "Lead captured successfully",
             data: {
-              id: response.data?.id || `lead_${Date.now()}`,
               reg_timestamp: leadData.reg_timestamp,
             },
           })
@@ -66,7 +65,6 @@ const leadController = {
         success: true,
         message: "Lead captured successfully",
         data: {
-          id: `lead_${Date.now()}`,
           reg_timestamp: leadData.reg_timestamp,
         },
       })
@@ -90,7 +88,7 @@ const leadController = {
         email,
         mobile: mobile || "NA",
         type: "contact_form",
-        timestamp: new Date().toISOString(),
+        query_timestamp: new Date().toISOString(),
         ip_address: req.ip,
       }
 
@@ -113,8 +111,8 @@ const leadController = {
             success: true,
             message: response.data?.message || "Thank you for your message. We will get back to you soon!",
             data: {
-              id: response.data?.id || `contact_${Date.now()}`,
-              timestamp: contactData.timestamp,
+              ticket_id: response.data?.ticket_id || `ticket_${Date.now()}`,
+              query_timestamp: contactData.query_timestamp,
             },
           })
         } catch (apiError) {
@@ -134,8 +132,8 @@ const leadController = {
         success: true,
         message: "Thank you for your message. We will get back to you soon!",
         data: {
-          id: `contact_${Date.now()}`,
-          timestamp: contactData.timestamp,
+          ticket_id: `ticket_${Date.now()}`,
+          query_timestamp: contactData.query_timestamp,
         },
       })
     } catch (error) {

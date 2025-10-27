@@ -39,19 +39,19 @@ This document outlines the expected responses from n8n webhooks for all API endp
 ```json
 {
   "success": true,
-  "message": "Lead captured successfully",
-  "id": "lead_1234567890",
-  "reg_timestamp": "2025-10-27T10:30:00.000Z"
+  "message": "Lead captured successfully"
 }
 ```
 
 **Alternative Success Format:**
 ```json
 {
-  "id": "lead_1234567890",
-  "status": "success"
+  "status": "success",
+  "message": "Lead registered successfully"
 }
 ```
+
+**Note:** n8n does NOT need to return a lead ID. The backend will track registrations using the email address.
 
 ### Error Responses
 
@@ -89,7 +89,6 @@ This document outlines the expected responses from n8n webhooks for all API endp
   "success": true,
   "message": "Lead captured successfully",
   "data": {
-    "id": "lead_1234567890",
     "reg_timestamp": "2025-10-27T10:30:00.000Z"
   }
 }
@@ -119,7 +118,7 @@ Status Code: `503`
   "email": "john@example.com",
   "mobile": "1234567890",
   "type": "contact_form",
-  "timestamp": "2025-10-27T10:30:00.000Z",
+  "query_timestamp": "2025-10-27T10:30:00.000Z",
   "ip_address": "192.168.1.1"
 }
 ```
@@ -129,18 +128,20 @@ Status Code: `503`
 {
   "success": true,
   "message": "Thank you for your message. We will get back to you soon!",
-  "id": "contact_1234567890",
-  "timestamp": "2025-10-27T10:30:00.000Z"
+  "ticket_id": "TICKET_1234567890"
 }
 ```
 
 **Alternative Success Format:**
 ```json
 {
-  "message": "Contact form submitted successfully",
-  "id": "contact_1234567890"
+  "ticket_id": "TICKET_1234567890",
+  "status": "submitted",
+  "message": "Query received successfully"
 }
 ```
+
+**Note:** n8n MUST return a `ticket_id` for tracking the query.
 
 ### Error Responses
 
@@ -169,8 +170,8 @@ Status Code: `503`
   "success": true,
   "message": "Thank you for your message. We will get back to you soon!",
   "data": {
-    "id": "contact_1234567890",
-    "timestamp": "2025-10-27T10:30:00.000Z"
+    "ticket_id": "TICKET_1234567890",
+    "query_timestamp": "2025-10-27T10:30:00.000Z"
   }
 }
 ```
@@ -853,8 +854,11 @@ Status Code: `500`
 ### Common Success Fields
 - `success` (boolean) - Indicates if the operation was successful
 - `message` (string) - Human-readable success message
-- `id` / `userId` / `txn_id` (string) - Unique identifier for the record
-- `timestamp` / `reg_timestamp` (ISO 8601 string) - When the operation occurred
+- `ticket_id` (string) - Unique identifier for contact queries
+- `userId` / `txn_id` (string) - Unique identifier for users/transactions
+- `timestamp` / `reg_timestamp` / `query_timestamp` (ISO 8601 string) - When the operation occurred
+
+**Note:** Lead capture does NOT return an ID - tracking is done via email address.
 
 ### Common Error Fields
 - `success` (boolean) - Always `false` for errors
@@ -918,7 +922,15 @@ Status Code: `500`
 Maintain the same field names across similar operations.
 
 ### 5. Include Identifiers in Responses
-Always return IDs for created/updated records.
+Always return IDs for created/updated records where applicable.
+
+**Required IDs:**
+- Contact Form: `ticket_id` (MUST return)
+- Payment: `txn_id` (included in request, confirmed in response)
+- User Registration: `userId` (MUST return)
+
+**Not Required:**
+- Lead Capture: No ID needed (tracked by email)
 
 ### 6. Provide Helpful Error Messages
 Guide users on how to fix the issue.
