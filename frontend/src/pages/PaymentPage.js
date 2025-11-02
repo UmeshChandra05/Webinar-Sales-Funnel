@@ -419,8 +419,24 @@ const PaymentPage = () => {
             <h3 className="font-semibold mb-2 text-purple-400">Have a Coupon Code?</h3>
             <p className="text-sm text-gray-400 mb-4">Enter your coupon code to apply available discounts</p>
             
+            <style>{`
+              .coupon-input-container {
+                display: flex;
+                gap: 0.75rem;
+              }
+              @media (max-width: 400px) {
+                .coupon-input-container {
+                  flex-direction: column;
+                  gap: 0.75rem;
+                }
+                .coupon-input-container button {
+                  width: 100%;
+                }
+              }
+            `}</style>
+
             {!couponApplied ? (
-              <div className="flex gap-3">
+              <div className="coupon-input-container">
                 <input
                   type="text"
                   value={couponCode}
@@ -480,10 +496,27 @@ const PaymentPage = () => {
             <p className="text-sm text-gray-400 mb-4">For demonstration purposes, choose your payment outcome:</p>
           </div>
 
-          <div className="flex flex-col md:grid md:grid-cols-3 gap-4 md:gap-8 max-w-4xl mx-auto">
+          <style>{`
+            .payment-buttons-grid {
+              display: grid;
+              grid-template-columns: 1fr;
+              gap: 1rem;
+              max-width: 64rem;
+              margin: 0 auto;
+            }
+            @media (min-width: 768px) {
+              .payment-buttons-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 2rem;
+              }
+            }
+          `}</style>
+
+          <div className="payment-buttons-grid">
             <button
               onClick={() => handlePaymentSimulation("success")}
-              className="btn btn-success w-full md:min-w-[140px]"
+              className="btn btn-success"
+              style={{ minWidth: '140px' }}
               disabled={loadingButton !== null}
             >
               {loadingButton === "success" ? (
@@ -498,7 +531,8 @@ const PaymentPage = () => {
 
             <button
               onClick={() => handlePaymentSimulation("need_time_to_confirm")}
-              className="btn btn-warning w-full md:min-w-[140px]"
+              className="btn btn-warning"
+              style={{ minWidth: '140px' }}
               disabled={loadingButton !== null}
             >
               {loadingButton === "need_time_to_confirm" ? (
@@ -513,7 +547,8 @@ const PaymentPage = () => {
             
             <button
               onClick={() => handlePaymentSimulation("failed")}
-              className="btn btn-danger w-full md:min-w-[140px]"
+              className="btn btn-danger"
+              style={{ minWidth: '140px' }}
               disabled={loadingButton !== null}
             >
               {loadingButton === "failed" ? (
