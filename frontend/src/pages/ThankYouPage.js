@@ -1,7 +1,7 @@
-"use client"
-
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
+import Toast from "../components/Toast"
+import { logError } from "../utils/errorHandler"
 
 const ThankYouPage = () => {
   const [userEmail, setUserEmail] = useState("")
@@ -10,7 +10,6 @@ const ThankYouPage = () => {
 
   const showToast = (message, type = "info") => {
     setToastMessage({ message, type })
-    setTimeout(() => setToastMessage(null), 4000)
   }
 
   const dismissToast = () => {
@@ -26,125 +25,26 @@ const ThankYouPage = () => {
   }, [])
 
   const handleAttendanceRecord = (attended) => {
-    // Simply show thank you message - no backend call
     if (!userEmail) {
       showToast("Unable to record feedback. Please try again.", "error")
       return
     }
 
     showToast("Thank you for your feedback! 🎉", "success")
-    console.log(`📊 User feedback: ${attended ? 'Attended & Loved It' : 'Couldn\'t Attend'}`)
+    logError(null, `User feedback: ${attended ? 'Attended & Loved It' : 'Couldn\'t Attend'}`)
   }
 
-  // Show different content for "need_time_to_confirm" status
   if (paymentStatus === "need_time_to_confirm") {
     return (
       <>
-        <style>
-          {`
-            @keyframes slideIn {
-              from {
-                transform: translateX(100%);
-                opacity: 0;
-              }
-              to {
-                transform: translateX(0);
-                opacity: 1;
-              }
-            }
-            
-            @keyframes progress {
-              from {
-                width: 100%;
-              }
-              to {
-                width: 0%;
-              }
-            }
-          `}
-        </style>
-
-        {/* Toast Notification */}
         {toastMessage && (
-          <div 
-            style={{
-              position: 'fixed',
-              top: '20px',
-              right: '20px',
-              zIndex: 1000,
-              backgroundColor: 'white',
-              borderRadius: '8px',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
-              animation: 'slideIn 0.3s ease-out',
-              minWidth: '300px',
-              maxWidth: '400px',
-              overflow: 'hidden'
-            }}
-          >
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              padding: '16px',
-              gap: '12px'
-            }}>
-              <div style={{
-                width: '24px',
-                height: '24px',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '14px',
-                fontWeight: 'bold',
-                color: 'white',
-                backgroundColor: toastMessage.type === 'success' ? '#10b981' : 
-                                 toastMessage.type === 'error' ? '#ef4444' :
-                                 toastMessage.type === 'warning' ? '#f59e0b' : '#3b82f6'
-              }}>
-                {toastMessage.type === 'success' ? '✓' : 
-                 toastMessage.type === 'error' ? '✖' :
-                 toastMessage.type === 'warning' ? '⚠' : 'i'}
-              </div>
-              <div style={{
-                flex: 1,
-                color: '#374151',
-                fontSize: '14px',
-                fontWeight: '500'
-              }}>
-                {toastMessage.message}
-              </div>
-              <button 
-                onClick={dismissToast}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#9ca3af',
-                  fontSize: '18px',
-                  cursor: 'pointer',
-                  padding: '4px',
-                  lineHeight: 1
-                }}
-              >
-                ×
-              </button>
-            </div>
-            <div style={{
-              height: '4px',
-              backgroundColor: '#f3f4f6',
-              position: 'relative',
-              overflow: 'hidden'
-            }}>
-              <div style={{
-                height: '100%',
-                width: '100%',
-                backgroundColor: toastMessage.type === 'success' ? '#10b981' : 
-                                 toastMessage.type === 'error' ? '#ef4444' :
-                                 toastMessage.type === 'warning' ? '#f59e0b' : '#3b82f6',
-                animation: 'progress 4s linear forwards'
-              }} />
-            </div>
-          </div>
+          <Toast
+            message={toastMessage.message}
+            type={toastMessage.type}
+            onDismiss={dismissToast}
+          />
         )}
+
 
         <div className="min-h-screen section">
           <div className="container max-w-3xl mx-auto">
@@ -207,111 +107,14 @@ const ThankYouPage = () => {
 
   return (
     <>
-      <style>
-        {`
-          @keyframes slideIn {
-            from {
-              transform: translateX(100%);
-              opacity: 0;
-            }
-            to {
-              transform: translateX(0);
-              opacity: 1;
-            }
-          }
-          
-          @keyframes progress {
-            from {
-              width: 100%;
-            }
-            to {
-              width: 0%;
-            }
-          }
-        `}
-      </style>
-
-      {/* Toast Notification */}
       {toastMessage && (
-        <div 
-          style={{
-            position: 'fixed',
-            top: '20px',
-            right: '20px',
-            zIndex: 1000,
-            backgroundColor: 'white',
-            borderRadius: '8px',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
-            animation: 'slideIn 0.3s ease-out',
-            minWidth: '300px',
-            maxWidth: '400px',
-            overflow: 'hidden'
-          }}
-        >
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            padding: '16px',
-            gap: '12px'
-          }}>
-            <div style={{
-              width: '24px',
-              height: '24px',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '14px',
-              fontWeight: 'bold',
-              color: 'white',
-              backgroundColor: toastMessage.type === 'success' ? '#10b981' : 
-                               toastMessage.type === 'error' ? '#ef4444' :
-                               toastMessage.type === 'warning' ? '#f59e0b' : '#3b82f6'
-            }}>
-              {toastMessage.type === 'success' ? '✓' : 
-               toastMessage.type === 'error' ? '✖' :
-               toastMessage.type === 'warning' ? '⚠' : 'i'}
-            </div>
-            <div style={{
-              flex: 1,
-              color: '#374151',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}>
-              {toastMessage.message}
-            </div>
-            <button 
-              onClick={dismissToast}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#9ca3af',
-                fontSize: '18px',
-                cursor: 'pointer',
-                padding: '4px',
-                lineHeight: 1
-              }}
-            >
-              ×
-            </button>
-          </div>
-          <div style={{
-            height: '4px',
-            backgroundColor: '#f3f4f6',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
-            <div style={{
-              height: '100%',
-              width: '100%',
-              backgroundColor: toastMessage.type === 'success' ? '#10b981' : 
-                               toastMessage.type === 'error' ? '#ef4444' :
-                               toastMessage.type === 'warning' ? '#f59e0b' : '#3b82f6',
-              animation: 'progress 4s linear forwards'
-            }} />
-          </div>
-        </div>
+        <Toast
+          message={toastMessage.message}
+          type={toastMessage.type}
+          onDismiss={dismissToast}
+        />
       )}
+
 
       <div className="min-h-screen section">
         <div className="container max-w-4xl mx-auto">

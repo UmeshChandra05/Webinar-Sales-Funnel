@@ -1,24 +1,23 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
+import Toast from "../components/Toast"
+import { getErrorMessage, logError } from "../utils/errorHandler"
+import { COURSE_PRICE, CURRENCY_SYMBOL, NAVIGATION_DELAY, COURSE_FEATURES } from "../utils/constants"
 
 const PaymentPage = () => {
   const navigate = useNavigate()
   const { user } = useAuth()
   const [userEmail, setUserEmail] = useState("")
-  const [loadingButton, setLoadingButton] = useState(null) // Track which button is loading
+  const [loadingButton, setLoadingButton] = useState(null)
   const [couponCode, setCouponCode] = useState("")
   const [couponApplied, setCouponApplied] = useState(false)
   const [couponDiscount, setCouponDiscount] = useState(0)
-  const [couponError, setCouponError] = useState("")
   const [couponLoading, setCouponLoading] = useState(false)
   const [toastMessage, setToastMessage] = useState(null)
 
   const showToast = (message, type = "info") => {
     setToastMessage({ message, type })
-    setTimeout(() => setToastMessage(null), 4000) // Auto-hide after 4 seconds
   }
 
   const dismissToast = () => {
@@ -56,14 +55,12 @@ const PaymentPage = () => {
   const validateCouponCode = async () => {
     const trimmedCode = couponCode.trim()
     
-    // Only validate if coupon code is entered
     if (!trimmedCode) {
       showToast("Please enter a coupon code", "warning")
       return
     }
 
     setCouponLoading(true)
-    setCouponError("")
 
     try {
       const response = await fetch("/api/validate-coupon", {
@@ -82,28 +79,19 @@ const PaymentPage = () => {
       if (result.success) {
         setCouponApplied(true)
         setCouponDiscount(result.discount_percentage || 0)
-        setCouponError("")
         showToast(`Coupon applied! ${result.discount_percentage}% discount`, "success")
-        console.log(`✅ Coupon ${trimmedCode} applied: ${result.discount_percentage}% discount`)
+        logError(null, `Coupon ${trimmedCode} applied: ${result.discount_percentage}% discount`)
       } else {
         setCouponApplied(false)
         setCouponDiscount(0)
         showToast("Invalid coupon code", "error")
-        console.log(`❌ Coupon ${trimmedCode} invalid: ${result.message}`)
+        logError(result, `Coupon ${trimmedCode} invalid`)
       }
     } catch (error) {
-      console.error("Coupon validation error:", error)
-      
+      logError(error, 'Coupon validation')
       setCouponApplied(false)
       setCouponDiscount(0)
-      
-      if (error.name === 'TypeError' && error.message.includes('fetch')) {
-        showToast("Connection failed. Please try again.", "error")
-      } else if (error.message.includes('timeout')) {
-        showToast("Request timed out. Please try again.", "error")
-      } else {
-        showToast("Unable to validate coupon. Please try again.", "error")
-      }
+      showToast(getErrorMessage(error, 'coupon'), "error")
     } finally {
       setCouponLoading(false)
     }
@@ -113,23 +101,21 @@ const PaymentPage = () => {
     setCouponCode("")
     setCouponApplied(false)
     setCouponDiscount(0)
-    setCouponError("")
     showToast("Coupon removed", "info")
   }
 
   const calculateFinalPrice = () => {
-    const originalPrice = 4999
     if (couponApplied && couponDiscount > 0) {
-      return originalPrice - (originalPrice * couponDiscount / 100)
+      return COURSE_PRICE - (COURSE_PRICE * couponDiscount / 100)
     }
-    return originalPrice
+    return COURSE_PRICE
   }
 
   const handlePaymentSimulation = async (status) => {
-    setLoadingButton(status) // Set which button is loading
+    setLoadingButton(status)
 
     try {
-      console.log(`🔄 Processing ${status} request for ${userEmail}`) // Debug log
+      logError(null, `Processing ${status} request for ${userEmail}`)
       
       const requestBody = {
         email: userEmail,
@@ -137,13 +123,10 @@ const PaymentPage = () => {
         txn_id: `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       }
 
-      // Only add coupon data if a coupon is applied
       if (couponApplied && couponCode.trim()) {
         requestBody.couponcode_applied = couponCode.trim()
         requestBody.discount_percentage = couponDiscount
       }
-      
-      console.log('Request body:', requestBody) // Debug log
 
       const response = await fetch("/api/simulate-payment", {
         method: "POST",
@@ -153,177 +136,49 @@ const PaymentPage = () => {
         body: JSON.stringify(requestBody),
       })
 
-      console.log('Response status:', response.status) // Debug log
-
-      // Check if response is ok first
       if (!response.ok) {
         const errorText = await response.text()
-        console.error('Response error:', errorText)
         throw new Error(`HTTP ${response.status}: ${errorText}`)
       }
 
       const result = await response.json()
-      console.log('Payment response:', result) // Debug log
+      logError(null, `Payment response received`)
 
       if (result.success) {
         if (status === "success") {
-          // Store WhatsApp link if provided
           if (result.data.whatsapp_link) {
             localStorage.setItem("whatsappLink", result.data.whatsapp_link)
           }
           showToast("Payment Successful!", "success")
-          setTimeout(() => navigate("/payment-success"), 1500)
+          setTimeout(() => navigate("/payment-success"), NAVIGATION_DELAY)
         } else if (status === "need_time_to_confirm") {
-          // Store pending confirmation status
           localStorage.setItem("paymentStatus", "need_time_to_confirm")
-          console.log('✅ Need time to confirm processed, navigating to thank-you')
           showToast("We'll wait for you.", "success")
-          setTimeout(() => navigate("/thank-you"), 1500)
+          setTimeout(() => navigate("/thank-you"), NAVIGATION_DELAY)
         } else {
           showToast("Payment Failed", "error")
-          setTimeout(() => navigate("/payment-failed"), 1500)
+          setTimeout(() => navigate("/payment-failed"), NAVIGATION_DELAY)
         }
       } else {
-        // More specific error message for need_time_to_confirm
-        if (status === "need_time_to_confirm") {
-          console.error("Need time to confirm failed:", result)
-          showToast("Unable to process request. Please try again.", "error")
-        } else {
-          showToast("Payment could not be processed. Please try again.", "error")
-        }
+        showToast(getErrorMessage(new Error('Payment processing failed'), 'payment'), "error")
       }
     } catch (error) {
-      console.error("Payment error details:", error)
-      
-      // More specific error messages
-      if (error.name === 'TypeError' && error.message.includes('fetch')) {
-        showToast("Connection failed. Please check your internet.", "error")
-      } else if (error.message.includes('HTTP 400')) {
-        showToast("Please check your information and try again.", "error")
-      } else if (error.message.includes('HTTP 404')) {
-        showToast("Service unavailable. Please try again later.", "error")
-      } else {
-        showToast("Something went wrong. Please try again.", "error")
-      }
+      logError(error, 'Payment simulation')
+      showToast(getErrorMessage(error, 'payment'), "error")
     } finally {
-      setLoadingButton(null) // Clear loading state
+      setLoadingButton(null)
     }
   }
 
   return (
     <>
-      <style>
-        {`
-          @keyframes slideIn {
-            from {
-              transform: translateX(100%);
-              opacity: 0;
-            }
-            to {
-              transform: translateX(0);
-              opacity: 1;
-            }
-          }
-          
-          @keyframes progress {
-            from {
-              width: 100%;
-            }
-            to {
-              width: 0%;
-            }
-          }
-        `}
-      </style>
-      
       <div className="min-h-screen section">
-        {/* Toast Notification */}
         {toastMessage && (
-          <div 
-            style={{
-              position: 'fixed',
-              top: '20px',
-              right: '20px',
-              zIndex: 1000,
-              backgroundColor: 'white',
-              borderRadius: '8px',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
-              animation: 'slideIn 0.3s ease-out',
-              minWidth: '300px',
-              maxWidth: '400px',
-              overflow: 'hidden'
-            }}
-          >
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              padding: '16px',
-              gap: '12px'
-            }}>
-              {/* Icon */}
-              <div style={{
-                width: '24px',
-                height: '24px',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '14px',
-                fontWeight: 'bold',
-                color: 'white',
-                backgroundColor: toastMessage.type === 'success' ? '#10b981' : 
-                                 toastMessage.type === 'error' ? '#ef4444' :
-                                 toastMessage.type === 'warning' ? '#f59e0b' : '#3b82f6'
-              }}>
-                {toastMessage.type === 'success' ? '✓' : 
-                 toastMessage.type === 'error' ? '✖' :
-                 toastMessage.type === 'warning' ? '⚠' : 'i'}
-              </div>
-              
-              {/* Message */}
-              <div style={{
-                flex: 1,
-                color: '#374151',
-                fontSize: '14px',
-                fontWeight: '500'
-              }}>
-                {toastMessage.message}
-              </div>
-              
-              {/* Close Button */}
-              <button 
-                onClick={dismissToast}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#9ca3af',
-                  fontSize: '18px',
-                  cursor: 'pointer',
-                  padding: '4px',
-                  lineHeight: 1
-                }}
-              >
-                ×
-              </button>
-            </div>
-            
-            {/* Progress Bar */}
-            <div style={{
-              height: '4px',
-              backgroundColor: '#f3f4f6',
-              position: 'relative',
-              overflow: 'hidden'
-            }}>
-              <div style={{
-                height: '100%',
-                width: '100%',
-                backgroundColor: toastMessage.type === 'success' ? '#10b981' : 
-                                 toastMessage.type === 'error' ? '#ef4444' :
-                                 toastMessage.type === 'warning' ? '#f59e0b' : '#3b82f6',
-                animation: 'progress 4s linear forwards'
-              }} />
-            </div>
-          </div>
+          <Toast
+            message={toastMessage.message}
+            type={toastMessage.type}
+            onDismiss={dismissToast}
+          />
         )}
       
       <div className="container max-w-2xl mx-auto">
@@ -338,27 +193,25 @@ const PaymentPage = () => {
           <div className="text-center mb-6">
             {couponApplied && couponDiscount > 0 ? (
               <>
-                {/* Original price with strikethrough */}
                 <div className="text-xl text-gray-500 mb-1">
                   <span style={{
                     textDecoration: 'line-through',
                     textDecorationColor: '#ef4444',
                     textDecorationThickness: '2px'
                   }}>
-                    ₹4,999
+                    {CURRENCY_SYMBOL}{COURSE_PRICE.toLocaleString()}
                   </span>
                 </div>
-                {/* Discounted price */}
                 <div className="text-4xl font-bold gradient-text mb-2">
-                  ₹{calculateFinalPrice().toLocaleString()}
+                  {CURRENCY_SYMBOL}{calculateFinalPrice().toLocaleString()}
                 </div>
                 <p className="text-green-400 text-sm mb-1">
-                  🎉 You save ₹{(4999 - calculateFinalPrice()).toLocaleString()} ({couponDiscount}% off)
+                  🎉 You save {CURRENCY_SYMBOL}{(COURSE_PRICE - calculateFinalPrice()).toLocaleString()} ({couponDiscount}% off)
                 </p>
               </>
             ) : (
               <div className="text-4xl font-bold gradient-text mb-2">
-                ₹{calculateFinalPrice().toLocaleString()}
+                {CURRENCY_SYMBOL}{calculateFinalPrice().toLocaleString()}
               </div>
             )}
             <p className="text-gray-400">One-time payment (INR)</p>
@@ -367,30 +220,12 @@ const PaymentPage = () => {
           <div className="mb-6">
             <h3 className="font-semibold mb-4">Your course includes:</h3>
             <ul className="space-y-2 text-gray-300">
-              <li className="flex items-center">
-                <span className="text-green-400 mr-2">✓</span>
-                Complete 5-day Python Full Stack course
-              </li>
-              <li className="flex items-center">
-                <span className="text-green-400 mr-2">✓</span>
-                Lifetime access to all recordings
-              </li>
-              <li className="flex items-center">
-                <span className="text-green-400 mr-2">✓</span>
-                Downloadable code templates and projects
-              </li>
-              <li className="flex items-center">
-                <span className="text-green-400 mr-2">✓</span>
-                Private WhatsApp community access
-              </li>
-              <li className="flex items-center">
-                <span className="text-green-400 mr-2">✓</span>
-                1-on-1 mentorship session (30 minutes)
-              </li>
-              <li className="flex items-center">
-                <span className="text-green-400 mr-2">✓</span>
-                Certificate of completion
-              </li>
+              {COURSE_FEATURES.map((feature, index) => (
+                <li key={index} className="flex items-center">
+                  <span className="text-green-400 mr-2">✓</span>
+                  {feature}
+                </li>
+              ))}
             </ul>
           </div>
 
