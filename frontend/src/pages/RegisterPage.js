@@ -76,7 +76,7 @@ const RegisterPage = () => {
 
       const result = await response.json()
 
-      if (result.success) {
+      if (response.ok && result.success) {
         // Store user data in localStorage
         localStorage.setItem("userData", JSON.stringify({
           name: formData.name,
@@ -92,7 +92,8 @@ const RegisterPage = () => {
           navigate("/payment")
         }, 2000)
       } else {
-        const errorMessage = result.details?.[0]?.msg || result.error || "Registration failed. Please try again."
+        // Display the exact message from n8n/backend
+        const errorMessage = result.message || result.error || result.details?.[0]?.msg || "Registration failed. Please try again."
         showToast(errorMessage, "error")
       }
     } catch (error) {

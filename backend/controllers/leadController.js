@@ -40,16 +40,35 @@ const leadController = {
           })
 
           console.log("✅ Lead sent to n8n successfully")
+          console.log("📦 n8n Response:", JSON.stringify(response.data, null, 2))
 
+          // Check if n8n explicitly indicates failure (duplicate email, etc.)
+          if (response.data?.success === false) {
+            console.log("⚠️ n8n rejected lead capture:", response.data.message)
+            return res.status(409).json({
+              success: false,
+              message: response.data.message || "Registration failed - email may already exist"
+            })
+          }
+
+          // If n8n indicates success or doesn't have a success field, proceed
           return res.status(200).json({
             success: true,
-            message: "Lead captured successfully",
+            message: response.data?.message || "Lead captured successfully",
             data: {
               reg_timestamp: leadData.reg_timestamp,
             },
           })
         } catch (apiError) {
           console.error("❌ n8n API Error:", apiError.message)
+          
+          // Check if n8n returned an error response with a message
+          if (apiError.response?.data?.message) {
+            return res.status(apiError.response.status || 400).json({
+              success: false,
+              message: apiError.response.data.message
+            })
+          }
           
           // Return error if n8n fails
           return res.status(503).json({

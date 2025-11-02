@@ -20,15 +20,39 @@ class ApiClient {
 
     try {
       const response = await fetch(url, config)
-      const data = await response.json()
+      
+      // Handle empty responses
+      let data
+      const contentType = response.headers.get("content-type")
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json()
+      } else {
+        const text = await response.text()
+        data = { message: text }
+      }
 
       if (!response.ok) {
-        throw new Error(data.error || `HTTP error! status: ${response.status}`)
+        // Create a custom error object with response details
+        const error = new Error(data.error || data.message || `Request failed with status ${response.status}`)
+        error.response = {
+          status: response.status,
+          data: data
+        }
+        error.status = response.status
+        throw error
       }
 
       return data
     } catch (error) {
       console.error("API request failed:", error)
+      
+      // Enhance error message for network failures
+      if (error.message === 'Failed to fetch' || error.name === 'TypeError') {
+        const networkError = new Error('Unable to connect to server. Please check your internet connection.')
+        networkError.isNetworkError = true
+        throw networkError
+      }
+      
       throw error
     }
   }
@@ -81,6 +105,93 @@ class ApiClient {
   // Health check
   async healthCheck() {
     return this.request("/health")
+  }
+
+  // User Authentication APIs
+  async registerUser(userData) {
+    return this.request("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(userData),
+    })
+  }
+
+  async loginUser(credentials) {
+    return this.request("/auth/login", {
+      method: "POST",
+      body: JSON.stringify(credentials),
+    })
+  }
+
+  async verifyToken(token) {
+    return this.request("/auth/verify", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+  }
+
+  async verifyTokenFromCookie() {
+    return this.request("/auth/verify", {
+      method: "GET",
+    })
+  }
+
+  async refreshToken(token) {
+    return this.request("/auth/refresh", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+  }
+
+  async logoutUser() {
+    return this.request("/auth/logout", {
+      method: "POST",
+    })
+  }
+
+  // Admin Authentication APIs
+  async adminLogin(credentials) {
+    return this.request("/admin/login", {
+      method: "POST",
+      body: JSON.stringify(credentials),
+    })
+  }
+
+  async getAdminDashboard(token) {
+    return this.request("/admin/dashboard", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+  }
+
+  async refreshAdminToken(token) {
+    return this.request("/admin/refresh-token", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+  }
+
+  // Coupon validation API
+  async validateCoupon(couponData) {
+    return this.request("/validate-coupon", {
+      method: "POST",
+      body: JSON.stringify(couponData),
+    })
+  }
+
+  // AI Chat API
+  async sendChatMessage(messageData) {
+    return this.request("/ai-chat", {
+      method: "POST",
+      body: JSON.stringify(messageData),
+    })
   }
 }
 

@@ -40,51 +40,56 @@ const authController = {
           });
 
           console.log("✅ User registration sent to n8n successfully");
+          console.log("📦 n8n Registration Response:", JSON.stringify(response.data, null, 2));
 
-          // Check if n8n response indicates success
-          if (response.data?.success !== false) {
-            // Generate JWT token for the user
-            const tokenExpiry = rememberMe ? '30d' : '7d';
-            const token = jwt.sign(
-              { 
-                email: email,
-                name: name,
-                userId: response.data?.userId || `user_${Date.now()}`,
-                role: role,
-                rememberMe: rememberMe 
-              },
-              JWT_SECRET,
-              { expiresIn: tokenExpiry }
-            );
-
-            // Set secure HTTP-only cookie for persistent login
-            const cookieOptions = {
-              httpOnly: true,
-              secure: process.env.NODE_ENV === 'production',
-              sameSite: 'strict',
-              maxAge: rememberMe ? 30 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000 // 30 days or 7 days
-            };
-            res.cookie('authToken', token, cookieOptions);
-
-            return res.status(201).json({
-              success: true,
-              message: "Registration successful",
-              token: token,
-              user: {
-                id: response.data?.userId || `user_${Date.now()}`,
-                name: name,
-                email: email,
-                mobile: mobile,
-                role: role,
-                reg_timestamp: userData.reg_timestamp
-              }
-            });
-          } else {
-            return res.status(400).json({
+          // Check if n8n explicitly indicates failure (duplicate email, etc.)
+          if (response.data?.success === false) {
+            console.log("⚠️ n8n rejected registration:", response.data.message);
+            return res.status(409).json({
               success: false,
-              message: response.data?.message || "Registration failed - user may already exist"
+              message: response.data.message || "Registration failed - email may already exist"
             });
           }
+
+          // If n8n indicates success or doesn't have a success field, proceed with registration
+          console.log("✅ Registration approved by n8n");
+
+          // Generate JWT token for the user
+          const tokenExpiry = rememberMe ? '30d' : '7d';
+          const token = jwt.sign(
+            { 
+              email: email,
+              name: name,
+              userId: response.data?.userId || `user_${Date.now()}`,
+              role: role,
+              rememberMe: rememberMe 
+            },
+            JWT_SECRET,
+            { expiresIn: tokenExpiry }
+          );
+
+          // Set secure HTTP-only cookie for persistent login
+          const cookieOptions = {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: rememberMe ? 30 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000 // 30 days or 7 days
+          };
+          res.cookie('authToken', token, cookieOptions);
+
+          return res.status(201).json({
+            success: true,
+            message: "Registration successful",
+            token: token,
+            user: {
+              id: response.data?.userId || `user_${Date.now()}`,
+              name: name,
+              email: email,
+              mobile: mobile,
+              role: role,
+              reg_timestamp: userData.reg_timestamp
+            }
+          });
         } catch (apiError) {
           console.error("❌ n8n registration API Error:", apiError.message);
           
@@ -181,20 +186,21 @@ const authController = {
     try {
       const { email, password, rememberMe } = req.body;
 
-      const loginData = {
-        email,
-        password, // We'll send the plain password to n8n for verification
-        type: "user_login",
-        reg_timestamp: new Date().toISOString(),
-        ip_address: req.ip,
-        user_agent: req.get("User-Agent"),
-      };
-
       console.log("🔐 User login attempt:", { email });
 
-      // If API_BASE_URL is configured, send to n8n webhook for verification
+      // If API_BASE_URL is configured, send login request to n8n
       if (API_BASE_URL && API_BASE_URL !== "API_URL") {
         try {
+          // Send login request to your existing n8n webhook
+          const loginData = {
+            email,
+            password, // Send plain password to n8n
+            type: "user_login",
+            reg_timestamp: new Date().toISOString(),
+            ip_address: req.ip,
+            user_agent: req.get("User-Agent"),
+          };
+
           const response = await axios.post(`${API_BASE_URL}/auth/login`, loginData, {
             timeout: 10000,
             headers: {
@@ -202,56 +208,104 @@ const authController = {
             },
           });
 
-          console.log("✅ User login verified by n8n");
+          console.log("✅ n8n response received");
+          console.log("📦 Response data:", JSON.stringify(response.data, null, 2));
 
-          // Check if n8n response indicates successful login
-          if (response.data?.success !== false && response.data?.user) {
-            // Generate JWT token for the user
-            const tokenExpiry = rememberMe ? '30d' : '7d';
-            const token = jwt.sign(
-              { 
-                email: response.data.user.email || email,
-                name: response.data.user.name,
-                userId: response.data.user.id || response.data.user.userId,
-                role: response.data.user.role,
-                rememberMe: rememberMe 
-              },
-              JWT_SECRET,
-              { expiresIn: tokenExpiry }
-            );
+          // n8n should return the user data with the HASHED password
+          // Handle different response formats
+          let userData = null;
+          
+          if (response.data?.user) {
+            // Format 1: { user: { ...userData } }
+            userData = response.data.user;
+          } else if (response.data?.email) {
+            // Format 2: Direct user data { email, name, password, ... }
+            userData = response.data;
+          } else if (Array.isArray(response.data) && response.data.length > 0) {
+            // Format 3: Array with user data [{ email, name, password, ... }]
+            userData = response.data[0];
+          }
 
-            // Set secure HTTP-only cookie for persistent login
-            const cookieOptions = {
-              httpOnly: true,
-              secure: process.env.NODE_ENV === 'production',
-              sameSite: 'strict',
-              maxAge: rememberMe ? 30 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000 // 30 days or 7 days
-            };
-            res.cookie('authToken', token, cookieOptions);
-
-            return res.status(200).json({
-              success: true,
-              message: "Login successful",
-              token: token,
-              user: {
-                id: response.data.user.id || response.data.user.userId,
-                name: response.data.user.name,
-                email: response.data.user.email || email,
-                mobile: response.data.user.mobile || "NA",
-                role: response.data.user.role
-              }
-            });
-          } else {
-            return res.status(401).json({
+          if (!userData || !userData.email) {
+            console.error("❌ No user data found in n8n response");
+            return res.status(404).json({
               success: false,
-              message: response.data?.message || "Invalid email or password"
+              message: "No account found with this email address"
             });
           }
+
+          console.log("👤 User data retrieved:", { email: userData.email, name: userData.name, hasPassword: !!userData.password });
+
+          // Compare the plain password with the hashed password HERE in backend
+          if (!userData.password) {
+            console.error("❌ No password hash returned from n8n");
+            return res.status(500).json({
+              success: false,
+              message: "Account data is incomplete. Please contact support."
+            });
+          }
+
+          const isPasswordValid = await bcrypt.compare(password, userData.password);
+
+          if (!isPasswordValid) {
+            console.log("❌ Incorrect password for user:", email);
+            return res.status(401).json({
+              success: false,
+              message: "Password is incorrect"
+            });
+          }
+
+          console.log("✅ Password verified successfully");
+
+          // Generate JWT token
+          const tokenExpiry = rememberMe ? '30d' : '7d';
+          const token = jwt.sign(
+            { 
+              email: userData.email || email,
+              name: userData.name,
+              userId: userData.id || userData.userId || `user_${Date.now()}`,
+              role: userData.role,
+              rememberMe: rememberMe 
+            },
+            JWT_SECRET,
+            { expiresIn: tokenExpiry }
+          );
+
+          // Set secure HTTP-only cookie
+          const cookieOptions = {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: rememberMe ? 30 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000
+          };
+          res.cookie('authToken', token, cookieOptions);
+
+          return res.status(200).json({
+            success: true,
+            message: "Login successful",
+            token: token,
+            user: {
+              id: userData.id || userData.userId,
+              name: userData.name,
+              email: userData.email || email,
+              mobile: userData.mobile || "NA",
+              role: userData.role
+            }
+          });
+
         } catch (apiError) {
           console.error("❌ n8n login API Error:", apiError.message);
           
+          // Check if user not found
+          if (apiError.response?.status === 404) {
+            return res.status(404).json({
+              success: false,
+              message: "No account found with this email address"
+            });
+          }
+          
           // Check if it's an authentication error
-          if (apiError.response?.status === 401 || apiError.response?.status === 404) {
+          if (apiError.response?.status === 401) {
             return res.status(401).json({
               success: false,
               message: "Invalid email or password"
@@ -276,7 +330,7 @@ const authController = {
         }
       }
 
-      // Local fallback (when n8n is not configured) - fail since we don't have local user database
+      // Local fallback (when n8n is not configured)
       res.status(503).json({
         success: false,
         message: "Authentication service is not configured. Please contact support.",

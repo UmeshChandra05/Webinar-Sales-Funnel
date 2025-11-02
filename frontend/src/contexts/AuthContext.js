@@ -9,7 +9,7 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-};
+}; 
 
 // Email validation utility
 const isValidEmail = (email) => {

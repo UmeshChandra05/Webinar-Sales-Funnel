@@ -7,6 +7,7 @@ const leadController = require("../controllers/leadController")
 const paymentController = require("../controllers/paymentController")
 const webinarController = require("../controllers/webinarController")
 const adminController = require("../controllers/adminController")
+const authController = require("../controllers/authController")
 
 // Validation middleware
 const handleValidationErrors = (req, res, next) => {
@@ -50,6 +51,34 @@ const couponValidation = [
 router.post("/capture-lead", leadValidation, handleValidationErrors, leadController.captureLeadAsync)
 router.post("/simulate-payment", paymentValidation, handleValidationErrors, paymentController.simulatePaymentAsync)
 router.post("/validate-coupon", couponValidation, handleValidationErrors, paymentController.validateCouponAsync)
+
+// User Authentication routes
+router.post(
+  "/auth/register",
+  [
+    body("name").trim().isLength({ min: 2, max: 100 }).withMessage("Name must be between 2 and 100 characters"),
+    body("email").isEmail().normalizeEmail().withMessage("Valid email is required"),
+    body("password").isLength({ min: 6 }).withMessage("Password must be at least 6 characters long"),
+    body("mobile").optional().isMobilePhone().withMessage("Valid mobile number is required"),
+    body("role").optional().trim(),
+  ],
+  handleValidationErrors,
+  authController.registerUser
+)
+
+router.post(
+  "/auth/login",
+  [
+    body("email").isEmail().normalizeEmail().withMessage("Valid email is required"),
+    body("password").isLength({ min: 1 }).withMessage("Password is required"),
+  ],
+  handleValidationErrors,
+  authController.loginUser
+)
+
+router.get("/auth/verify", authController.verifyUserToken, authController.verifyUser)
+router.post("/auth/refresh", authController.verifyUserToken, authController.refreshUserToken)
+router.post("/auth/logout", authController.logoutUser)
 
 // Additional utility routes
 router.get("/webinar-info", webinarController.getWebinarInfo)
