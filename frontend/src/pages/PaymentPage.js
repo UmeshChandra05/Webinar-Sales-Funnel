@@ -480,10 +480,10 @@ const PaymentPage = () => {
             <p className="text-sm text-gray-400 mb-4">For demonstration purposes, choose your payment outcome:</p>
           </div>
 
-          <div className="grid grid-cols-3 gap-8 max-w-4xl mx-auto">
+          <div className="flex flex-col md:grid md:grid-cols-3 gap-4 md:gap-8 max-w-4xl mx-auto">
             <button
               onClick={() => handlePaymentSimulation("success")}
-              className="btn btn-success min-w-[140px]"
+              className="btn btn-success w-full md:min-w-[140px]"
               disabled={loadingButton !== null}
             >
               {loadingButton === "success" ? (
@@ -498,7 +498,7 @@ const PaymentPage = () => {
 
             <button
               onClick={() => handlePaymentSimulation("need_time_to_confirm")}
-              className="btn btn-warning min-w-[140px]"
+              className="btn btn-warning w-full md:min-w-[140px]"
               disabled={loadingButton !== null}
             >
               {loadingButton === "need_time_to_confirm" ? (
@@ -513,7 +513,7 @@ const PaymentPage = () => {
             
             <button
               onClick={() => handlePaymentSimulation("failed")}
-              className="btn btn-danger min-w-[140px]"
+              className="btn btn-danger w-full md:min-w-[140px]"
               disabled={loadingButton !== null}
             >
               {loadingButton === "failed" ? (

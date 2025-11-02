@@ -2,6 +2,7 @@ import { Routes, Route, useLocation } from "react-router-dom"
 import { AuthProvider } from "./contexts/AuthContext"
 import Navigation from "./components/Navigation"
 import AIChatWidget from "./components/AIChatWidget"
+import ProtectedRoute from "./components/ProtectedRoute"
 import LandingPage from "./pages/LandingPage"
 import RegisterPage from "./pages/RegisterPage"
 import LoginPage from "./pages/LoginPage"
@@ -29,16 +30,53 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/payment" element={<PaymentPage />} />
-            <Route path="/payment-success" element={<PaymentSuccessPage />} />
-            <Route path="/payment-failed" element={<PaymentFailedPage />} />
-            <Route path="/thank-you" element={<ThankYouPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/contact" element={<ContactPage />} />
             
+            {/* Protected User Routes */}
+            <Route 
+              path="/payment" 
+              element={
+                <ProtectedRoute>
+                  <PaymentPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/payment-success" 
+              element={
+                <ProtectedRoute>
+                  <PaymentSuccessPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/payment-failed" 
+              element={
+                <ProtectedRoute>
+                  <PaymentFailedPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/thank-you" 
+              element={
+                <ProtectedRoute>
+                  <ThankYouPage />
+                </ProtectedRoute>
+              } 
+            />
+            
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLoginPage />} />
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route 
+              path="/admin/dashboard" 
+              element={
+                <ProtectedRoute requireAdmin={true}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
             
             {/* Catch All */}
             <Route path="*" element={<NotFoundPage />} />

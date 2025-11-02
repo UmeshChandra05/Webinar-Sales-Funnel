@@ -47,7 +47,7 @@ const LoginPage = () => {
       
       showToast(
         formData.rememberMe 
-          ? 'Login successful! You will stay logged in on this device.' 
+          ? 'Logged in! You\'ll stay signed in for 30 days.' 
           : 'Login successful! Redirecting...', 
         'success'
       );

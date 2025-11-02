@@ -276,14 +276,14 @@ const ContactPage = () => {
             Get in <span className="gradient-text">Touch</span>
           </h1>
           <p className="text-xl text-gray-400">
-            Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
+            Have questions? We'd love to hear from you. Send us a Query and we'll respond as soon as possible.
           </p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-12" style={{ marginBottom: '4rem' }}>
           {/* Contact Form */}
           <div className="card" style={{ marginBottom: '3rem' }}>
-            <h2 className="text-2xl font-semibold mb-6">Send us a Message</h2>
+            <h2 className="text-2xl font-semibold mb-6">Send us a Query</h2>
 
 
 
@@ -338,7 +338,7 @@ const ContactPage = () => {
               <div className="form-group">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                   <label htmlFor="query" className="form-label">
-                    Message *
+                    Query *
                   </label>
                   <span style={{ 
                     fontSize: '12px', 
@@ -386,7 +386,7 @@ const ContactPage = () => {
                     Sending...
                   </>
                 ) : (
-                  "Send Message"
+                  "Send Query"
                 )}
               </button>
             </form>
