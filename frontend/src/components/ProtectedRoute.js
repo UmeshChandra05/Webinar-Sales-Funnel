@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import axios from 'axios';
+import apiClient from '../utils/api';
 
 const ProtectedRoute = ({ children, requireAdmin = false }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -24,15 +24,29 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
         return;
       }
 
+      // ============================================
+      // ⚠️ REMOVE IN PRODUCTION - START
+      // Development bypass for admin verification
+      // ============================================
+      if (adminToken.startsWith('dev-token-')) {
+        console.log('✅ Development admin token detected, bypassing verification');
+        setAdminVerified(true);
+        setVerifying(false);
+        return;
+      }
+      // ============================================
+      // ⚠️ REMOVE IN PRODUCTION - END
+      // ============================================
+
       try {
-        await axios.get('/api/admin/dashboard', {
-          headers: { Authorization: `Bearer ${adminToken}` }
-        });
+        await apiClient.getAdminDashboard(adminToken);
         setAdminVerified(true);
       } catch (error) {
         console.error('Admin token verification failed:', error);
         // Remove invalid token
         localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminUser');
+        localStorage.removeItem('adminLoginTime');
         setAdminVerified(false);
       } finally {
         setVerifying(false);

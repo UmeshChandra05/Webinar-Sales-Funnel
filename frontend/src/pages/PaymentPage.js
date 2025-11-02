@@ -6,7 +6,7 @@ import { useAuth } from "../contexts/AuthContext"
 
 const PaymentPage = () => {
   const navigate = useNavigate()
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth()
+  const { user } = useAuth()
   const [userEmail, setUserEmail] = useState("")
   const [loadingButton, setLoadingButton] = useState(null) // Track which button is loading
   const [couponCode, setCouponCode] = useState("")
@@ -26,33 +26,13 @@ const PaymentPage = () => {
   }
 
   useEffect(() => {
-    // Wait for auth to initialize
-    if (authLoading) {
-      console.log("🔄 Waiting for authentication to initialize...")
-      return
+    // Get email from authenticated user or localStorage
+    // ProtectedRoute already handles authentication, so we just need to get the email
+    const email = user?.email || localStorage.getItem("userEmail")
+    if (email) {
+      setUserEmail(email)
     }
-
-    // Priority 1: Use authenticated user from auth context (most reliable)
-    if (isAuthenticated && user?.email) {
-      console.log("✅ Using email from authenticated user:", user.email)
-      setUserEmail(user.email)
-      // Sync localStorage for backward compatibility
-      localStorage.setItem("userEmail", user.email)
-      return
-    }
-
-    // Priority 2: Fallback to localStorage (for users who registered but haven't logged in yet)
-    const storedEmail = localStorage.getItem("userEmail")
-    if (storedEmail) {
-      console.log("⚠️ Using stored email (not authenticated):", storedEmail)
-      setUserEmail(storedEmail)
-      return
-    }
-
-    // Priority 3: No email found - redirect to registration
-    console.log("❌ No user email found, redirecting to registration...")
-    navigate("/register")
-  }, [authLoading, isAuthenticated, user, navigate])
+  }, [user])
 
   // Test backend connectivity
   useEffect(() => {
