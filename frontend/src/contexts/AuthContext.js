@@ -105,6 +105,9 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('authToken', response.token);
         localStorage.setItem('rememberMe', rememberMe.toString());
         
+        // CRITICAL: Update userEmail for payment page compatibility
+        localStorage.setItem('userEmail', response.user.email);
+        
         console.log('✅ User logged in successfully');
         return response;
       }
@@ -113,19 +116,13 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('Login error:', error);
       
-      // Enhanced error handling for login
+      // Clean error handling for login
       if (error.response?.status === 404) {
-        const enhancedError = new Error('No account found with this email address');
-        enhancedError.suggestion = 'Please register for our webinar first';
-        enhancedError.actionType = 'SUGGEST_SIGNUP';
-        throw enhancedError;
+        throw new Error('No account found with this email address');
       }
       
       if (error.response?.status === 401) {
-        const enhancedError = new Error('Invalid email or password');
-        enhancedError.suggestion = 'Please check your credentials and try again';
-        enhancedError.actionType = 'RETRY_LOGIN';
-        throw enhancedError;
+        throw new Error('Invalid email or password');
       }
       
       throw error;
@@ -144,6 +141,8 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem('authUser');
       localStorage.removeItem('authToken');
       localStorage.removeItem('rememberMe');
+      localStorage.removeItem('userEmail'); // Clear payment email tracking
+      localStorage.removeItem('userData'); // Clear legacy user data
       setUser(null);
       setIsAuthenticated(false);
       console.log('✅ User logged out');

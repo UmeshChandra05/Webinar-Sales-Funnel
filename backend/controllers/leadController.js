@@ -1,108 +1,14 @@
 const axios = require("../middleware/axios")
-const bcrypt = require("bcryptjs")
 
 const API_BASE_URL = process.env.API_BASE_URL
 
 const leadController = {
-  captureLeadAsync: async (req, res) => {
-    try {
-      const { name, email, mobile, source, role, password } = req.body
-
-      // Hash password if provided
-      let hashedPassword = null
-      if (password) {
-        const saltRounds = 10
-        hashedPassword = await bcrypt.hash(password, saltRounds)
-      }
-
-      const leadData = {
-        name,
-        email,
-        mobile: mobile || "NA", // Default to NA if mobile is not provided
-        role: role || "",
-        source: source || "website",
-        password: hashedPassword || "", // Include hashed password
-        reg_timestamp: new Date().toISOString(),
-        ip_address: req.ip,
-        user_agent: req.get("User-Agent"),
-      }
-
-      console.log("📝 Capturing lead:", { email, name, role, source, hasPassword: !!password })
-
-      // If API_BASE_URL is configured, send to n8n webhook
-      if (API_BASE_URL && API_BASE_URL !== "API_URL") {
-        try {
-          const response = await axios.post(`${API_BASE_URL}/capture-lead`, leadData, {
-            timeout: 10000,
-            headers: {
-              "Content-Type": "application/json",
-            },
-          })
-
-          console.log("✅ Lead sent to n8n successfully")
-          console.log("📦 n8n Response:", JSON.stringify(response.data, null, 2))
-
-          // Check if n8n explicitly indicates failure (duplicate email, etc.)
-          if (response.data?.success === false) {
-            console.log("⚠️ n8n rejected lead capture:", response.data.message)
-            return res.status(409).json({
-              success: false,
-              message: response.data.message || "Registration failed - email may already exist"
-            })
-          }
-
-          // If n8n indicates success or doesn't have a success field, proceed
-          return res.status(200).json({
-            success: true,
-            message: response.data?.message || "Lead captured successfully",
-            data: {
-              reg_timestamp: leadData.reg_timestamp,
-            },
-          })
-        } catch (apiError) {
-          console.error("❌ n8n API Error:", apiError.message)
-          
-          // Check if n8n returned an error response with a message
-          if (apiError.response?.data?.message) {
-            return res.status(apiError.response.status || 400).json({
-              success: false,
-              message: apiError.response.data.message
-            })
-          }
-          
-          // Return error if n8n fails
-          return res.status(503).json({
-            success: false,
-            error: "Registration service temporarily unavailable",
-            message: "Unable to complete registration. Please try again later.",
-          })
-        }
-      }
-
-      // Local fallback response (when n8n is not configured)
-      res.status(200).json({
-        success: true,
-        message: "Lead captured successfully",
-        data: {
-          reg_timestamp: leadData.reg_timestamp,
-        },
-      })
-    } catch (error) {
-      console.error("❌ Lead capture error:", error)
-      res.status(500).json({
-        success: false,
-        error: "Failed to capture lead",
-        message: process.env.NODE_ENV === "production" ? "Internal server error" : error.message,
-      })
-    }
-  },
-
   handleContactForm: async (req, res) => {
     try {
-      const { name, email, mobile, message } = req.body
+      const { name, email, mobile, query } = req.body
 
       const contactData = {
-        query: message,
+        query,
         name,
         email,
         mobile: mobile || "NA",

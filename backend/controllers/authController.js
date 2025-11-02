@@ -5,11 +5,43 @@ const axios = require("../middleware/axios");
 const API_BASE_URL = process.env.API_BASE_URL;
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key';
 
+// ============================================================================
+// 🚨 TEST CREDENTIALS - REMOVE IN PRODUCTION 🚨
+// ============================================================================
+// These credentials allow testing login without n8n validation
+// Email: test@example.com
+// Password: test123
+const TEST_USER = {
+  email: 'test@example.com',
+  password: 'test123', // Plain password for testing
+  name: 'Test User',
+  mobile: '1234567890',
+  role: 'Student',
+  id: 'test_user_001'
+};
+// ============================================================================
+
 const authController = {
   // Register new user
   registerUser: async (req, res) => {
     try {
       const { name, email, password, mobile, role, rememberMe } = req.body;
+
+      console.log("👤 User registration:", { email, name, role });
+
+      // ============================================================================
+      // 🚨 TEST USER CHECK - REMOVE IN PRODUCTION 🚨
+      // ============================================================================
+      // Prevent registration with test email
+      if (email.toLowerCase().trim() === TEST_USER.email) {
+        console.log("🧪 TEST EMAIL: Registration blocked - test email already exists");
+        return res.status(409).json({
+          success: false,
+          message: "An account with this email already exists",
+          errorCode: "EMAIL_ALREADY_EXISTS"
+        });
+      }
+      // ============================================================================
 
       // Hash password
       const saltRounds = 10;
@@ -27,19 +59,17 @@ const authController = {
         user_agent: req.get("User-Agent"),
       };
 
-      console.log("👤 User registration:", { email, name, role });
-
-      // If API_BASE_URL is configured, send to n8n webhook for verification
+      // Send to n8n capture-lead webhook (stores in Google Sheets)
       if (API_BASE_URL && API_BASE_URL !== "API_URL") {
         try {
-          const response = await axios.post(`${API_BASE_URL}/auth/register`, userData, {
+          const response = await axios.post(`${API_BASE_URL}/capture-lead`, userData, {
             timeout: 10000,
             headers: {
               "Content-Type": "application/json",
             },
           });
 
-          console.log("✅ User registration sent to n8n successfully");
+          console.log("✅ User registration sent to n8n capture-lead successfully");
           console.log("📦 n8n Registration Response:", JSON.stringify(response.data, null, 2));
 
           // Check if n8n explicitly indicates failure (duplicate email, etc.)
@@ -188,20 +218,65 @@ const authController = {
 
       console.log("🔐 User login attempt:", { email });
 
-      // If API_BASE_URL is configured, send login request to n8n
+      // ============================================================================
+      // 🚨 TEST CREDENTIALS CHECK - REMOVE IN PRODUCTION 🚨
+      // ============================================================================
+      // Check if test credentials are being used (for development only)
+      if (email.toLowerCase().trim() === TEST_USER.email && password === TEST_USER.password) {
+        console.log("🧪 TEST LOGIN: Using test credentials (development only)");
+        
+        // Generate JWT token for test user
+        const tokenExpiry = rememberMe ? '30d' : '7d';
+        const token = jwt.sign(
+          { 
+            email: TEST_USER.email,
+            name: TEST_USER.name,
+            userId: TEST_USER.id,
+            role: TEST_USER.role,
+            rememberMe: rememberMe,
+            isTestUser: true // Flag to identify test user
+          },
+          JWT_SECRET,
+          { expiresIn: tokenExpiry }
+        );
+
+        // Set secure HTTP-only cookie
+        const cookieOptions = {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: rememberMe ? 30 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000
+        };
+        res.cookie('authToken', token, cookieOptions);
+
+        return res.status(200).json({
+          success: true,
+          message: "Login successful (TEST MODE)",
+          token: token,
+          user: {
+            id: TEST_USER.id,
+            name: TEST_USER.name,
+            email: TEST_USER.email,
+            mobile: TEST_USER.mobile,
+            role: TEST_USER.role
+          }
+        });
+      }
+      // ============================================================================
+
+      // Query user from n8n/Google Sheets
       if (API_BASE_URL && API_BASE_URL !== "API_URL") {
         try {
-          // Send login request to your existing n8n webhook
+          // Send login request to n8n - it should query Google Sheets and return user with hashed password
           const loginData = {
-            email,
-            password, // Send plain password to n8n
-            type: "user_login",
-            reg_timestamp: new Date().toISOString(),
+            email: email.toLowerCase().trim(),
+            action: "user_login",
+            timestamp: new Date().toISOString(),
             ip_address: req.ip,
             user_agent: req.get("User-Agent"),
           };
 
-          const response = await axios.post(`${API_BASE_URL}/auth/login`, loginData, {
+          const response = await axios.post(`${API_BASE_URL}/user-login`, loginData, {
             timeout: 10000,
             headers: {
               "Content-Type": "application/json",

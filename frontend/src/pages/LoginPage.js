@@ -15,8 +15,8 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
 
-  const showToast = (message, type = 'info', suggestion = null, actionType = null) => {
-    setToastMessage({ message, type, suggestion, actionType });
+  const showToast = (message, type = 'info') => {
+    setToastMessage({ message, type });
     setTimeout(() => setToastMessage(null), 4000);
   };
 
@@ -58,12 +58,7 @@ const LoginPage = () => {
       }, 1500);
     } catch (error) {
       console.error('Login error:', error);
-      
-      if (error.actionType === 'SUGGEST_SIGNUP') {
-        showToast(error.message, 'error', 'Please register for our webinar instead', 'register');
-      } else {
-        showToast(error.message || 'Login failed. Please try again.', 'error', error.suggestion);
-      }
+      showToast(error.message || 'Login failed. Please try again.', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -144,39 +139,10 @@ const LoginPage = () => {
                 <div style={{
                   color: '#374151',
                   fontSize: '14px',
-                  fontWeight: '500',
-                  marginBottom: toastMessage.suggestion ? '8px' : '0'
+                  fontWeight: '500'
                 }}>
                   {toastMessage.message}
                 </div>
-                
-                {toastMessage.suggestion && (
-                  <div style={{
-                    color: '#6b7280',
-                    fontSize: '13px',
-                    marginBottom: toastMessage.actionType === 'signup' ? '8px' : '0'
-                  }}>
-                    {toastMessage.suggestion}
-                  </div>
-                )}
-                
-                {toastMessage.actionType === 'register' && (
-                  <button
-                    onClick={() => navigate('/register')}
-                    style={{
-                      background: '#8b5cf6',
-                      color: 'white',
-                      border: 'none',
-                      padding: '6px 12px',
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      fontWeight: '500',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Register for Webinar
-                  </button>
-                )}
               </div>
               
               {/* Close Button */}

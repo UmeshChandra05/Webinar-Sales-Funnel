@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
+import { useAuth } from "../contexts/AuthContext"
 
 const LandingPage = () => {
   const navigate = useNavigate()
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth()
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -36,6 +38,47 @@ const LandingPage = () => {
   const handleRegisterClick = () => {
     navigate("/register")
   }
+
+  const handlePaymentClick = () => {
+    navigate("/payment")
+  }
+
+  // Check if user has registered (has email in localStorage or is authenticated)
+  const isRegistered = isAuthenticated || localStorage.getItem("userEmail")
+  
+  // Determine button text and action based on auth state
+  const getButtonConfig = () => {
+    if (authLoading) {
+      return { text: "Loading...", action: null, disabled: true }
+    }
+    
+    if (isAuthenticated && user) {
+      return {
+        text: "💳 Complete Payment",
+        action: handlePaymentClick,
+        disabled: false,
+        style: "btn btn-success btn-lg"
+      }
+    }
+    
+    if (isRegistered) {
+      return {
+        text: "💳 Proceed to Payment",
+        action: handlePaymentClick,
+        disabled: false,
+        style: "btn btn-success btn-lg"
+      }
+    }
+    
+    return {
+      text: "💡 I'm Interested - Show Me Details",
+      action: handleRegisterClick,
+      disabled: false,
+      style: "btn btn-primary btn-lg"
+    }
+  }
+
+  const buttonConfig = getButtonConfig()
 
   const features = [
     {
@@ -109,8 +152,12 @@ const LandingPage = () => {
             </div>
           </div>
 
-          <button className="btn btn-primary btn-lg" onClick={handleRegisterClick}>
-            💡 I'm Interested - Show Me Details
+          <button 
+            className={buttonConfig.style} 
+            onClick={buttonConfig.action}
+            disabled={buttonConfig.disabled}
+          >
+            {buttonConfig.text}
           </button>
         </div>
       </section>
@@ -156,13 +203,71 @@ const LandingPage = () => {
       {/* CTA Section */}
       <section className="section gradient-bg">
         <div className="container text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Transform Your Career?</h2>
-          <p className="text-xl mb-8 opacity-90">
-            Join thousands of developers who have already mastered full-stack development
+          <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{
+            color: isAuthenticated || isRegistered ? '#ffffff' : 'inherit'
+          }}>
+            {isAuthenticated ? "Complete Your Registration" : "Ready to Transform Your Career?"}
+          </h2>
+          <p className="text-xl mb-8" style={{
+            color: isAuthenticated || isRegistered ? '#e5e7eb' : 'inherit',
+            opacity: 1
+          }}>
+            {isAuthenticated 
+              ? "You're one step away from joining thousands of successful developers"
+              : "Join thousands of developers who have already mastered full-stack development"
+            }
           </p>
-          <button className="btn btn-lg bg-white text-purple-600 hover:bg-gray-100" onClick={handleRegisterClick}>
-            💡 Show Interest Now
+          <button 
+            className={
+              isAuthenticated || isRegistered
+                ? "btn btn-lg"
+                : "btn btn-lg bg-white text-purple-600 hover:bg-gray-100"
+            }
+            style={
+              isAuthenticated || isRegistered
+                ? {
+                    backgroundColor: '#f59e0b',
+                    color: '#ffffff',
+                    fontWeight: '600',
+                    boxShadow: '0 4px 20px rgba(245, 158, 11, 0.4)',
+                    border: 'none'
+                  }
+                : {}
+            }
+            onMouseEnter={(e) => {
+              if (isAuthenticated || isRegistered) {
+                e.target.style.backgroundColor = '#d97706';
+                e.target.style.boxShadow = '0 6px 24px rgba(245, 158, 11, 0.5)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (isAuthenticated || isRegistered) {
+                e.target.style.backgroundColor = '#f59e0b';
+                e.target.style.boxShadow = '0 4px 20px rgba(245, 158, 11, 0.4)';
+              }
+            }}
+            onClick={isAuthenticated || isRegistered ? handlePaymentClick : handleRegisterClick}
+            disabled={authLoading}
+          >
+            {isAuthenticated || isRegistered ? "💳 Complete Payment" : "💡 Show Interest Now"}
           </button>
+          
+          {/* Payment urgency message for registered users */}
+          {(isAuthenticated || isRegistered) && (
+            <div className="mt-6 p-4 rounded-lg max-w-2xl mx-auto" style={{
+              backgroundColor: '#fef3c7',
+              border: '2px solid #f59e0b',
+              boxShadow: '0 4px 12px rgba(245, 158, 11, 0.2)'
+            }}>
+              <p style={{
+                color: '#92400e',
+                fontWeight: '600',
+                fontSize: '16px'
+              }}>
+                ⚡ Limited seats available! Complete payment to confirm your spot.
+              </p>
+            </div>
+          )}
         </div>
       </section>
     </div>

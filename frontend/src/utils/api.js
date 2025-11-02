@@ -57,19 +57,6 @@ class ApiClient {
     }
   }
 
-  // Lead capture API
-  async captureLeadAsync(leadData) {
-    return this.request("/capture-lead", {
-      method: "POST",
-      body: JSON.stringify({
-        name: leadData.name,
-        email: leadData.email,
-        mobile: leadData.mobile || "NA",
-        source: leadData.source || "website",
-      }),
-    })
-  }
-
   // Payment simulation API
   async simulatePaymentAsync(paymentData) {
     return this.request("/simulate-payment", {
@@ -92,19 +79,9 @@ class ApiClient {
         name: formData.name,
         email: formData.email,
         mobile: formData.mobile || "NA",
-        message: formData.message || formData.query, // Support both field names
+        query: formData.query, // Matches Google Sheets "query" field
       }),
     })
-  }
-
-  // Get webinar information
-  async getWebinarInfo() {
-    return this.request("/webinar-info")
-  }
-
-  // Health check
-  async healthCheck() {
-    return this.request("/health")
   }
 
   // User Authentication APIs
@@ -150,6 +127,16 @@ class ApiClient {
     return this.request("/auth/logout", {
       method: "POST",
     })
+  }
+
+  // Get webinar information
+  async getWebinarInfo() {
+    return this.request("/webinar-info")
+  }
+
+  // Health check
+  async healthCheck() {
+    return this.request("/health")
   }
 
   // Admin Authentication APIs

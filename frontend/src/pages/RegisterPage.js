@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import apiClient from "../utils/api"
 
 const RegisterPage = () => {
   const navigate = useNavigate()
@@ -59,46 +60,51 @@ const RegisterPage = () => {
     setIsLoading(true)
 
     try {
-      const response = await fetch("/api/capture-lead", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          mobile: formData.mobile,
-          role: formData.role,
-          password: formData.password,
-          source: "registration_page",
-        }),
+      // Use auth registration - creates user account, sends to n8n, and logs them in
+      const result = await apiClient.registerUser({
+        name: formData.name,
+        email: formData.email,
+        mobile: formData.mobile,
+        role: formData.role,
+        password: formData.password,
+        source: "registration_page",
+        rememberMe: false // Don't remember by default on registration
       })
 
-      const result = await response.json()
-
-      if (response.ok && result.success) {
-        // Store user data in localStorage
+      if (result.success) {
+        // Store authentication data
+        localStorage.setItem("authUser", JSON.stringify(result.user))
+        localStorage.setItem("authToken", result.token)
+        localStorage.setItem("userEmail", formData.email)
+        
+        // Also store legacy userData for backward compatibility with payment page
         localStorage.setItem("userData", JSON.stringify({
           name: formData.name,
           email: formData.email,
           mobile: formData.mobile,
           role: formData.role,
         }))
-        localStorage.setItem("userEmail", formData.email)
 
-        showToast("Registration successful!", "success")
+        showToast("Registration successful! You're now logged in.", "success")
 
         setTimeout(() => {
           navigate("/payment")
         }, 2000)
       } else {
-        // Display the exact message from n8n/backend
-        const errorMessage = result.message || result.error || result.details?.[0]?.msg || "Registration failed. Please try again."
+        const errorMessage = result.message || "Registration failed. Please try again."
         showToast(errorMessage, "error")
       }
     } catch (error) {
       console.error("Registration error:", error)
-      showToast("Network error. Please check your connection and try again.", "error")
+      
+      // Handle specific error cases
+      if (error.response?.status === 409) {
+        showToast(error.response.data.message || "An account with this email already exists", "error")
+      } else if (error.isNetworkError) {
+        showToast("Network error. Please check your connection and try again.", "error")
+      } else {
+        showToast(error.message || "Registration failed. Please try again.", "error")
+      }
     } finally {
       setIsLoading(false)
     }

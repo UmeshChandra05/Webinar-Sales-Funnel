@@ -1146,6 +1146,20 @@ p {
   transform: translateX(3px);
 }
 
+/* Payment Button Variant - Professional, no animation */
+.cta-button-payment {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+}
+
+.cta-button-payment::before {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+.cta-button-payment:hover {
+  box-shadow: 0 8px 32px rgba(16, 185, 129, 0.4);
+}
+
 /* Mobile Menu Toggle */
 .nav-mobile-toggle {
   display: flex;
@@ -1261,6 +1275,16 @@ p {
 .cta-button-mobile:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 32px rgba(139, 92, 246, 0.4);
+}
+
+/* Mobile Payment Button Variant - Professional, no animation */
+.cta-button-mobile-payment {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 6px 24px rgba(16, 185, 129, 0.3);
+}
+
+.cta-button-mobile-payment:hover {
+  box-shadow: 0 8px 32px rgba(16, 185, 129, 0.4);
 }
 
 /* User authentication styles */

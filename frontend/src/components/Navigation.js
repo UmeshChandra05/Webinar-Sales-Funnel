@@ -70,19 +70,24 @@ const Navigation = () => {
             </Link>
             {!isLoading && (
               isAuthenticated ? (
-                <div className="nav-user-menu">
-                  <span className="nav-user-greeting">
-                    Welcome, {user?.name || 'User'}!
-                  </span>
+                <>
                   <button 
                     onClick={handleLogout}
                     className="nav-link nav-logout-btn"
                   >
                     Logout
                   </button>
-                </div>
+                </>
               ) : (
-                <Link to="/login" className={`nav-link ${isActive("/login") ? "nav-link-active" : ""}`}>
+                <Link 
+                  to="/login" 
+                  className={`nav-link ${isActive("/login") ? "nav-link-active" : ""}`}
+                  style={{
+                    border: '1px solid #8b5cf6',
+                    borderRadius: '6px',
+                    padding: '8px 16px'
+                  }}
+                >
                   Login
                 </Link>
               )
@@ -91,12 +96,23 @@ const Navigation = () => {
 
           {/* Desktop CTA */}
           <div className="nav-cta-desktop">
-            <Link to="/register" className="cta-button">
-              <span>💡 I'm Interested</span>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M5 12h14m-7-7 7 7-7 7"/>
-              </svg>
-            </Link>
+            {!isLoading && (
+              isAuthenticated ? (
+                <Link to="/payment" className="cta-button cta-button-payment">
+                  <span>💳 Complete Payment</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M5 12h14m-7-7 7 7-7 7"/>
+                  </svg>
+                </Link>
+              ) : (
+                <Link to="/register" className="cta-button">
+                  <span>💡 I'm Interested</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M5 12h14m-7-7 7 7-7 7"/>
+                  </svg>
+                </Link>
+              )
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -137,13 +153,6 @@ const Navigation = () => {
             {!isLoading && (
               isAuthenticated ? (
                 <>
-                  <div className="nav-mobile-user">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                      <circle cx="12" cy="7" r="4"/>
-                    </svg>
-                    Welcome, {user?.name || 'User'}!
-                  </div>
                   <button 
                     onClick={handleLogout} 
                     className="nav-mobile-link nav-mobile-logout"
@@ -155,7 +164,15 @@ const Navigation = () => {
                   </button>
                 </>
               ) : (
-                <Link to="/login" onClick={closeMenu} className={`nav-mobile-link ${isActive("/login") ? "nav-mobile-link-active" : ""}`}>
+                <Link 
+                  to="/login" 
+                  onClick={closeMenu} 
+                  className={`nav-mobile-link ${isActive("/login") ? "nav-mobile-link-active" : ""}`}
+                  style={{
+                    border: '1px solid #8b5cf6',
+                    borderRadius: '6px'
+                  }}
+                >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4m-5-4l5-5-5-5m5 5H3"/>
                   </svg>
@@ -165,9 +182,17 @@ const Navigation = () => {
             )}
             
             <div className="nav-mobile-cta">
-              <Link to="/register" onClick={closeMenu} className="cta-button-mobile">
-                💡 Show Interest
-              </Link>
+              {!isLoading && (
+                isAuthenticated ? (
+                  <Link to="/payment" onClick={closeMenu} className="cta-button-mobile cta-button-mobile-payment">
+                    💳 Complete Payment
+                  </Link>
+                ) : (
+                  <Link to="/register" onClick={closeMenu} className="cta-button-mobile">
+                    💡 Show Interest
+                  </Link>
+                )
+              )}
             </div>
           </div>
         </div>

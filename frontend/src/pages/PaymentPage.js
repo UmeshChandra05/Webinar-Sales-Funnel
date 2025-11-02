@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
+import { useAuth } from "../contexts/AuthContext"
 
 const PaymentPage = () => {
   const navigate = useNavigate()
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth()
   const [userEmail, setUserEmail] = useState("")
   const [loadingButton, setLoadingButton] = useState(null) // Track which button is loading
   const [couponCode, setCouponCode] = useState("")
@@ -24,16 +26,36 @@ const PaymentPage = () => {
   }
 
   useEffect(() => {
-    // Get user email from localStorage
-    const email = localStorage.getItem("userEmail")
-    if (!email) {
-      // Redirect to registration if no email found
-      navigate("/register")
+    // Wait for auth to initialize
+    if (authLoading) {
+      console.log("🔄 Waiting for authentication to initialize...")
       return
     }
-    setUserEmail(email)
-    
-    // Test backend connectivity
+
+    // Priority 1: Use authenticated user from auth context (most reliable)
+    if (isAuthenticated && user?.email) {
+      console.log("✅ Using email from authenticated user:", user.email)
+      setUserEmail(user.email)
+      // Sync localStorage for backward compatibility
+      localStorage.setItem("userEmail", user.email)
+      return
+    }
+
+    // Priority 2: Fallback to localStorage (for users who registered but haven't logged in yet)
+    const storedEmail = localStorage.getItem("userEmail")
+    if (storedEmail) {
+      console.log("⚠️ Using stored email (not authenticated):", storedEmail)
+      setUserEmail(storedEmail)
+      return
+    }
+
+    // Priority 3: No email found - redirect to registration
+    console.log("❌ No user email found, redirecting to registration...")
+    navigate("/register")
+  }, [authLoading, isAuthenticated, user, navigate])
+
+  // Test backend connectivity
+  useEffect(() => {
     const testBackendConnection = async () => {
       try {
         const response = await fetch("/health")
@@ -49,7 +71,7 @@ const PaymentPage = () => {
     }
     
     testBackendConnection()
-  }, [navigate])
+  }, [])
 
   const validateCouponCode = async () => {
     const trimmedCode = couponCode.trim()

@@ -21,16 +21,6 @@ const handleValidationErrors = (req, res, next) => {
   next()
 }
 
-// Lead capture validation
-const leadValidation = [
-  body("name").trim().isLength({ min: 2, max: 100 }).withMessage("Name must be between 2 and 100 characters"),
-  body("email").isEmail().normalizeEmail().withMessage("Valid email is required"),
-  body("mobile").optional().isMobilePhone().withMessage("Valid mobile number is required"),
-  body("role").trim().isLength({ min: 1, max: 50 }).withMessage("Role is required"),
-  body("password").isLength({ min: 6 }).withMessage("Password must be at least 6 characters long"),
-  body("source").optional().isString().trim(),
-]
-
 // Payment validation
 const paymentValidation = [
   body("email").isEmail().normalizeEmail().withMessage("Valid email is required"),
@@ -48,11 +38,10 @@ const couponValidation = [
 ]
 
 // Routes
-router.post("/capture-lead", leadValidation, handleValidationErrors, leadController.captureLeadAsync)
 router.post("/simulate-payment", paymentValidation, handleValidationErrors, paymentController.simulatePaymentAsync)
 router.post("/validate-coupon", couponValidation, handleValidationErrors, paymentController.validateCouponAsync)
 
-// User Authentication routes
+// User Authentication routes (primary method for registration and login)
 router.post(
   "/auth/register",
   [
@@ -87,10 +76,10 @@ router.post(
   [
     body("name").trim().isLength({ min: 2, max: 100 }).withMessage("Name is required"),
     body("email").isEmail().normalizeEmail().withMessage("Valid email is required"),
-    body("message")
+    body("query")
       .trim()
       .isLength({ min: 10, max: 1000 })
-      .withMessage("Message must be between 10 and 1000 characters"),
+      .withMessage("Query must be between 10 and 1000 characters"),
   ],
   handleValidationErrors,
   leadController.handleContactForm,
