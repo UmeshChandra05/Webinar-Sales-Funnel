@@ -1,0 +1,19 @@
+node_modules
+.env
+.env.local
+.git
+.gitignore
+README.md
+*.log
+.DS_Store
+.vscode
+.idea
+
+# Frontend dev files
+frontend/node_modules
+frontend/.env.local
+frontend/build
+
+# Backend dev files
+backend/node_modules
+backend/.env
