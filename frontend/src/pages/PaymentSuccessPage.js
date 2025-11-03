@@ -30,7 +30,6 @@ const PaymentSuccessPage = () => {
     if (user) {
       logPaymentStatus(user, 'PaymentSuccessPage')
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // Only run once on mount - user dependency removed to prevent loops
 
   return (
