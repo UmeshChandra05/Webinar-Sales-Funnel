@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { fetchSheetData, fetchContactsData } from '../services/googleSheetsService';
 import {
   Chart as ChartJS,
@@ -32,6 +33,7 @@ ChartJS.register(
 );
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const [dateRange, setDateRange] = useState('alltime');
   const [dateRangeLabel, setDateRangeLabel] = useState('Select Date Range');
   const [customStartDate, setCustomStartDate] = useState('');
@@ -1404,6 +1406,35 @@ const AdminDashboard = () => {
           )}
         </div>
         <div className="flex" style={{ gap: '0.5rem', alignItems: 'center' }}>
+          {/* Settings Button */}
+          <button 
+            onClick={() => navigate('/admin/settings')}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: '#8b5cf6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '0.5rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              fontSize: '0.95rem',
+              fontWeight: '500',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#7c3aed';
+              e.currentTarget.style.transform = 'translateY(-1px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#8b5cf6';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+          >
+            <span>⚙️</span>
+            <span>Settings</span>
+          </button>
           {/* Date Range Dropdown */}
           <div className="date-range-dropdown" style={{ position: 'relative' }}>
             <button 

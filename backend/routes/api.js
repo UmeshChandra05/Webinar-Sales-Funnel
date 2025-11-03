@@ -8,7 +8,7 @@ const paymentController = require("../controllers/paymentController")
 const webinarController = require("../controllers/webinarController")
 const adminController = require("../controllers/adminController")
 const authController = require("../controllers/authController")
-const configController = require("../controllers/configController")
+const settingsController = require("../controllers/settingsController")
 
 // Validation middleware
 const handleValidationErrors = (req, res, next) => {
@@ -72,7 +72,6 @@ router.post("/auth/logout", authController.logoutUser)
 
 // Additional utility routes
 router.get("/webinar-info", webinarController.getWebinarInfo)
-router.get("/admin-config", configController.getAdminConfig) // Fetch admin configuration
 router.post(
   "/contact",
   [
@@ -101,6 +100,10 @@ router.post(
 // Protected admin routes
 router.get("/admin/dashboard", adminController.verifyAdminToken, adminController.getDashboardData)
 router.post("/admin/refresh-token", adminController.verifyAdminToken, adminController.refreshToken)
+
+// Settings routes
+router.get("/settings", settingsController.getSettings) // Public route - fetch settings
+router.put("/admin/settings", adminController.verifyAdminToken, settingsController.updateSettings) // Protected - update settings
 
 // AI Chat route
 router.post("/ai-chat", [

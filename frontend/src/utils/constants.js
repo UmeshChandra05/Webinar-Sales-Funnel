@@ -1,31 +1,22 @@
 /**
  * Application-wide constants
- * These can be updated dynamically from admin configuration
+ * Dynamic settings are fetched from backend/Google Sheets
  */
 
-// Default static constants
+// Static UI constants (never change)
 export const CURRENCY_SYMBOL = '₹';
 export const TOAST_DURATION = 4000;
 export const NAVIGATION_DELAY = 1500;
 
-// Dynamic configuration (can be updated from Google Sheets Admin panel)
-let dynamicConfig = {
-  // Pricing
+// Default values (fallback if API fails)
+const DEFAULT_SETTINGS = {
   coursePrice: 4999,
-  
-  // Admin credentials (stored securely, not exposed to frontend)
-  // adminUsername and adminPassword are fetched but not stored here
-  
-  // Registration settings
-  registrationDeadline: '2025-11-07', // Format: YYYY-MM-DD
-  webinarTime: '2025-11-08T19:00:00', // Format: ISO 8601
-  
-  // Contact information
+  registrationDeadline: '2025-11-07',
+  webinarTime: '2025-11-08',
   contactEmail: 'webinar@pystack.com',
-  whatsappInviteLink: 'https://wa.me/yourwhatsapplink',
-  discordCommunityLink: 'https://discord.gg/yourcommunity',
-  
-  // Course features
+  whatsappLink: 'https://wa.me/',
+  discordLink: 'https://discord.gg/',
+  adminUsername: 'admin',
   courseFeatures: [
     'Complete 5-day Python Full Stack course',
     'Lifetime access to all recordings',
@@ -36,45 +27,81 @@ let dynamicConfig = {
   ]
 };
 
-// Getter functions to access dynamic config
-export const getCoursePrice = () => dynamicConfig.coursePrice;
-export const getRegistrationDeadline = () => dynamicConfig.registrationDeadline;
-export const getWebinarTime = () => dynamicConfig.webinarTime;
-export const getContactEmail = () => dynamicConfig.contactEmail;
-export const getWhatsappInviteLink = () => dynamicConfig.whatsappInviteLink;
-export const getDiscordCommunityLink = () => dynamicConfig.discordCommunityLink;
-export const getCourseFeatures = () => dynamicConfig.courseFeatures;
+// In-memory cache for settings
+let cachedSettings = { ...DEFAULT_SETTINGS };
+let lastFetchTime = null;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-// Backward compatibility - export as constants
-export const COURSE_PRICE = dynamicConfig.coursePrice;
-export const COURSE_FEATURES = dynamicConfig.courseFeatures;
+/**
+ * Fetch settings from backend/Google Sheets
+ */
+export const fetchSettings = async () => {
+  try {
+    // Check if cache is still valid
+    if (lastFetchTime && Date.now() - lastFetchTime < CACHE_DURATION) {
+      console.log('📋 Using cached settings');
+      return cachedSettings;
+    }
 
-// Update function to be called when fetching from backend
-export const updateDynamicConfig = (newConfig) => {
-  if (newConfig.coursePrice !== undefined) {
-    dynamicConfig.coursePrice = newConfig.coursePrice;
+    console.log('🔄 Fetching fresh settings from backend...');
+    const response = await fetch('/api/settings', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success && data.settings) {
+        cachedSettings = { ...DEFAULT_SETTINGS, ...data.settings };
+        lastFetchTime = Date.now();
+        console.log('✅ Settings fetched successfully:', cachedSettings);
+        return cachedSettings;
+      }
+    }
+
+    console.warn('⚠️ Failed to fetch settings, using defaults');
+    return DEFAULT_SETTINGS;
+  } catch (error) {
+    console.error('❌ Error fetching settings:', error);
+    return DEFAULT_SETTINGS;
   }
-  if (newConfig.registrationDeadline !== undefined) {
-    dynamicConfig.registrationDeadline = newConfig.registrationDeadline;
-  }
-  if (newConfig.webinarTime !== undefined) {
-    dynamicConfig.webinarTime = newConfig.webinarTime;
-  }
-  if (newConfig.contactEmail !== undefined) {
-    dynamicConfig.contactEmail = newConfig.contactEmail;
-  }
-  if (newConfig.whatsappInviteLink !== undefined) {
-    dynamicConfig.whatsappInviteLink = newConfig.whatsappInviteLink;
-  }
-  if (newConfig.discordCommunityLink !== undefined) {
-    dynamicConfig.discordCommunityLink = newConfig.discordCommunityLink;
-  }
-  if (newConfig.courseFeatures !== undefined) {
-    dynamicConfig.courseFeatures = newConfig.courseFeatures;
-  }
-  
-  console.log('✅ Dynamic configuration updated:', dynamicConfig);
 };
 
-// Get all current config
-export const getDynamicConfig = () => ({ ...dynamicConfig });
+/**
+ * Get current settings (from cache or fetch if needed)
+ */
+export const getSettings = async () => {
+  if (!lastFetchTime) {
+    return await fetchSettings();
+  }
+  return cachedSettings;
+};
+
+/**
+ * Force refresh settings (bypass cache)
+ */
+export const refreshSettings = async () => {
+  lastFetchTime = null;
+  return await fetchSettings();
+};
+
+/**
+ * Get setting value synchronously (returns cached or default)
+ */
+export const getSetting = (key) => {
+  return cachedSettings[key] || DEFAULT_SETTINGS[key];
+};
+
+// Export commonly used settings as getters
+export const COURSE_PRICE = () => getSetting('coursePrice');
+export const REGISTRATION_DEADLINE = () => getSetting('registrationDeadline');
+export const WEBINAR_TIME = () => getSetting('webinarTime');
+export const CONTACT_EMAIL = () => getSetting('contactEmail');
+export const WHATSAPP_LINK = () => getSetting('whatsappLink');
+export const DISCORD_LINK = () => getSetting('discordLink');
+export const COURSE_FEATURES = () => getSetting('courseFeatures');
+
+// Initialize settings on module load
+fetchSettings();

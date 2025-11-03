@@ -187,10 +187,20 @@ class ApiClient {
     })
   }
 
-  // Fetch admin configuration (public settings only)
-  async getAdminConfig() {
-    return this.request("/admin-config", {
+  // Settings Management APIs
+  async getSettings() {
+    return this.request("/settings", {
       method: "GET",
+    })
+  }
+
+  async updateSettings(settingsData, adminToken) {
+    return this.request("/admin/settings", {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify(settingsData),
     })
   }
 }

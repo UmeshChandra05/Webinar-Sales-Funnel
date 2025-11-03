@@ -1,6 +1,5 @@
 import { Routes, Route, useLocation } from "react-router-dom"
 import { AuthProvider } from "./contexts/AuthContext"
-import { useAppConfig } from "./hooks/useAppConfig"
 import Navigation from "./components/Navigation"
 import AIChatWidget from "./components/AIChatWidget"
 import ProtectedRoute from "./components/ProtectedRoute"
@@ -15,19 +14,12 @@ import AboutPage from "./pages/AboutPage"
 import ContactPage from "./pages/ContactPage"
 import AdminLoginPage from "./pages/AdminLoginPage"
 import AdminDashboard from "./pages/AdminDashboard"
+import AdminSettingsPage from "./pages/AdminSettingsPage"
 import NotFoundPage from "./pages/NotFoundPage"
 
 function App() {
   const location = useLocation();
   const isAdminPath = location.pathname.startsWith('/admin');
-  
-  // Fetch dynamic configuration on app load
-  const { config, isLoading: configLoading } = useAppConfig();
-  
-  // Show loading state while fetching config (optional, can be removed for faster initial render)
-  // if (configLoading) {
-  //   return <div>Loading configuration...</div>;
-  // }
 
   return (
     <AuthProvider>
@@ -83,6 +75,14 @@ function App() {
               element={
                 <ProtectedRoute requireAdmin={true}>
                   <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/settings" 
+              element={
+                <ProtectedRoute requireAdmin={true}>
+                  <AdminSettingsPage />
                 </ProtectedRoute>
               } 
             />
