@@ -1207,17 +1207,11 @@ const AdminDashboard = () => {
     const getColorForRole = (role) => {
       const colorMap = {
         'Student': { bg: 'rgba(99, 179, 237, 0.9)', border: 'rgba(99, 179, 237, 1)' }, // Vibrant Cyan Blue
-        'Teacher': { bg: 'rgba(72, 207, 173, 0.9)', border: 'rgba(72, 207, 173, 1)' }, // Vibrant Teal
         'Faculty': { bg: 'rgba(72, 207, 173, 0.9)', border: 'rgba(72, 207, 173, 1)' }, // Vibrant Teal
-        'Entrepreneur': { bg: 'rgba(255, 159, 67, 0.9)', border: 'rgba(255, 159, 67, 1)' }, // Vibrant Orange
         'Industry Professional': { bg: 'rgba(142, 124, 255, 0.9)', border: 'rgba(142, 124, 255, 1)' }, // Vibrant Purple
-        'Working Professional': { bg: 'rgba(142, 124, 255, 0.9)', border: 'rgba(142, 124, 255, 1)' }, // Vibrant Purple
-        'Professional': { bg: 'rgba(142, 124, 255, 0.9)', border: 'rgba(142, 124, 255, 1)' }, // Vibrant Purple
-        'HR Professional': { bg: 'rgba(255, 107, 161, 0.9)', border: 'rgba(255, 107, 161, 1)' }, // Vibrant Pink/Coral
-        'Consultant': { bg: 'rgba(94, 231, 223, 0.9)', border: 'rgba(94, 231, 223, 1)' }, // Vibrant Light Cyan
-        'Business Owner': { bg: 'rgba(255, 195, 113, 0.9)', border: 'rgba(255, 195, 113, 1)' }, // Vibrant Peach
-        'Others': { bg: 'rgba(163, 174, 208, 0.9)', border: 'rgba(163, 174, 208, 1)' }, // Soft Blue Grey
-        'Unknown': { bg: 'rgba(163, 174, 208, 0.9)', border: 'rgba(163, 174, 208, 1)' } // Soft Blue Grey
+        'Freelancer': { bg: 'rgba(129, 236, 236, 0.9)', border: 'rgba(129, 236, 236, 1)' }, // Vibrant Turquoise
+        'Entrepreneur': { bg: 'rgba(255, 159, 67, 0.9)', border: 'rgba(255, 159, 67, 1)' }, // Vibrant Orange
+        'Other': { bg: 'rgba(255, 121, 198, 0.9)', border: 'rgba(255, 121, 198, 1)' } // Vibrant Magenta Pink
       };
       return colorMap[role] || { bg: 'rgba(163, 174, 208, 0.9)', border: 'rgba(163, 174, 208, 1)' }; // Default soft grey
     };
@@ -1878,17 +1872,11 @@ const AdminDashboard = () => {
                   const getColorForRole = (roleName) => {
                     const colorMap = {
                       'Student': 'rgba(99, 179, 237, 1)',
-                      'Teacher': 'rgba(72, 207, 173, 1)',
                       'Faculty': 'rgba(72, 207, 173, 1)',
-                      'Entrepreneur': 'rgba(255, 159, 67, 1)',
                       'Industry Professional': 'rgba(142, 124, 255, 1)',
-                      'Working Professional': 'rgba(142, 124, 255, 1)',
-                      'Professional': 'rgba(142, 124, 255, 1)',
-                      'HR Professional': 'rgba(255, 107, 161, 1)',
-                      'Consultant': 'rgba(94, 231, 223, 1)',
-                      'Business Owner': 'rgba(255, 195, 113, 1)',
-                      'Others': 'rgba(163, 174, 208, 1)',
-                      'Unknown': 'rgba(163, 174, 208, 1)'
+                      'Freelancer': 'rgba(129, 236, 236, 1)',
+                      'Entrepreneur': 'rgba(255, 159, 67, 1)',
+                      'Other': 'rgba(255, 121, 198, 1)'
                     };
                     return colorMap[roleName] || 'rgba(163, 174, 208, 1)';
                   };

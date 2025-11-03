@@ -186,6 +186,13 @@ class ApiClient {
       body: JSON.stringify(messageData),
     })
   }
+
+  // Fetch admin configuration (public settings only)
+  async getAdminConfig() {
+    return this.request("/admin-config", {
+      method: "GET",
+    })
+  }
 }
 
 // Create and export a singleton instance

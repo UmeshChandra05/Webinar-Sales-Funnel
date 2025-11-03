@@ -8,6 +8,7 @@ const paymentController = require("../controllers/paymentController")
 const webinarController = require("../controllers/webinarController")
 const adminController = require("../controllers/adminController")
 const authController = require("../controllers/authController")
+const configController = require("../controllers/configController")
 
 // Validation middleware
 const handleValidationErrors = (req, res, next) => {
@@ -71,6 +72,7 @@ router.post("/auth/logout", authController.logoutUser)
 
 // Additional utility routes
 router.get("/webinar-info", webinarController.getWebinarInfo)
+router.get("/admin-config", configController.getAdminConfig) // Fetch admin configuration
 router.post(
   "/contact",
   [
