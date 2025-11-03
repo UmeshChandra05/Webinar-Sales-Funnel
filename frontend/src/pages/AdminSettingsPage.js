@@ -7,8 +7,10 @@ const AdminSettingsPage = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [toastMessage, setToastMessage] = useState(null)
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [settings, setSettings] = useState({
     adminUsername: 'admin',
+    adminPassword: '',
     coursePrice: 4999,
     registrationDeadline: '2025-11-07',
     webinarTime: '2025-11-08T19:00',
@@ -62,6 +64,28 @@ const AdminSettingsPage = () => {
     if (!adminToken) {
       showToast('Admin authentication required', 'error')
       navigate('/admin/login')
+      return
+    }
+
+    // Validate password and confirm password match (if password is being changed)
+    if (settings.adminPassword && settings.adminPassword.trim().length > 0) {
+      if (settings.adminPassword !== confirmPassword) {
+        showToast('Passwords do not match', 'error')
+        return
+      }
+      
+      if (settings.adminPassword.length < 6) {
+        showToast('Password must be at least 6 characters long', 'error')
+        return
+      }
+    }
+
+    // Validate registration deadline is before webinar time
+    const deadlineDate = new Date(settings.registrationDeadline)
+    const webinarDate = new Date(settings.webinarTime)
+    
+    if (deadlineDate >= webinarDate) {
+      showToast('Registration deadline must be before webinar time', 'error')
       return
     }
 
@@ -150,17 +174,18 @@ const AdminSettingsPage = () => {
 
           .settings-container {
             min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #0a0a0a;
             padding: 2rem 1rem;
           }
 
           .settings-card {
             max-width: 800px;
             margin: 0 auto;
-            background: white;
+            background: #1a1a1a;
+            border: 1px solid #27272a;
             border-radius: 16px;
             padding: 2rem;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
           }
 
           .settings-header {
@@ -169,19 +194,19 @@ const AdminSettingsPage = () => {
             align-items: center;
             margin-bottom: 2rem;
             padding-bottom: 1rem;
-            border-bottom: 2px solid #e5e7eb;
+            border-bottom: 2px solid #27272a;
           }
 
           .settings-title {
             font-size: 1.75rem;
             font-weight: bold;
-            color: #1f2937;
+            color: #ffffff;
             margin: 0;
           }
 
           .back-button {
             padding: 0.5rem 1rem;
-            background: #6366f1;
+            background: #8b5cf6;
             color: white;
             border: none;
             border-radius: 8px;
@@ -192,7 +217,7 @@ const AdminSettingsPage = () => {
           }
 
           .back-button:hover {
-            background: #4f46e5;
+            background: #7c3aed;
             transform: translateY(-1px);
           }
 
@@ -203,7 +228,7 @@ const AdminSettingsPage = () => {
           .section-title {
             font-size: 1.25rem;
             font-weight: 600;
-            color: #374151;
+            color: #a78bfa;
             margin-bottom: 1rem;
             display: flex;
             align-items: center;
@@ -229,7 +254,7 @@ const AdminSettingsPage = () => {
           .submit-button {
             width: 100%;
             padding: 0.875rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
             color: white;
             border: none;
             border-radius: 8px;
@@ -245,12 +270,42 @@ const AdminSettingsPage = () => {
 
           .submit-button:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 10px 25px rgba(139, 92, 246, 0.4);
           }
 
           .submit-button:disabled {
             opacity: 0.6;
             cursor: not-allowed;
+          }
+
+          .form-input[type="date"],
+          .form-input[type="datetime-local"] {
+            position: relative;
+          }
+
+          .form-input[type="date"]::-webkit-calendar-picker-indicator,
+          .form-input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            filter: invert(0.8);
+            opacity: 0.8;
+          }
+
+          .form-input[type="date"]::-webkit-calendar-picker-indicator:hover,
+          .form-input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
+            opacity: 1;
+          }
+
+          .form-helper-text {
+            font-size: 0.75rem;
+            color: #a1a1aa;
+            margin-top: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+          }
+
+          .form-input:invalid {
+            border-color: #ef4444;
           }
         `}
       </style>
@@ -373,9 +428,53 @@ const AdminSettingsPage = () => {
                     required
                   />
                 </div>
+
+                <div className="form-group">
+                  <label htmlFor="adminPassword" className="form-label">
+                    Admin Password
+                  </label>
+                  <input
+                    type="password"
+                    id="adminPassword"
+                    name="adminPassword"
+                    value={settings.adminPassword}
+                    onChange={handleInputChange}
+                    className="form-input"
+                    placeholder="Enter new password (min 6 characters)"
+                    minLength={settings.adminPassword ? 6 : 0}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="confirmPassword" className="form-label">
+                    Confirm Password
+                  </label>
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="form-input"
+                    placeholder="Re-enter new password"
+                    style={{
+                      borderColor: settings.adminPassword && confirmPassword && settings.adminPassword !== confirmPassword ? '#ef4444' : ''
+                    }}
+                  />
+                  {settings.adminPassword && confirmPassword && settings.adminPassword !== confirmPassword && (
+                    <p style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '0.25rem' }}>
+                      ❌ Passwords do not match
+                    </p>
+                  )}
+                  {settings.adminPassword && confirmPassword && settings.adminPassword === confirmPassword && (
+                    <p style={{ fontSize: '0.75rem', color: '#10b981', marginTop: '0.25rem' }}>
+                      ✓ Passwords match
+                    </p>
+                  )}
+                </div>
               </div>
-              <p style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.5rem' }}>
-                Note: Password updates must be done through Google Sheets directly for security.
+              <p style={{ fontSize: '0.875rem', color: '#a1a1aa', marginTop: '0.5rem' }}>
+                💡 Leave password fields blank if you don't want to change it. New password will be stored in Google Sheets.
               </p>
             </div>
 
@@ -413,7 +512,15 @@ const AdminSettingsPage = () => {
                     onChange={handleInputChange}
                     className="form-input"
                     required
+                    max={settings.webinarTime ? settings.webinarTime.split('T')[0] : ''}
+                    style={{ 
+                      colorScheme: 'dark',
+                      cursor: 'pointer'
+                    }}
                   />
+                  <p className="form-helper-text">
+                    ⚠️ Must be before webinar time
+                  </p>
                 </div>
 
                 <div className="form-group form-field-full">
@@ -428,7 +535,15 @@ const AdminSettingsPage = () => {
                     onChange={handleInputChange}
                     className="form-input"
                     required
+                    min={new Date().toISOString().slice(0, 16)}
+                    style={{ 
+                      colorScheme: 'dark',
+                      cursor: 'pointer'
+                    }}
                   />
+                  <p className="form-helper-text">
+                    📅 Select both date and time for the webinar
+                  </p>
                 </div>
               </div>
             </div>
