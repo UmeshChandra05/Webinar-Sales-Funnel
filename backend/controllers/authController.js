@@ -25,9 +25,9 @@ const authController = {
   // Register new user
   registerUser: async (req, res) => {
     try {
-      const { name, email, password, mobile, role, rememberMe } = req.body;
+      const { name, email, password, mobile, role, rememberMe, source } = req.body;
 
-      console.log("👤 User registration:", { email, name, role });
+      console.log("👤 User registration:", { email, name, role, source: source || 'Direct' });
 
       // ============================================================================
       // 🚨 TEST USER CHECK - REMOVE IN PRODUCTION 🚨
@@ -53,6 +53,7 @@ const authController = {
         password: hashedPassword,
         mobile: mobile || "NA",
         role: role || "",
+        source: source || "Direct", // Capture source from request or default to "Direct"
         type: "user_registration",
         reg_timestamp: new Date().toISOString(),
         ip_address: req.ip,

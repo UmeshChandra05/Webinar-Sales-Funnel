@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
 import { logPaymentStatus } from "../utils/paymentUtils"
 
 const LandingPage = () => {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { 
     user, 
     isAuthenticated, 
@@ -44,7 +45,15 @@ const LandingPage = () => {
   }, [])
 
   const handleRegisterClick = () => {
-    navigate("/register")
+    // Preserve source parameter when navigating to register
+    const source = searchParams.get('source')
+    if (source) {
+      navigate(`/register?source=${encodeURIComponent(source)}`)
+      console.log('Navigating to register with source:', source)
+    } else {
+      navigate("/register")
+      console.log('Navigating to register without source (will default to Direct)')
+    }
   }
 
   const handlePaymentClick = () => {

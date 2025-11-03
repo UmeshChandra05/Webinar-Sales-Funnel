@@ -1,11 +1,12 @@
 "use client"
 
-import { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useState, useEffect } from "react"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import apiClient from "../utils/api"
 
 const RegisterPage = () => {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -14,9 +15,21 @@ const RegisterPage = () => {
     password: "",
     confirmPassword: "",
   })
+  const [source, setSource] = useState("Direct") // Default source
   const [isLoading, setIsLoading] = useState(false)
   const [toastMessage, setToastMessage] = useState(null)
   const [passwordError, setPasswordError] = useState("")
+
+  // Capture source from URL parameters on component mount
+  useEffect(() => {
+    const urlSource = searchParams.get('source')
+    if (urlSource) {
+      setSource(urlSource)
+      console.log('Source captured from URL:', urlSource)
+    } else {
+      console.log('No source in URL, using default: Direct')
+    }
+  }, [searchParams])
 
   const showToast = (message, type = 'info') => {
     setToastMessage({ message, type })
@@ -67,9 +80,11 @@ const RegisterPage = () => {
         mobile: formData.mobile,
         role: formData.role,
         password: formData.password,
-        source: "registration_page",
+        source: source, // Use captured source (either from URL or "Direct")
         rememberMe: false // Don't remember by default on registration
       })
+      
+      console.log('Registration submitted with source:', source)
 
       if (result.success) {
         // Store authentication data

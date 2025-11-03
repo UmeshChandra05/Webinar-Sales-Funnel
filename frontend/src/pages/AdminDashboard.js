@@ -81,7 +81,7 @@ const AdminDashboard = () => {
     email: true,
     role: true,
     client_status: true,
-    nuturing: true,
+    nurturing: true,
     payment_status: false,
     source: false,
     reg_timestamp: false,
@@ -91,8 +91,9 @@ const AdminDashboard = () => {
     discount_amt: false,
     couponcode_given: false,
     couponcode_applied: false,
-    unsubscribed: false,
-    interest: false
+    txn_id: false,
+    txn_timestamp: false,
+    currency: false
   });
   
   // Column-specific filters
@@ -102,7 +103,7 @@ const AdminDashboard = () => {
     email: 'all',
     role: 'all',
     client_status: 'all',
-    nuturing: 'all',
+    nurturing: 'all',
     payment_status: 'all',
     source: 'all',
     reg_timestamp: 'all',
@@ -112,8 +113,9 @@ const AdminDashboard = () => {
     discount_amt: 'all',
     couponcode_given: 'all',
     couponcode_applied: 'all',
-    unsubscribed: 'all',
-    interest: 'all'
+    txn_id: 'all',
+    txn_timestamp: 'all',
+    currency: 'all'
   });
   
   // Chart data state
@@ -2649,10 +2651,10 @@ const AdminDashboard = () => {
               <thead style={{ backgroundColor: 'var(--surface-light)' }}>
                 {/* Header Row - Column Names with Sort */}
                 <tr>
-                  {visibleColumns.Name && (
+                  {visibleColumns.name && (
                     <th 
                       className="cursor-pointer"
-                      onClick={() => handleSort('Name')}
+                      onClick={() => handleSort('name')}
                       style={{
                         padding: '0.75rem',
                         textAlign: 'left',
@@ -2663,13 +2665,13 @@ const AdminDashboard = () => {
                         userSelect: 'none'
                       }}
                     >
-                      Name {sortConfig.key === 'Name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      Name {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
                   )}
-                  {visibleColumns.Mobile && (
+                  {visibleColumns.mobile && (
                     <th 
                       className="cursor-pointer"
-                      onClick={() => handleSort('Mobile')}
+                      onClick={() => handleSort('mobile')}
                       style={{
                         padding: '0.75rem',
                         textAlign: 'left',
@@ -2680,13 +2682,13 @@ const AdminDashboard = () => {
                         userSelect: 'none'
                       }}
                     >
-                      Mobile {sortConfig.key === 'Mobile' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      Mobile {sortConfig.key === 'mobile' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
                   )}
-                  {visibleColumns.Email && (
+                  {visibleColumns.email && (
                     <th 
                       className="cursor-pointer"
-                      onClick={() => handleSort('Email')}
+                      onClick={() => handleSort('email')}
                       style={{
                         padding: '0.75rem',
                         textAlign: 'left',
@@ -2697,13 +2699,13 @@ const AdminDashboard = () => {
                         userSelect: 'none'
                       }}
                     >
-                      Email {sortConfig.key === 'Email' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      Email {sortConfig.key === 'email' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
                   )}
-                  {visibleColumns.Role && (
+                  {visibleColumns.role && (
                     <th 
                       className="cursor-pointer"
-                      onClick={() => handleSort('Role')}
+                      onClick={() => handleSort('role')}
                       style={{
                         padding: '0.75rem',
                         textAlign: 'left',
@@ -2714,10 +2716,10 @@ const AdminDashboard = () => {
                         userSelect: 'none'
                       }}
                     >
-                      Role {sortConfig.key === 'Role' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      Role {sortConfig.key === 'role' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
                   )}
-                  {visibleColumns.Status && (
+                  {visibleColumns.client_status && (
                     <th 
                       style={{
                         padding: '0.75rem',
@@ -2730,10 +2732,10 @@ const AdminDashboard = () => {
                       Status
                     </th>
                   )}
-                  {visibleColumns['Nurture Level'] && (
+                  {visibleColumns.nurturing && (
                     <th 
                       className="cursor-pointer"
-                      onClick={() => handleSort('Nurture Level')}
+                      onClick={() => handleSort('nurturing')}
                       style={{
                         padding: '0.75rem',
                         textAlign: 'left',
@@ -2744,13 +2746,13 @@ const AdminDashboard = () => {
                         userSelect: 'none'
                       }}
                     >
-                      Nurture Level {sortConfig.key === 'Nurture Level' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      Nurture Level {sortConfig.key === 'nurturing' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
                   )}
-                  {visibleColumns['Payment Status'] && (
+                  {visibleColumns.payment_status && (
                     <th 
                       className="cursor-pointer"
-                      onClick={() => handleSort('Payment Status')}
+                      onClick={() => handleSort('payment_status')}
                       style={{
                         padding: '0.75rem',
                         textAlign: 'left',
@@ -2761,13 +2763,13 @@ const AdminDashboard = () => {
                         userSelect: 'none'
                       }}
                     >
-                      Payment Status {sortConfig.key === 'Payment Status' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      Payment Status {sortConfig.key === 'payment_status' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
                   )}
-                  {visibleColumns.Source && (
+                  {visibleColumns.source && (
                     <th 
                       className="cursor-pointer"
-                      onClick={() => handleSort('Source')}
+                      onClick={() => handleSort('source')}
                       style={{
                         padding: '0.75rem',
                         textAlign: 'left',
@@ -2778,13 +2780,13 @@ const AdminDashboard = () => {
                         userSelect: 'none'
                       }}
                     >
-                      Source {sortConfig.key === 'Source' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      Source {sortConfig.key === 'source' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
                   )}
-                  {visibleColumns.Registration_TS && (
+                  {visibleColumns.reg_timestamp && (
                     <th 
                       className="cursor-pointer"
-                      onClick={() => handleSort('Registration_TS')}
+                      onClick={() => handleSort('reg_timestamp')}
                       style={{
                         padding: '0.75rem',
                         textAlign: 'left',
@@ -2795,13 +2797,13 @@ const AdminDashboard = () => {
                         userSelect: 'none'
                       }}
                     >
-                      Registered {sortConfig.key === 'Registration_TS' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      Registered {sortConfig.key === 'reg_timestamp' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
                   )}
-                  {visibleColumns.Payable && (
+                  {visibleColumns.payable_amt && (
                     <th 
                       className="cursor-pointer"
-                      onClick={() => handleSort('Payable')}
+                      onClick={() => handleSort('payable_amt')}
                       style={{
                         padding: '0.75rem',
                         textAlign: 'left',
@@ -2812,13 +2814,13 @@ const AdminDashboard = () => {
                         userSelect: 'none'
                       }}
                     >
-                      Payable {sortConfig.key === 'Payable' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      Payable {sortConfig.key === 'payable_amt' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
                   )}
-                  {visibleColumns['Paid Amount'] && (
+                  {visibleColumns.paid_amt && (
                     <th 
                       className="cursor-pointer"
-                      onClick={() => handleSort('Paid Amount')}
+                      onClick={() => handleSort('paid_amt')}
                       style={{
                         padding: '0.75rem',
                         textAlign: 'left',
@@ -2829,13 +2831,13 @@ const AdminDashboard = () => {
                         userSelect: 'none'
                       }}
                     >
-                      Paid Amount {sortConfig.key === 'Paid Amount' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      Paid Amount {sortConfig.key === 'paid_amt' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
                   )}
-                  {visibleColumns['Discount %'] && (
+                  {visibleColumns.discount_percentage && (
                     <th 
                       className="cursor-pointer"
-                      onClick={() => handleSort('Discount %')}
+                      onClick={() => handleSort('discount_percentage')}
                       style={{
                         padding: '0.75rem',
                         textAlign: 'left',
@@ -2846,13 +2848,13 @@ const AdminDashboard = () => {
                         userSelect: 'none'
                       }}
                     >
-                      Discount % {sortConfig.key === 'Discount %' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      Discount % {sortConfig.key === 'discount_percentage' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
                   )}
-                  {visibleColumns['Discount Amount'] && (
+                  {visibleColumns.discount_amt && (
                     <th 
                       className="cursor-pointer"
-                      onClick={() => handleSort('Discount Amount')}
+                      onClick={() => handleSort('discount_amt')}
                       style={{
                         padding: '0.75rem',
                         textAlign: 'left',
@@ -2863,13 +2865,13 @@ const AdminDashboard = () => {
                         userSelect: 'none'
                       }}
                     >
-                      Discount Amount {sortConfig.key === 'Discount Amount' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      Discount Amount {sortConfig.key === 'discount_amt' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
                   )}
-                  {visibleColumns['Coupon Code (G)'] && (
+                  {visibleColumns.couponcode_given && (
                     <th 
                       className="cursor-pointer"
-                      onClick={() => handleSort('Coupon Code (G)')}
+                      onClick={() => handleSort('couponcode_given')}
                       style={{
                         padding: '0.75rem',
                         textAlign: 'left',
@@ -2880,13 +2882,13 @@ const AdminDashboard = () => {
                         userSelect: 'none'
                       }}
                     >
-                      Coupon (Given) {sortConfig.key === 'Coupon Code (G)' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      Coupon (Given) {sortConfig.key === 'couponcode_given' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
                   )}
-                  {visibleColumns['Coupon Code (A)'] && (
+                  {visibleColumns.couponcode_applied && (
                     <th 
                       className="cursor-pointer"
-                      onClick={() => handleSort('Coupon Code (A)')}
+                      onClick={() => handleSort('couponcode_applied')}
                       style={{
                         padding: '0.75rem',
                         textAlign: 'left',
@@ -2897,13 +2899,13 @@ const AdminDashboard = () => {
                         userSelect: 'none'
                       }}
                     >
-                      Coupon (Applied) {sortConfig.key === 'Coupon Code (A)' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      Coupon (Applied) {sortConfig.key === 'couponcode_applied' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
                   )}
-                  {visibleColumns.Unsubscribed && (
+                  {visibleColumns.txn_id && (
                     <th 
                       className="cursor-pointer"
-                      onClick={() => handleSort('Unsubscribed')}
+                      onClick={() => handleSort('txn_id')}
                       style={{
                         padding: '0.75rem',
                         textAlign: 'left',
@@ -2914,13 +2916,13 @@ const AdminDashboard = () => {
                         userSelect: 'none'
                       }}
                     >
-                      Unsubscribed {sortConfig.key === 'Unsubscribed' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      Transaction ID {sortConfig.key === 'txn_id' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
                   )}
-                  {visibleColumns.Interest && (
+                  {visibleColumns.txn_timestamp && (
                     <th 
                       className="cursor-pointer"
-                      onClick={() => handleSort('Interest')}
+                      onClick={() => handleSort('txn_timestamp')}
                       style={{
                         padding: '0.75rem',
                         textAlign: 'left',
@@ -2931,7 +2933,24 @@ const AdminDashboard = () => {
                         userSelect: 'none'
                       }}
                     >
-                      Interest {sortConfig.key === 'Interest' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      Payment Date {sortConfig.key === 'txn_timestamp' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </th>
+                  )}
+                  {visibleColumns.currency && (
+                    <th 
+                      className="cursor-pointer"
+                      onClick={() => handleSort('currency')}
+                      style={{
+                        padding: '0.75rem',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: 'var(--text-primary)',
+                        borderBottom: '1px solid var(--border)',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                    >
+                      Currency {sortConfig.key === 'currency' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
                   )}
                 </tr>
@@ -2939,7 +2958,7 @@ const AdminDashboard = () => {
                 {/* Filter Row - Dropdowns for each column (Only shown when Advanced Filters is active) */}
                 {showAdvancedSelection && (
                   <tr>
-                    {visibleColumns.Name && (
+                    {visibleColumns.name && (
                       <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
                         {/* No filter for Name - use search instead */}
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
@@ -2947,7 +2966,7 @@ const AdminDashboard = () => {
                         </div>
                       </th>
                     )}
-                    {visibleColumns.Mobile && (
+                    {visibleColumns.mobile && (
                     <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
                       {/* No filter for Mobile - use search instead */}
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
@@ -2955,7 +2974,7 @@ const AdminDashboard = () => {
                       </div>
                     </th>
                   )}
-                  {visibleColumns.Email && (
+                  {visibleColumns.email && (
                     <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
                       {/* No filter for Email - use search instead */}
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
@@ -2963,11 +2982,11 @@ const AdminDashboard = () => {
                       </div>
                     </th>
                   )}
-                  {visibleColumns.Role && (
+                  {visibleColumns.role && (
                     <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
                       <select
-                        value={columnFilters.Role || 'all'}
-                        onChange={(e) => handleColumnFilter('Role', e.target.value)}
+                        value={columnFilters.role || 'all'}
+                        onChange={(e) => handleColumnFilter('role', e.target.value)}
                         onClick={(e) => e.stopPropagation()}
                         style={{
                           width: '100%',
@@ -2982,17 +3001,17 @@ const AdminDashboard = () => {
                         }}
                       >
                         <option value="all">All</option>
-                        {getUniqueValuesForColumn('Role').map(value => (
+                        {getUniqueValuesForColumn('role').map(value => (
                           <option key={value} value={value}>{value}</option>
                         ))}
                       </select>
                     </th>
                   )}
-                  {visibleColumns.Status && (
+                  {visibleColumns.client_status && (
                     <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
                       <select
-                        value={columnFilters.Status || 'all'}
-                        onChange={(e) => handleColumnFilter('Status', e.target.value)}
+                        value={columnFilters.client_status || 'all'}
+                        onChange={(e) => handleColumnFilter('client_status', e.target.value)}
                         onClick={(e) => e.stopPropagation()}
                         style={{
                           width: '100%',
@@ -3014,11 +3033,11 @@ const AdminDashboard = () => {
                       </select>
                     </th>
                   )}
-                  {visibleColumns['Nurture Level'] && (
+                  {visibleColumns.nurturing && (
                     <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
                       <select
-                        value={columnFilters['Nurture Level'] || 'all'}
-                        onChange={(e) => handleColumnFilter('Nurture Level', e.target.value)}
+                        value={columnFilters.nurturing || 'all'}
+                        onChange={(e) => handleColumnFilter('nurturing', e.target.value)}
                         onClick={(e) => e.stopPropagation()}
                         style={{
                           width: '100%',
@@ -3033,17 +3052,17 @@ const AdminDashboard = () => {
                         }}
                       >
                         <option value="all">All</option>
-                        {getUniqueValuesForColumn('Nurture Level').map(value => (
+                        {getUniqueValuesForColumn('nurturing').map(value => (
                           <option key={value} value={value}>{value}</option>
                         ))}
                       </select>
                     </th>
                   )}
-                  {visibleColumns['Payment Status'] && (
+                  {visibleColumns.payment_status && (
                     <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
                       <select
-                        value={columnFilters['Payment Status'] || 'all'}
-                        onChange={(e) => handleColumnFilter('Payment Status', e.target.value)}
+                        value={columnFilters.payment_status || 'all'}
+                        onChange={(e) => handleColumnFilter('payment_status', e.target.value)}
                         onClick={(e) => e.stopPropagation()}
                         style={{
                           width: '100%',
@@ -3058,17 +3077,17 @@ const AdminDashboard = () => {
                         }}
                       >
                         <option value="all">All</option>
-                        {getUniqueValuesForColumn('Payment Status').map(value => (
+                        {getUniqueValuesForColumn('payment_status').map(value => (
                           <option key={value} value={value}>{value}</option>
                         ))}
                       </select>
                     </th>
                   )}
-                  {visibleColumns.Source && (
+                  {visibleColumns.source && (
                     <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
                       <select
-                        value={columnFilters.Source || 'all'}
-                        onChange={(e) => handleColumnFilter('Source', e.target.value)}
+                        value={columnFilters.source || 'all'}
+                        onChange={(e) => handleColumnFilter('source', e.target.value)}
                         onClick={(e) => e.stopPropagation()}
                         style={{
                           width: '100%',
@@ -3083,17 +3102,17 @@ const AdminDashboard = () => {
                         }}
                       >
                         <option value="all">All</option>
-                        {getUniqueValuesForColumn('Source').map(value => (
+                        {getUniqueValuesForColumn('source').map(value => (
                           <option key={value} value={value}>{value}</option>
                         ))}
                       </select>
                     </th>
                   )}
-                  {visibleColumns.Registration_TS && (
+                  {visibleColumns.reg_timestamp && (
                     <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
                       <select
-                        value={columnFilters.Registration_TS || 'all'}
-                        onChange={(e) => handleColumnFilter('Registration_TS', e.target.value)}
+                        value={columnFilters.reg_timestamp || 'all'}
+                        onChange={(e) => handleColumnFilter('reg_timestamp', e.target.value)}
                         onClick={(e) => e.stopPropagation()}
                         style={{
                           width: '100%',
@@ -3108,7 +3127,7 @@ const AdminDashboard = () => {
                         }}
                       >
                         <option value="all">All Dates</option>
-                        {getUniqueValuesForColumn('Registration_TS').map(value => {
+                        {getUniqueValuesForColumn('reg_timestamp').map(value => {
                           const displayDate = new Date(value + 'T00:00:00').toLocaleDateString('en-US', {
                             year: 'numeric',
                             month: 'short',
@@ -3121,39 +3140,39 @@ const AdminDashboard = () => {
                       </select>
                     </th>
                   )}
-                  {visibleColumns.Payable && (
+                  {visibleColumns.payable_amt && (
                     <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
                         Use search
                       </div>
                     </th>
                   )}
-                  {visibleColumns['Paid Amount'] && (
+                  {visibleColumns.paid_amt && (
                     <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
                         Use search
                       </div>
                     </th>
                   )}
-                  {visibleColumns['Discount %'] && (
+                  {visibleColumns.discount_percentage && (
                     <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
                         Use search
                       </div>
                     </th>
                   )}
-                  {visibleColumns['Discount Amount'] && (
+                  {visibleColumns.discount_amt && (
                     <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
                         Use search
                       </div>
                     </th>
                   )}
-                  {visibleColumns['Coupon Code (G)'] && (
+                  {visibleColumns.couponcode_given && (
                     <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
                       <select
-                        value={columnFilters['Coupon Code (G)'] || 'all'}
-                        onChange={(e) => handleColumnFilter('Coupon Code (G)', e.target.value)}
+                        value={columnFilters.couponcode_given || 'all'}
+                        onChange={(e) => handleColumnFilter('couponcode_given', e.target.value)}
                         onClick={(e) => e.stopPropagation()}
                         style={{
                           width: '100%',
@@ -3168,17 +3187,17 @@ const AdminDashboard = () => {
                         }}
                       >
                         <option value="all">All</option>
-                        {getUniqueValuesForColumn('Coupon Code (G)').map(value => (
+                        {getUniqueValuesForColumn('couponcode_given').map(value => (
                           <option key={value} value={value}>{value}</option>
                         ))}
                       </select>
                     </th>
                   )}
-                  {visibleColumns['Coupon Code (A)'] && (
+                  {visibleColumns.couponcode_applied && (
                     <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
                       <select
-                        value={columnFilters['Coupon Code (A)'] || 'all'}
-                        onChange={(e) => handleColumnFilter('Coupon Code (A)', e.target.value)}
+                        value={columnFilters.couponcode_applied || 'all'}
+                        onChange={(e) => handleColumnFilter('couponcode_applied', e.target.value)}
                         onClick={(e) => e.stopPropagation()}
                         style={{
                           width: '100%',
@@ -3193,42 +3212,31 @@ const AdminDashboard = () => {
                         }}
                       >
                         <option value="all">All</option>
-                        {getUniqueValuesForColumn('Coupon Code (A)').map(value => (
+                        {getUniqueValuesForColumn('couponcode_applied').map(value => (
                           <option key={value} value={value}>{value}</option>
                         ))}
                       </select>
                     </th>
                   )}
-                  {visibleColumns.Unsubscribed && (
+                  {visibleColumns.txn_id && (
                     <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
-                      <select
-                        value={columnFilters.Unsubscribed || 'all'}
-                        onChange={(e) => handleColumnFilter('Unsubscribed', e.target.value)}
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                          width: '100%',
-                          padding: '0.375rem 0.5rem',
-                          backgroundColor: 'var(--surface)',
-                          color: 'var(--text-primary)',
-                          border: '1px solid var(--border)',
-                          borderRadius: '0.25rem',
-                          fontSize: '0.75rem',
-                          cursor: 'pointer',
-                          outline: 'none'
-                        }}
-                      >
-                        <option value="all">All</option>
-                        {getUniqueValuesForColumn('Unsubscribed').map(value => (
-                          <option key={value} value={value}>{value}</option>
-                        ))}
-                      </select>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                        Use search
+                      </div>
                     </th>
                   )}
-                  {visibleColumns.Interest && (
+                  {visibleColumns.txn_timestamp && (
+                    <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                        Use search
+                      </div>
+                    </th>
+                  )}
+                  {visibleColumns.currency && (
                     <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
                       <select
-                        value={columnFilters.Interest || 'all'}
-                        onChange={(e) => handleColumnFilter('Interest', e.target.value)}
+                        value={columnFilters.currency || 'all'}
+                        onChange={(e) => handleColumnFilter('currency', e.target.value)}
                         onClick={(e) => e.stopPropagation()}
                         style={{
                           width: '100%',
@@ -3243,7 +3251,7 @@ const AdminDashboard = () => {
                         }}
                       >
                         <option value="all">All</option>
-                        {getUniqueValuesForColumn('Interest').map(value => (
+                        {getUniqueValuesForColumn('currency').map(value => (
                           <option key={value} value={value}>{value}</option>
                         ))}
                       </select>
@@ -3282,27 +3290,27 @@ const AdminDashboard = () => {
                         e.currentTarget.style.backgroundColor = 'transparent';
                       }}
                     >
-                      {visibleColumns.Name && (
+                      {visibleColumns.name && (
                         <td style={{ padding: '0.75rem', color: 'var(--text-primary)' }}>
                           {lead.name || '-'}
                         </td>
                       )}
-                      {visibleColumns.Mobile && (
+                      {visibleColumns.mobile && (
                         <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
                           {lead.mobile || '-'}
                         </td>
                       )}
-                      {visibleColumns.Email && (
+                      {visibleColumns.email && (
                         <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
                           {lead.email || '-'}
                         </td>
                       )}
-                      {visibleColumns.Role && (
+                      {visibleColumns.role && (
                         <td style={{ padding: '0.75rem', color: 'var(--text-primary)' }}>
                           {lead.role || '-'}
                         </td>
                       )}
-                      {visibleColumns.Status && (
+                      {visibleColumns.client_status && (
                         <td style={{ padding: '0.75rem' }}>
                           {(() => {
                             const status = getStatusDisplay(lead);
@@ -3326,12 +3334,12 @@ const AdminDashboard = () => {
                           })()}
                         </td>
                       )}
-                      {visibleColumns['Nurture Level'] && (
+                      {visibleColumns.nurturing && (
                         <td style={{ padding: '0.75rem', color: 'var(--text-primary)' }}>
                           {lead.nurturing || '-'}
                         </td>
                       )}
-                      {visibleColumns['Payment Status'] && (
+                      {visibleColumns.payment_status && (
                         <td style={{ padding: '0.75rem' }}>
                           <span 
                             className={`badge ${getPaymentBadgeClass(lead.payment_status)}`}
@@ -3355,17 +3363,17 @@ const AdminDashboard = () => {
                           </span>
                         </td>
                       )}
-                      {visibleColumns.Source && (
+                      {visibleColumns.source && (
                         <td style={{ padding: '0.75rem', color: 'var(--text-primary)' }}>
                           {formatSourceDisplay(lead.source)}
                         </td>
                       )}
-                      {visibleColumns.Registration_TS && (
+                      {visibleColumns.reg_timestamp && (
                         <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
                           {lead.reg_timestamp ? new Date(lead.reg_timestamp).toLocaleDateString() : '-'}
                         </td>
                       )}
-                      {visibleColumns.Payable && (
+                      {visibleColumns.payable_amt && (
                         <td style={{ padding: '0.75rem', color: 'var(--text-primary)', fontSize: '0.875rem' }}>
                           {(() => {
                             const payable = lead.payable_amt;
@@ -3375,7 +3383,7 @@ const AdminDashboard = () => {
                           })()}
                         </td>
                       )}
-                      {visibleColumns['Paid Amount'] && (
+                      {visibleColumns.paid_amt && (
                         <td style={{ padding: '0.75rem', color: 'var(--text-primary)', fontSize: '0.875rem' }}>
                           {(() => {
                             const paid = lead.paid_amt;
@@ -3385,7 +3393,7 @@ const AdminDashboard = () => {
                           })()}
                         </td>
                       )}
-                      {visibleColumns['Discount %'] && (
+                      {visibleColumns.discount_percentage && (
                         <td style={{ padding: '0.75rem', color: 'var(--text-primary)', fontSize: '0.875rem' }}>
                           {(() => {
                             const discount = lead.discount_percentage;
@@ -3395,7 +3403,7 @@ const AdminDashboard = () => {
                           })()}
                         </td>
                       )}
-                      {visibleColumns['Discount Amount'] && (
+                      {visibleColumns.discount_amt && (
                         <td style={{ padding: '0.75rem', color: 'var(--text-primary)', fontSize: '0.875rem' }}>
                           {(() => {
                             const discountAmt = lead.discount_amt;
@@ -3405,38 +3413,29 @@ const AdminDashboard = () => {
                           })()}
                         </td>
                       )}
-                      {visibleColumns['Coupon Code (G)'] && (
+                      {visibleColumns.couponcode_given && (
                         <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
                           {lead.couponcode_given || '-'}
                         </td>
                       )}
-                      {visibleColumns['Coupon Code (A)'] && (
+                      {visibleColumns.couponcode_applied && (
                         <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
                           {lead.couponcode_applied || '-'}
                         </td>
                       )}
-                      {visibleColumns.Unsubscribed && (
-                        <td style={{ padding: '0.75rem' }}>
-                          <span 
-                            style={{
-                              display: 'inline-block',
-                              padding: '0.25rem 0.75rem',
-                              borderRadius: '9999px',
-                              fontSize: '0.75rem',
-                              fontWeight: '600',
-                              backgroundColor: (lead.Unsubscribed === 'Yes' || lead.Unsubscribed === true || lead.Unsubscribed === 'true') 
-                                ? 'var(--error)' 
-                                : 'var(--success)',
-                              color: '#ffffff'
-                            }}
-                          >
-                            {(lead.Unsubscribed === 'Yes' || lead.Unsubscribed === true || lead.Unsubscribed === 'true') ? 'Yes' : 'No'}
-                          </span>
+                      {visibleColumns.txn_id && (
+                        <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                          {lead.txn_id || '-'}
                         </td>
                       )}
-                      {visibleColumns.Interest && (
+                      {visibleColumns.txn_timestamp && (
                         <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                          {lead.Interest || '-'}
+                          {lead.txn_timestamp ? new Date(lead.txn_timestamp).toLocaleDateString() : '-'}
+                        </td>
+                      )}
+                      {visibleColumns.currency && (
+                        <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                          {lead.currency || '-'}
                         </td>
                       )}
                     </tr>
