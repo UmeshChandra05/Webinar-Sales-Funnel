@@ -98,12 +98,15 @@ const Navigation = () => {
           <div className="nav-cta-desktop">
             {!isLoading && (
               isAuthenticated ? (
-                <Link to="/payment" className="cta-button cta-button-payment">
-                  <span>💳 Complete Payment</span>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M5 12h14m-7-7 7 7-7 7"/>
-                  </svg>
-                </Link>
+                // Hide payment button when already on payment page
+                !isActive("/payment") && (
+                  <Link to="/payment" className="cta-button cta-button-payment">
+                    <span>💳 Complete Payment</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M5 12h14m-7-7 7 7-7 7"/>
+                    </svg>
+                  </Link>
+                )
               ) : (
                 <Link to="/register" className="cta-button">
                   <span>💡 I'm Interested</span>
@@ -184,9 +187,12 @@ const Navigation = () => {
             <div className="nav-mobile-cta">
               {!isLoading && (
                 isAuthenticated ? (
-                  <Link to="/payment" onClick={closeMenu} className="cta-button-mobile cta-button-mobile-payment">
-                    💳 Complete Payment
-                  </Link>
+                  // Hide payment button when already on payment page
+                  !isActive("/payment") && (
+                    <Link to="/payment" onClick={closeMenu} className="cta-button-mobile cta-button-mobile-payment">
+                      💳 Complete Payment
+                    </Link>
+                  )
                 ) : (
                   <Link to="/register" onClick={closeMenu} className="cta-button-mobile">
                     💡 Show Interest

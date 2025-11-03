@@ -111,15 +111,15 @@ const PaymentPage = () => {
     return COURSE_PRICE
   }
 
-  const handlePaymentSimulation = async (status) => {
-    setLoadingButton(status)
+  const handlePaymentSimulation = async (payment_status) => {
+    setLoadingButton(payment_status)
 
     try {
-      logError(null, `Processing ${status} request for ${userEmail}`)
+      logError(null, `Processing ${payment_status} request for ${userEmail}`)
       
       const requestBody = {
         email: userEmail,
-        payment_status: status === "success" ? "Success" : status === "need_time_to_confirm" ? "Need Time" : "Failure",
+        payment_status: payment_status === "success" ? "Success" : payment_status === "need_time" ? "Need Time" : "Failure",
         txn_id: `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       }
 
@@ -145,14 +145,14 @@ const PaymentPage = () => {
       logError(null, `Payment response received`)
 
       if (result.success) {
-        if (status === "success") {
+        if (payment_status === "success") {
           if (result.data.whatsapp_link) {
             localStorage.setItem("whatsappLink", result.data.whatsapp_link)
           }
           showToast("Payment Successful!", "success")
           setTimeout(() => navigate("/payment-success"), NAVIGATION_DELAY)
-        } else if (status === "need_time_to_confirm") {
-          localStorage.setItem("paymentStatus", "need_time_to_confirm")
+        } else if (payment_status === "need_time") {
+          localStorage.setItem("payment_status", "need_time")
           showToast("We'll wait for you.", "success")
           setTimeout(() => navigate("/thank-you"), NAVIGATION_DELAY)
         } else {
@@ -345,12 +345,12 @@ const PaymentPage = () => {
             </button>
 
             <button
-              onClick={() => handlePaymentSimulation("need_time_to_confirm")}
+              onClick={() => handlePaymentSimulation("need_time")}
               className="btn btn-warning"
               style={{ minWidth: '140px' }}
               disabled={loadingButton !== null}
             >
-              {loadingButton === "need_time_to_confirm" ? (
+              {loadingButton === "need_time" ? (
                 <>
                   <div className="spinner mr-2"></div>
                   Processing...

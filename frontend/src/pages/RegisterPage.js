@@ -97,11 +97,13 @@ const RegisterPage = () => {
     } catch (error) {
       console.error("Registration error:", error)
       
-      // Handle specific error cases
-      if (error.response?.status === 409) {
+      // Handle specific error cases - check service availability first
+      if (error.response?.status === 503) {
+        showToast(error.response.data.message || "Service temporarily unavailable. Please try again later.", "error")
+      } else if (error.response?.status === 409) {
         showToast(error.response.data.message || "An account with this email already exists", "error")
-      } else if (error.isNetworkError) {
-        showToast("Network error. Please check your connection and try again.", "error")
+      } else if (error.isNetworkError || error.code === 'ERR_NETWORK' || !error.response) {
+        showToast("Service temporarily unavailable. Please try again later.", "error")
       } else {
         showToast(error.message || "Registration failed. Please try again.", "error")
       }

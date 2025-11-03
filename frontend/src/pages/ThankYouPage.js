@@ -5,7 +5,7 @@ import { logError } from "../utils/errorHandler"
 
 const ThankYouPage = () => {
   const [userEmail, setUserEmail] = useState("")
-  const [paymentStatus, setPaymentStatus] = useState("")
+  const [payment_status, setPayment_status] = useState("")
   const [toastMessage, setToastMessage] = useState(null)
 
   const showToast = (message, type = "info") => {
@@ -18,10 +18,10 @@ const ThankYouPage = () => {
 
   useEffect(() => {
     const email = localStorage.getItem("userEmail")
-    const status = localStorage.getItem("paymentStatus")
+    const status = localStorage.getItem("payment_status")
     
     setUserEmail(email || "")
-    setPaymentStatus(status || "")
+    setPayment_status(status || "")
   }, [])
 
   const handleAttendanceRecord = (attended) => {
@@ -34,7 +34,7 @@ const ThankYouPage = () => {
     logError(null, `User feedback: ${attended ? 'Attended & Loved It' : 'Couldn\'t Attend'}`)
   }
 
-  if (paymentStatus === "need_time_to_confirm") {
+  if (payment_status === "need_time") {
     return (
       <>
         {toastMessage && (

@@ -116,13 +116,22 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('Login error:', error);
       
-      // Clean error handling for login
+      // Clean error handling for login - check service availability first
+      if (error.response?.status === 503) {
+        throw new Error(error.response?.data?.message || 'Service temporarily unavailable. Please try again later.');
+      }
+      
       if (error.response?.status === 404) {
         throw new Error('No account found with this email address');
       }
       
       if (error.response?.status === 401) {
         throw new Error('Invalid email or password');
+      }
+      
+      // Handle network errors (when n8n is completely down)
+      if (error.code === 'ERR_NETWORK' || !error.response) {
+        throw new Error('Service temporarily unavailable. Please try again later.');
       }
       
       throw error;

@@ -500,22 +500,41 @@ Response: { success: boolean, message: string, data: { id: string, timestamp: st
 POST /api/simulate-payment
 Body: {
   email: string (valid email),
-  status: "success" | "failed" | "need_time_to_confirm",
-  transaction_id: string (optional),
-  couponCode: string (optional),
-  discount: number (optional, 0-100)
+  payment_status: "Success" | "Need Time" | "Failure",
+  txn_id: string (optional),
+  couponcode_applied: string (optional),
+  discount_percentage: number (optional, 0-100)
 }
-Response: { success: boolean, message: string, data: { transaction_id, status, timestamp, whatsapp_link } }
+Response: { 
+  success: boolean, 
+  message: string, 
+  data: { 
+    txn_id: string,
+    payment_status: string,
+    txn_timestamp: string,
+    paid_amt: number,
+    reg_fee: number,
+    payable_amt: number,
+    discount_amt: number,
+    whatsapp_link: string | null,
+    confirmation_pending: boolean
+  } 
+}
 ```
 
 #### Validate Coupon
 ```
 POST /api/validate-coupon
 Body: {
-  couponCode: string (1-20 chars),
+  couponcode_applied: string (1-20 chars),
   email: string (valid email)
 }
-Response: { success: boolean, message: string, discount: number, couponCode: string }
+Response: { 
+  success: boolean, 
+  message: string, 
+  discount_percentage: number, 
+  couponcode_applied: string 
+}
 ```
 
 #### Get Webinar Info

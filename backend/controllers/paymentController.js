@@ -31,9 +31,9 @@ const paymentController = {
 
       console.log(`💳 Payment simulation: ${payment_status} for ${email}`)
 
-      // Special handling for need_time_to_confirm
-      if (status === "need_time_to_confirm") {
-        console.log("🕐 Processing need_time_to_confirm request")
+      // Special handling for need_time
+      if (payment_status === "need_time") {
+        console.log("🕐 Processing need_time request")
         
         // Send to n8n and wait for response
         if (API_BASE_URL && API_BASE_URL !== "API_URL") {
@@ -59,7 +59,7 @@ const paymentController = {
               },
             })
           } catch (apiError) {
-            console.error("❌ n8n API Error for need_time_to_confirm:", apiError.message)
+            console.error("❌ n8n API Error for need_time:", apiError.message)
             
             // Return error if n8n fails
             return res.status(503).json({
