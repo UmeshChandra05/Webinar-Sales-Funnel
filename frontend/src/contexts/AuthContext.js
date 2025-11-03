@@ -45,13 +45,28 @@ export const AuthProvider = ({ children }) => {
       if (storedUser && storedToken) {
         const userData = JSON.parse(storedUser);
         
-        // Verify token with backend (this will also check cookies)
+        // Smart verification: Skip n8n call if payment already completed
+        const skipFreshData = userData.payment_status === "Success";
+        
+        if (skipFreshData) {
+          // Payment completed - trust localStorage, just verify token validity
+          console.log('💰 Payment completed - using cached data');
+          setUser(userData);
+          setIsAuthenticated(true);
+          setIsLoading(false);
+          return;
+        }
+        
+        // Payment not completed - verify with backend to get fresh status
         try {
+          console.log('🔄 Payment pending - fetching fresh data from backend');
           const response = await apiClient.verifyToken(storedToken);
           if (response.success) {
             setUser(response.user);
             setIsAuthenticated(true);
-            console.log('✅ User authenticated from stored session');
+            // Update localStorage with fresh data
+            localStorage.setItem('authUser', JSON.stringify(response.user));
+            console.log('✅ User authenticated with fresh data');
             return;
           }
         } catch (error) {
@@ -203,7 +218,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const refreshUserData = async () => {
+  const refreshUserData = async (forceRefresh = false) => {
     try {
       const storedToken = localStorage.getItem('authToken');
       if (!storedToken) {
@@ -211,9 +226,15 @@ export const AuthProvider = ({ children }) => {
         return null;
       }
       
+      // Smart refresh: Skip if payment already completed (unless forced)
+      if (!forceRefresh && user?.payment_status === "Success") {
+        console.log('⏭️ Skipping refresh - payment already completed');
+        return user;
+      }
+      
       console.log('🔄 Refreshing user data from backend...');
       
-      // Use verify token to get latest user data
+      // Use verify token to get latest user data (backend will fetch from n8n)
       const response = await apiClient.verifyToken(storedToken);
       if (response.success && response.user) {
         // Update state first

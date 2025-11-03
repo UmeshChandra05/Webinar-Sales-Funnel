@@ -557,13 +557,13 @@ const authController = {
   verifyUser: async (req, res) => {
     try {
       // Token is already verified by middleware
-      // CRITICAL: Fetch fresh user data from n8n to get latest payment_status
-      // Reuse the same /user-login endpoint to get fresh data from database
+      // Smart fetching: Only fetch fresh data from n8n if payment is not completed
       
       const email = req.user.email;
+      const skipFreshData = req.query.skipFreshData === 'true'; // Frontend can signal to skip
       
-      // If API_BASE_URL configured, fetch latest user data from n8n using login endpoint
-      if (API_BASE_URL && API_BASE_URL !== "API_URL") {
+      // If API_BASE_URL configured AND we need fresh data
+      if (API_BASE_URL && API_BASE_URL !== "API_URL" && !skipFreshData) {
         try {
           console.log(`🔄 Fetching fresh user data for verification: ${email}`);
           
@@ -616,6 +616,8 @@ const authController = {
           console.error("⚠️ n8n user data fetch error:", apiError.message);
           // Fall through to use token data
         }
+      } else if (skipFreshData) {
+        console.log("⏭️ Skipping fresh data fetch (payment completed)");
       }
       
       // Fallback: Return token data (may not have latest payment_status)
