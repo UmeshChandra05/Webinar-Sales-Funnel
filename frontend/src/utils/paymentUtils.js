@@ -156,7 +156,7 @@ export const getPaymentButtonText = (user, isAuthenticated) => {
   }
   
   if (hasCompletedPayment(user)) {
-    return "✅ View Payment Details"
+    return "View Payment Details"
   }
   
   return "💳 Complete Payment"
