@@ -1,8 +1,21 @@
 "use client"
+import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
+import { useAuth } from "../contexts/AuthContext"
+import { logPaymentStatus } from "../utils/paymentUtils"
 
 const PaymentFailedPage = () => {
   const navigate = useNavigate()
+  const { user, hasCompletedPayment } = useAuth()
+
+  // Redirect if payment already successful
+  useEffect(() => {
+    if (hasCompletedPayment()) {
+      console.log("✅ Payment already completed, redirecting to success page...")
+      logPaymentStatus(user, 'PaymentFailedPage - Auto Redirect')
+      navigate("/payment-success", { replace: true })
+    }
+  }, [hasCompletedPayment, navigate, user])
 
   const handleRetryPayment = () => {
     navigate("/payment")

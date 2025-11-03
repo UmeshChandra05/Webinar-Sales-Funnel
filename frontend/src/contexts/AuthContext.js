@@ -1,5 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import apiClient from '../utils/api';
+import { 
+  hasCompletedPayment, 
+  shouldShowPaymentButton, 
+  getPaymentRedirectPath,
+  getPaymentButtonText,
+  logPaymentStatus 
+} from '../utils/paymentUtils';
 
 const AuthContext = createContext();
 
@@ -115,26 +122,38 @@ export const AuthProvider = ({ children }) => {
       throw new Error(response.message || 'Login failed');
     } catch (error) {
       console.error('Login error:', error);
+      console.error('Error response:', error.response);
+      console.error('Error status:', error.response?.status);
+      console.error('Error code:', error.code);
       
       // Clean error handling for login - check service availability first
       if (error.response?.status === 503) {
-        throw new Error(error.response?.data?.message || 'Service temporarily unavailable. Please try again later.');
+        const message = error.response?.data?.message || 'Service temporarily unavailable. Please try again later.';
+        console.log('🔌 503 Service unavailable error detected:', message);
+        throw new Error(message);
       }
       
       if (error.response?.status === 404) {
-        throw new Error('No account found with this email address');
+        throw new Error(error.response?.data?.message || 'No account found with this email address');
       }
       
       if (error.response?.status === 401) {
-        throw new Error('Invalid email or password');
+        throw new Error(error.response?.data?.message || 'Invalid email or password');
       }
       
-      // Handle network errors (when n8n is completely down)
-      if (error.code === 'ERR_NETWORK' || !error.response) {
-        throw new Error('Service temporarily unavailable. Please try again later.');
+      // Handle network errors (when n8n is completely down and backend can't respond)
+      if (error.code === 'ERR_NETWORK' || error.isNetworkError || !error.response) {
+        console.log('🔌 Network error detected - complete connection failure');
+        throw new Error('Service temporarily unavailable. Please check your connection and try again later.');
       }
       
-      throw error;
+      // If error has a message property, use it
+      if (error.message && !error.message.includes('HTTP')) {
+        throw error;
+      }
+      
+      // Fallback
+      throw new Error('Login failed. Please try again later.');
     }
   };
 
@@ -152,6 +171,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem('rememberMe');
       localStorage.removeItem('userEmail'); // Clear payment email tracking
       localStorage.removeItem('userData'); // Clear legacy user data
+      localStorage.removeItem('whatsappLink'); // Clear temporary payment data
       setUser(null);
       setIsAuthenticated(false);
       console.log('✅ User logged out');
@@ -183,6 +203,68 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const refreshUserData = async () => {
+    try {
+      const storedToken = localStorage.getItem('authToken');
+      if (!storedToken) {
+        console.warn('No token available to refresh user data');
+        return null;
+      }
+      
+      console.log('🔄 Refreshing user data from backend...');
+      
+      // Use verify token to get latest user data
+      const response = await apiClient.verifyToken(storedToken);
+      if (response.success && response.user) {
+        // Update state first
+        setUser(response.user);
+        
+        // Then update localStorage with fresh data
+        localStorage.setItem('authUser', JSON.stringify(response.user));
+        
+        console.log('✅ User data refreshed:', {
+          payment_status: response.user.payment_status,
+          timestamp: new Date().toISOString()
+        });
+        
+        return response.user;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Refresh user data error:', error);
+      return null;
+    }
+  };
+
+  /**
+   * Update user payment status locally (for immediate UI update)
+   * This should be called after successful payment simulation
+   * Backend will be source of truth on next verification
+   */
+  const updateUserPaymentStatus = (paymentStatus) => {
+    if (!user) {
+      console.warn('Cannot update payment status: no user logged in');
+      return;
+    }
+
+    console.log('🔄 Updating local payment status:', paymentStatus);
+    
+    const updatedUser = {
+      ...user,
+      payment_status: paymentStatus
+    };
+    
+    setUser(updatedUser);
+    localStorage.setItem('authUser', JSON.stringify(updatedUser));
+    
+    console.log('✅ Local payment status updated:', {
+      old: user.payment_status,
+      new: paymentStatus,
+      timestamp: new Date().toISOString()
+    });
+  };
+
   // Auto-refresh token periodically for remembered sessions
   useEffect(() => {
     if (!isAuthenticated || !user) return;
@@ -208,7 +290,14 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     refreshAuth,
-    initializeAuth
+    refreshUserData,
+    updateUserPaymentStatus,
+    initializeAuth,
+    // Centralized payment utilities
+    hasCompletedPayment: () => hasCompletedPayment(user),
+    shouldShowPaymentButton: () => shouldShowPaymentButton(user, isAuthenticated),
+    getPaymentRedirectPath: () => getPaymentRedirectPath(user),
+    getPaymentButtonText: () => getPaymentButtonText(user, isAuthenticated)
   };
 
   return (

@@ -46,10 +46,16 @@ class ApiClient {
     } catch (error) {
       console.error("API request failed:", error)
       
-      // Enhance error message for network failures
+      // If error already has response details (like 503 from backend), preserve it
+      if (error.response) {
+        throw error
+      }
+      
+      // Only enhance error message for pure network failures (no response at all)
       if (error.message === 'Failed to fetch' || error.name === 'TypeError') {
         const networkError = new Error('Unable to connect to server. Please check your internet connection.')
         networkError.isNetworkError = true
+        networkError.code = 'ERR_NETWORK'
         throw networkError
       }
       

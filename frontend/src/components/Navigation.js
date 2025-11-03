@@ -1,13 +1,34 @@
 import { useState, useEffect } from "react"
 import { Link, useLocation } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
+import { logPaymentStatus } from "../utils/paymentUtils"
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const location = useLocation()
-  const { user, isAuthenticated, logout, isLoading } = useAuth()
+  const { 
+    user, 
+    isAuthenticated, 
+    logout, 
+    isLoading,
+    shouldShowPaymentButton,
+    hasCompletedPayment 
+  } = useAuth()
 
   const isActive = (path) => location.pathname === path
+  
+  // Check if user is on any payment flow page
+  const isOnPaymentFlow = () => {
+    const paymentPages = ['/payment', '/payment-success', '/payment-failed', '/thank-you']
+    return paymentPages.includes(location.pathname)
+  }
+
+  // Log payment status for debugging (only in development)
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      logPaymentStatus(user, 'Navigation')
+    }
+  }, [user, isAuthenticated, location.pathname])
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
@@ -98,8 +119,8 @@ const Navigation = () => {
           <div className="nav-cta-desktop">
             {!isLoading && (
               isAuthenticated ? (
-                // Hide payment button when already on payment page
-                !isActive("/payment") && (
+                // Show payment button only if user should see it and not on payment flow pages
+                shouldShowPaymentButton() && !isOnPaymentFlow() && (
                   <Link to="/payment" className="cta-button cta-button-payment">
                     <span>💳 Complete Payment</span>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -108,12 +129,15 @@ const Navigation = () => {
                   </Link>
                 )
               ) : (
-                <Link to="/register" className="cta-button">
-                  <span>💡 I'm Interested</span>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M5 12h14m-7-7 7 7-7 7"/>
-                  </svg>
-                </Link>
+                // Show interest button only when NOT on payment flow pages
+                !isOnPaymentFlow() && (
+                  <Link to="/register" className="cta-button">
+                    <span>💡 I'm Interested</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M5 12h14m-7-7 7 7-7 7"/>
+                    </svg>
+                  </Link>
+                )
               )
             )}
           </div>
@@ -187,16 +211,19 @@ const Navigation = () => {
             <div className="nav-mobile-cta">
               {!isLoading && (
                 isAuthenticated ? (
-                  // Hide payment button when already on payment page
-                  !isActive("/payment") && (
+                  // Show payment button only if user should see it and not on payment flow pages
+                  shouldShowPaymentButton() && !isOnPaymentFlow() && (
                     <Link to="/payment" onClick={closeMenu} className="cta-button-mobile cta-button-mobile-payment">
                       💳 Complete Payment
                     </Link>
                   )
                 ) : (
-                  <Link to="/register" onClick={closeMenu} className="cta-button-mobile">
-                    💡 Show Interest
-                  </Link>
+                  // Show interest button only when NOT on payment flow pages
+                  !isOnPaymentFlow() && (
+                    <Link to="/register" onClick={closeMenu} className="cta-button-mobile">
+                      💡 Show Interest
+                    </Link>
+                  )
                 )
               )}
             </div>

@@ -117,13 +117,51 @@ const authController = {
               email: email,
               mobile: mobile,
               role: role,
-              reg_timestamp: userData.reg_timestamp
+              reg_timestamp: userData.reg_timestamp,
+              payment_status: null,
+              couponCode: null
             }
           });
         } catch (apiError) {
           console.error("❌ n8n registration API Error:", apiError.message);
+          console.error("❌ Error code:", apiError.code);
+          console.error("❌ Has response:", !!apiError.response);
+          console.error("❌ Response data:", apiError.response?.data);
           
-          // Enhanced duplicate email handling
+          // Network or connection errors - no response at all
+          if (!apiError.response || 
+              apiError.code === 'ECONNREFUSED' || 
+              apiError.code === 'ETIMEDOUT' ||
+              apiError.code === 'ENOTFOUND' ||
+              apiError.code === 'ECONNRESET' ||
+              apiError.code === 'ERR_NETWORK' ||
+              apiError.message?.includes('ECONNREFUSED') ||
+              apiError.message?.includes('network')) {
+            console.log("🔌 Network error detected - n8n service unavailable");
+            return res.status(503).json({
+              success: false,
+              message: "Registration service temporarily unavailable. Please try again later.",
+              errorCode: "SERVICE_UNAVAILABLE"
+            });
+          }
+          
+          // Check if n8n webhook is not registered/configured (404 from n8n itself)
+          if (apiError.response?.status === 404) {
+            const responseMessage = apiError.response?.data?.message || '';
+            // If the 404 is from n8n saying webhook not registered, it's a service issue
+            if (responseMessage.includes('webhook') || 
+                responseMessage.includes('not registered') ||
+                responseMessage.includes('Execute workflow')) {
+              console.log("⚙️ n8n webhook not configured properly");
+              return res.status(503).json({
+                success: false,
+                message: "Registration service is not configured properly. Please contact support.",
+                errorCode: "SERVICE_NOT_CONFIGURED"
+              });
+            }
+          }
+          
+          // Enhanced duplicate email handling (only when we have a response from n8n)
           if (apiError.response?.status === 409 || 
               apiError.response?.status === 400 ||
               apiError.response?.data?.message?.toLowerCase().includes('already exists') ||
@@ -143,15 +181,6 @@ const authController = {
               success: false,
               message: apiError.response?.data?.message || "Invalid registration data",
               errorCode: "VALIDATION_ERROR"
-            });
-          }
-          
-          // Network or server errors
-          if (apiError.code === 'ECONNREFUSED' || apiError.code === 'ETIMEDOUT') {
-            return res.status(503).json({
-              success: false,
-              message: "Registration service temporarily unavailable. Please try again later.",
-              errorCode: "SERVICE_UNAVAILABLE"
             });
           }
           
@@ -197,7 +226,9 @@ const authController = {
           email: email,
           mobile: mobile,
           role: role,
-          reg_timestamp: userData.reg_timestamp
+          reg_timestamp: userData.reg_timestamp,
+          payment_status: null,
+          couponCode: null
         }
       });
 
@@ -267,6 +298,9 @@ const authController = {
       // Query user from n8n/Google Sheets
       if (API_BASE_URL && API_BASE_URL !== "API_URL") {
         try {
+          console.log("🔄 Attempting to connect to n8n for user login...");
+          console.log("🌐 n8n URL:", API_BASE_URL);
+          
           // Send login request to n8n - it should query Google Sheets and return user with hashed password
           const loginData = {
             email: email.toLowerCase().trim(),
@@ -284,7 +318,26 @@ const authController = {
           });
 
           console.log("✅ n8n response received");
+          console.log("📦 Response status:", response.status);
           console.log("📦 Response data:", JSON.stringify(response.data, null, 2));
+
+          // Check if n8n returned an error response (200 OK but with error data)
+          if (response.data?.success === false || response.data?.error) {
+            console.error("❌ n8n returned error response:", response.data.message || response.data.error);
+            // If it's a service unavailable error from n8n
+            if (response.data.message?.includes('unavailable') || response.data.message?.includes('service')) {
+              return res.status(503).json({
+                success: false,
+                message: "Authentication service temporarily unavailable. Please try again later.",
+                errorCode: "SERVICE_UNAVAILABLE"
+              });
+            }
+            // User not found from n8n
+            return res.status(404).json({
+              success: false,
+              message: response.data.message || "No account found with this email address"
+            });
+          }
 
           // n8n should return the user data with the HASHED password
           // Handle different response formats
@@ -303,6 +356,7 @@ const authController = {
 
           if (!userData || !userData.email) {
             console.error("❌ No user data found in n8n response");
+            console.error("❌ This usually means the user doesn't exist in the database");
             return res.status(404).json({
               success: false,
               message: "No account found with this email address"
@@ -364,15 +418,50 @@ const authController = {
               name: userData.name,
               email: userData.email || email,
               mobile: userData.mobile || "NA",
-              role: userData.role
+              role: userData.role,
+              payment_status: userData.payment_status || null,
+              couponCode: userData.CouponCode || userData.couponcode_given || null
             }
           });
 
         } catch (apiError) {
           console.error("❌ n8n login API Error:", apiError.message);
+          console.error("❌ Error code:", apiError.code);
+          console.error("❌ Has response:", !!apiError.response);
+          console.error("❌ Response data:", apiError.response?.data);
           
-          // Check if user not found
+          // Network or connection errors - no response at all
+          if (!apiError.response || 
+              apiError.code === 'ECONNREFUSED' || 
+              apiError.code === 'ETIMEDOUT' ||
+              apiError.code === 'ENOTFOUND' ||
+              apiError.code === 'ECONNRESET' ||
+              apiError.code === 'ERR_NETWORK' ||
+              apiError.message?.includes('ECONNREFUSED') ||
+              apiError.message?.includes('network')) {
+            console.log("🔌 Network error detected - n8n service unavailable");
+            return res.status(503).json({
+              success: false,
+              message: "Authentication service temporarily unavailable. Please try again later.",
+              errorCode: "SERVICE_UNAVAILABLE"
+            });
+          }
+          
+          // Check if n8n webhook is not registered/configured (404 from n8n itself)
           if (apiError.response?.status === 404) {
+            const responseMessage = apiError.response?.data?.message || '';
+            // If the 404 is from n8n saying webhook not registered, it's a service issue
+            if (responseMessage.includes('webhook') || 
+                responseMessage.includes('not registered') ||
+                responseMessage.includes('Execute workflow')) {
+              console.log("⚙️ n8n webhook not configured properly");
+              return res.status(503).json({
+                success: false,
+                message: "Authentication service is not configured properly. Please contact support.",
+                errorCode: "SERVICE_NOT_CONFIGURED"
+              });
+            }
+            // Otherwise it's a genuine user not found
             return res.status(404).json({
               success: false,
               message: "No account found with this email address"
@@ -384,15 +473,6 @@ const authController = {
             return res.status(401).json({
               success: false,
               message: "Invalid email or password"
-            });
-          }
-          
-          // Network or server errors
-          if (apiError.code === 'ECONNREFUSED' || apiError.code === 'ETIMEDOUT') {
-            return res.status(503).json({
-              success: false,
-              message: "Authentication service temporarily unavailable. Please try again later.",
-              errorCode: "SERVICE_UNAVAILABLE"
             });
           }
           
@@ -476,7 +556,70 @@ const authController = {
   // Verify user endpoint
   verifyUser: async (req, res) => {
     try {
-      // Token is already verified by middleware, just return user data
+      // Token is already verified by middleware
+      // CRITICAL: Fetch fresh user data from n8n to get latest payment_status
+      // Reuse the same /user-login endpoint to get fresh data from database
+      
+      const email = req.user.email;
+      
+      // If API_BASE_URL configured, fetch latest user data from n8n using login endpoint
+      if (API_BASE_URL && API_BASE_URL !== "API_URL") {
+        try {
+          console.log(`🔄 Fetching fresh user data for verification: ${email}`);
+          
+          const loginData = {
+            email: email.toLowerCase().trim(),
+            action: "verify_session",
+            timestamp: new Date().toISOString(),
+          };
+          
+          const response = await axios.post(`${API_BASE_URL}/user-login`, loginData, {
+            timeout: 10000,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          // Handle different response formats from n8n (same as login)
+          let userData = null;
+          
+          if (response.data?.user) {
+            userData = response.data.user;
+          } else if (response.data?.email) {
+            userData = response.data;
+          } else if (Array.isArray(response.data) && response.data.length > 0) {
+            userData = response.data[0];
+          }
+
+          if (userData && userData.email) {
+            console.log("✅ Fresh user data retrieved from n8n:", {
+              email: userData.email,
+              payment_status: userData.payment_status,
+              couponCode: userData.CouponCode || userData.couponcode_given
+            });
+            
+            return res.status(200).json({
+              success: true,
+              message: "Token is valid",
+              user: {
+                id: userData.id || userData.userId || req.user.userId,
+                name: userData.name || req.user.name,
+                email: userData.email || email,
+                mobile: userData.mobile || "NA",
+                role: userData.role || req.user.role,
+                payment_status: userData.payment_status || null,
+                couponCode: userData.CouponCode || userData.couponcode_given || null
+              }
+            });
+          }
+        } catch (apiError) {
+          console.error("⚠️ n8n user data fetch error:", apiError.message);
+          // Fall through to use token data
+        }
+      }
+      
+      // Fallback: Return token data (may not have latest payment_status)
+      console.log("⚠️ Using token data (may be stale)");
       res.status(200).json({
         success: true,
         message: "Token is valid",
@@ -484,7 +627,9 @@ const authController = {
           id: req.user.userId,
           name: req.user.name,
           email: req.user.email,
-          role: req.user.role
+          role: req.user.role,
+          payment_status: null, // Token doesn't store payment_status
+          couponCode: null
         }
       });
     } catch (error) {

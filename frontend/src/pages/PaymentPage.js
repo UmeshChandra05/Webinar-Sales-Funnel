@@ -4,10 +4,11 @@ import { useAuth } from "../contexts/AuthContext"
 import Toast from "../components/Toast"
 import { getErrorMessage, logError } from "../utils/errorHandler"
 import { COURSE_PRICE, CURRENCY_SYMBOL, NAVIGATION_DELAY, COURSE_FEATURES } from "../utils/constants"
+import { logPaymentStatus } from "../utils/paymentUtils"
 
 const PaymentPage = () => {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, hasCompletedPayment, updateUserPaymentStatus } = useAuth()
   const [userEmail, setUserEmail] = useState("")
   const [loadingButton, setLoadingButton] = useState(null)
   const [couponCode, setCouponCode] = useState("")
@@ -24,12 +25,26 @@ const PaymentPage = () => {
     setToastMessage(null)
   }
 
+  // Redirect if payment already successful
+  useEffect(() => {
+    if (hasCompletedPayment()) {
+      console.log("✅ Payment already completed, redirecting to success page...")
+      logPaymentStatus(user, 'PaymentPage - Auto Redirect')
+      navigate("/payment-success", { replace: true })
+    }
+  }, [hasCompletedPayment, navigate, user])
+
   useEffect(() => {
     // Get email from authenticated user or localStorage
     // ProtectedRoute already handles authentication, so we just need to get the email
     const email = user?.email || localStorage.getItem("userEmail")
     if (email) {
       setUserEmail(email)
+    }
+    
+    // Pre-fill coupon code if user has one
+    if (user?.couponCode) {
+      setCouponCode(user.couponCode)
     }
   }, [user])
 
@@ -145,18 +160,29 @@ const PaymentPage = () => {
       logError(null, `Payment response received`)
 
       if (result.success) {
+        // Payment was processed successfully
+        // Update local state immediately for instant UI response
+        
         if (payment_status === "success") {
+          // CRITICAL: Update local state immediately
+          updateUserPaymentStatus("Success")
+          
           if (result.data.whatsapp_link) {
             localStorage.setItem("whatsappLink", result.data.whatsapp_link)
           }
           showToast("Payment Successful!", "success")
           setTimeout(() => navigate("/payment-success"), NAVIGATION_DELAY)
         } else if (payment_status === "need_time") {
-          localStorage.setItem("payment_status", "need_time")
-          showToast("We'll wait for you.", "success")
-          setTimeout(() => navigate("/thank-you"), NAVIGATION_DELAY)
+          // Update local state immediately
+          updateUserPaymentStatus("Need Time")
+          
+          showToast("We'll wait for you. Please complete payment soon.", "success")
+          setTimeout(() => navigate("/thank-you", { state: { fromPayment: true, payment_status: "need_time" } }), NAVIGATION_DELAY)
         } else {
-          showToast("Payment Failed", "error")
+          // Update local state immediately
+          updateUserPaymentStatus("Failure")
+          
+          showToast("Payment Failed. Please try again.", "error")
           setTimeout(() => navigate("/payment-failed"), NAVIGATION_DELAY)
         }
       } else {

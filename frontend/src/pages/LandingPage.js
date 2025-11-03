@@ -1,10 +1,18 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
+import { logPaymentStatus } from "../utils/paymentUtils"
 
 const LandingPage = () => {
   const navigate = useNavigate()
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth()
+  const { 
+    user, 
+    isAuthenticated, 
+    isLoading: authLoading,
+    hasCompletedPayment,
+    getPaymentRedirectPath,
+    getPaymentButtonText
+  } = useAuth()
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -40,7 +48,10 @@ const LandingPage = () => {
   }
 
   const handlePaymentClick = () => {
-    navigate("/payment")
+    // Use centralized redirect logic
+    const redirectPath = getPaymentRedirectPath()
+    logPaymentStatus(user, 'LandingPage - Payment Click')
+    navigate(redirectPath)
   }
 
   // Check if user is authenticated (logged in with valid session)
@@ -50,10 +61,10 @@ const LandingPage = () => {
       return { text: "Loading...", action: null, disabled: true }
     }
     
-    // Only show payment button if user is authenticated (logged in)
+    // If user is authenticated
     if (isAuthenticated && user) {
       return {
-        text: "💳 Complete Payment",
+        text: getPaymentButtonText(),
         action: handlePaymentClick,
         disabled: false,
         style: "btn btn-success btn-lg"
@@ -240,11 +251,14 @@ const LandingPage = () => {
             onClick={isAuthenticated ? handlePaymentClick : handleRegisterClick}
             disabled={authLoading}
           >
-            {isAuthenticated ? "💳 Complete Payment" : "💡 Show Interest Now"}
+            {isAuthenticated 
+              ? getPaymentButtonText()
+              : "💡 Show Interest Now"
+            }
           </button>
           
-          {/* Payment urgency message for authenticated users */}
-          {isAuthenticated && (
+          {/* Payment urgency message for authenticated users who haven't paid */}
+          {isAuthenticated && !hasCompletedPayment() && (
             <div className="mt-6 p-4 rounded-lg max-w-2xl mx-auto" style={{
               backgroundColor: '#fef3c7',
               border: '2px solid #f59e0b',

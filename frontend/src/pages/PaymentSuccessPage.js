@@ -2,19 +2,35 @@
 
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
+import { useAuth } from "../contexts/AuthContext"
+import { logPaymentStatus } from "../utils/paymentUtils"
 
 const PaymentSuccessPage = () => {
+  const { user, refreshUserData } = useAuth()
   const [whatsappLink, setWhatsappLink] = useState("")
   const [userEmail, setUserEmail] = useState("")
 
   useEffect(() => {
-    // Get stored data
-    const email = localStorage.getItem("userEmail")
+    // Refresh user data to get latest payment status from backend
+    const fetchUserData = async () => {
+      console.log("🔄 PaymentSuccessPage: Refreshing user data...")
+      await refreshUserData()
+    }
+    
+    fetchUserData()
+    
+    // Get stored WhatsApp link (temporary, from payment response)
     const link = localStorage.getItem("whatsappLink")
-
-    setUserEmail(email || "")
     setWhatsappLink(link || "https://chat.whatsapp.com/sample-group-link")
-  }, [])
+    
+    // Get email from authenticated user
+    setUserEmail(user?.email || "")
+    
+    // Log payment status after component mounts
+    if (user) {
+      logPaymentStatus(user, 'PaymentSuccessPage')
+    }
+  }, [refreshUserData, user])
 
   return (
     <div className="min-h-screen section">

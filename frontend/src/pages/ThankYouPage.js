@@ -1,9 +1,14 @@
 import { useEffect, useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
+import { useAuth } from "../contexts/AuthContext"
 import Toast from "../components/Toast"
 import { logError } from "../utils/errorHandler"
+import { needsTimeToPayment, logPaymentStatus } from "../utils/paymentUtils"
 
 const ThankYouPage = () => {
+  const { user, hasCompletedPayment } = useAuth()
+  const location = useLocation()
+  const navigate = useNavigate()
   const [userEmail, setUserEmail] = useState("")
   const [payment_status, setPayment_status] = useState("")
   const [toastMessage, setToastMessage] = useState(null)
@@ -17,12 +22,29 @@ const ThankYouPage = () => {
   }
 
   useEffect(() => {
-    const email = localStorage.getItem("userEmail")
-    const status = localStorage.getItem("payment_status")
+    // If user has successful payment, redirect to success page
+    if (hasCompletedPayment()) {
+      console.log("✅ Payment already completed, redirecting to success page...")
+      logPaymentStatus(user, 'ThankYouPage - Auto Redirect')
+      navigate("/payment-success", { replace: true })
+      return
+    }
+
+    // Check if we came from payment page with need_time status
+    const fromPayment = location.state?.fromPayment
+    const paymentStatus = location.state?.payment_status
     
-    setUserEmail(email || "")
-    setPayment_status(status || "")
-  }, [])
+    // Priority: location state > user context > fallback
+    if (fromPayment && paymentStatus === "need_time") {
+      setPayment_status("need_time")
+    } else if (needsTimeToPayment(user)) {
+      setPayment_status("need_time")
+    } else {
+      setPayment_status("")
+    }
+    
+    setUserEmail(user?.email || "")
+  }, [user, location.state, navigate, hasCompletedPayment])
 
   const handleAttendanceRecord = (attended) => {
     if (!userEmail) {
