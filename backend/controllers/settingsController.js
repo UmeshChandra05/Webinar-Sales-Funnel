@@ -1,97 +1,98 @@
 const axios = require("../middleware/axios");
 
-// Google Sheets configuration
-const SHEET_ID = '1UinuM281y4r8gxCrCr2dvF_-7CBC2l_FVSomj0Ia-c8';
-const ADMIN_SHEET_GID = '1904087004'; // Update this with your actual Admin sheet GID
-const ADMIN_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${ADMIN_SHEET_GID}`;
+// n8n webhook URLs
+const API_BASE_URL = process.env.API_BASE_URL;
+const N8N_GET_SETTINGS_WEBHOOK = process.env.N8N_GET_SETTINGS_WEBHOOK || `${API_BASE_URL}/get-settings`;
+const N8N_UPDATE_SETTINGS_WEBHOOK = process.env.N8N_UPDATE_SETTINGS_WEBHOOK || API_BASE_URL;
 
-// n8n webhook URL for updating settings - Update with your actual n8n webhook URL
-const N8N_UPDATE_SETTINGS_WEBHOOK = process.env.N8N_UPDATE_SETTINGS_WEBHOOK || process.env.API_BASE_URL;
-
-// Helper function to parse CSV
-const parseCSV = (csvText) => {
-  const lines = csvText.split('\n').filter(line => line.trim());
-  const settings = {};
+// Helper function to convert DD-MM-YYYY to YYYY-MM-DD
+const convertDateFormat = (dateStr) => {
+  if (!dateStr) return null;
   
-  // Skip header row and parse data
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
-    
-    // Simple CSV parsing (handles basic cases)
-    const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
-    
-    if (values.length >= 2) {
-      const key = values[0];
-      const value = values[1];
-      
-      // Map Google Sheets field names to our setting keys
-      switch(key) {
-        case 'Admin Username':
-          settings.adminUsername = value;
-          break;
-        case 'Admin Password':
-          settings.adminPassword = value;
-          break;
-        case 'Registration Fee':
-          settings.coursePrice = parseFloat(value) || 4999;
-          break;
-        case 'Registration Deadline':
-          // Convert DD-MM-YYYY to YYYY-MM-DD
-          const dateParts = value.split('-');
-          if (dateParts.length === 3) {
-            settings.registrationDeadline = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
-          } else {
-            settings.registrationDeadline = value;
-          }
-          break;
-        case 'Webinar Time':
-          // Convert DD-MM-YYYY to YYYY-MM-DD format (assume time is not included or add default time)
-          const webinarDateParts = value.split('-');
-          if (webinarDateParts.length === 3) {
-            settings.webinarTime = `${webinarDateParts[2]}-${webinarDateParts[1]}-${webinarDateParts[0]}T19:00`;
-          } else {
-            settings.webinarTime = value;
-          }
-          break;
-        case 'Contact Email':
-          settings.contactEmail = value;
-          break;
-        case 'Whatsapp Invite Link':
-          settings.whatsappLink = value;
-          break;
-        case 'Discord Community Link':
-          settings.discordLink = value;
-          break;
-      }
-    }
+  const parts = dateStr.split('-');
+  if (parts.length === 3) {
+    // DD-MM-YYYY to YYYY-MM-DD
+    return `${parts[2]}-${parts[1]}-${parts[0]}`;
   }
-  
-  return settings;
+  return dateStr;
 };
 
-// Get admin settings from Google Sheets Admin tab
+// Get admin settings from n8n webhook
 exports.getSettings = async (req, res) => {
   try {
-    console.log('Fetching admin settings from Google Sheets Admin tab...');
-    console.log('Admin CSV URL:', ADMIN_CSV_URL);
+    console.log('Fetching admin settings from n8n webhook...');
+    console.log('n8n webhook URL:', N8N_GET_SETTINGS_WEBHOOK);
     
-    // Fetch directly from Google Sheets CSV export
-    const response = await axios.get(ADMIN_CSV_URL);
+    if (!API_BASE_URL || API_BASE_URL === "API_URL") {
+      console.log('⚠️ API_BASE_URL not configured, using default settings');
+      return res.json({
+        success: true,
+        settings: {
+          adminUsername: 'admin',
+          adminPassword: 'admin',
+          coursePrice: 4999,
+          registrationDeadline: '2025-11-07',
+          webinarTime: '2025-11-08T19:00',
+          contactEmail: 'webinar@pystack.com',
+          whatsappLink: 'www.google.com',
+          discordLink: 'www.discord.com'
+        },
+        message: 'Using default settings - n8n not configured'
+      });
+    }
+    
+    // Fetch settings from n8n webhook
+    const response = await axios.post(N8N_GET_SETTINGS_WEBHOOK, {
+      action: "get_settings"
+    }, {
+      timeout: 10000,
+      headers: {
+        "Content-Type": "application/json",
+      }
+    });
+    
+    console.log('✅ n8n response received');
     
     if (response.data) {
-      const settings = parseCSV(response.data);
-      console.log('Parsed settings:', settings);
+      // n8n should return data in format:
+      // {
+      //   "Admin Username": "admin",
+      //   "Admin Password": "admin",
+      //   "Registration Fee": 4999,
+      //   "Registration Deadline": "7-11-2025",
+      //   "Webinar Time": "8-11-2025",
+      //   "Contact Email": "webinar@pystack.com",
+      //   "Whatsapp Invite Link": "www.google.com",
+      //   "Discord Community Link": "www.discord.com"
+      // }
+      
+      const rawData = response.data;
+      
+      // Convert to our API format
+      const settings = {
+        adminUsername: rawData['Admin Username'] || 'admin',
+        adminPassword: rawData['Admin Password'] || 'admin',
+        coursePrice: parseFloat(rawData['Registration Fee']) || 4999,
+        registrationDeadline: convertDateFormat(rawData['Registration Deadline']) || '2025-11-07',
+        webinarTime: convertDateFormat(rawData['Webinar Time']) 
+          ? `${convertDateFormat(rawData['Webinar Time'])}T19:00` 
+          : '2025-11-08T19:00',
+        contactEmail: rawData['Contact Email'] || 'webinar@pystack.com',
+        whatsappLink: rawData['Whatsapp Invite Link'] || 'www.google.com',
+        discordLink: rawData['Discord Community Link'] || 'www.discord.com'
+      };
+      
+      console.log('✅ Parsed settings:', settings);
       
       res.json({
         success: true,
         settings: settings
       });
     } else {
-      throw new Error('No data received from Google Sheets');
+      throw new Error('No data received from n8n webhook');
     }
   } catch (error) {
-    console.error("Error fetching settings from Google Sheets:", error.message);
+    console.error("❌ Error fetching settings from n8n:", error.message);
     
     // Return default settings on error
     res.json({
@@ -106,7 +107,7 @@ exports.getSettings = async (req, res) => {
         whatsappLink: 'www.google.com',
         discordLink: 'www.discord.com'
       },
-      message: 'Using default settings due to fetch error: ' + error.message
+      message: 'Using default settings due to n8n error: ' + error.message
     });
   }
 };
@@ -198,7 +199,7 @@ exports.updateSettings = async (req, res) => {
 
     // Send update to n8n webhook which will write to Google Sheets "Admin" tab
     console.log('Sending settings update to n8n webhook...');
-    const response = await axios.post(N8N_UPDATE_SETTINGS_WEBHOOK, {
+    const response = await axios.post(`${N8N_UPDATE_SETTINGS_WEBHOOK}/post-settings`, {
       sheet: "Admin",
       action: "update_settings",
       data: sheetData
