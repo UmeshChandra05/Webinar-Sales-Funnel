@@ -90,16 +90,41 @@ const PaymentPage = () => {
       })
 
       const result = await response.json()
+      
+      // Debug logging
+      console.log("🎟️ Coupon validation response:", result)
+      console.log("📊 Discount percentage:", result.discount_percentage, typeof result.discount_percentage)
 
       if (result.success) {
+        // Try to get discount percentage from multiple possible sources
+        let discountValue = 0
+        
+        // First, try the discount_percentage field
+        if (result.discount_percentage !== undefined && result.discount_percentage !== null) {
+          discountValue = Number(result.discount_percentage)
+        }
+        // Fallback: Extract from message (e.g., "30% discount applied successfully!")
+        else if (result.message) {
+          const percentMatch = result.message.match(/(\d+)%/)
+          if (percentMatch) {
+            discountValue = Number(percentMatch[1])
+            console.log("⚠️ Extracted discount from message:", discountValue)
+          }
+        }
+        
+        // Ensure it's a valid number
+        discountValue = Number(discountValue) || 0
+        
         setCouponApplied(true)
-        setCouponDiscount(result.discount_percentage || 0)
-        showToast(`Coupon applied! ${result.discount_percentage}% discount`, "success")
-        logError(null, `Coupon ${trimmedCode} applied: ${result.discount_percentage}% discount`)
+        setCouponDiscount(discountValue)
+        showToast(`Coupon applied! ${discountValue}% discount`, "success")
+        logError(null, `Coupon ${trimmedCode} applied: ${discountValue}% discount`)
+        
+        console.log("✅ Coupon state updated:", { couponApplied: true, couponDiscount: discountValue })
       } else {
         setCouponApplied(false)
         setCouponDiscount(0)
-        showToast("Invalid coupon code", "error")
+        showToast(result.message || "Invalid coupon code", "error")
         logError(result, `Coupon ${trimmedCode} invalid`)
       }
     } catch (error) {
