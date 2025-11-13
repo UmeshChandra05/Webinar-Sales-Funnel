@@ -9,14 +9,14 @@ const AdminSettingsPage = () => {
   const [toastMessage, setToastMessage] = useState(null)
   const [confirmPassword, setConfirmPassword] = useState('')
   const [settings, setSettings] = useState({
-    adminUsername: 'admin',
+    adminUsername: '',
     adminPassword: '',
-    coursePrice: 4999,
-    registrationDeadline: '2025-11-07',
-    webinarTime: '2025-11-08T19:00',
-    contactEmail: 'webinar@pystack.com',
-    whatsappLink: 'https://wa.me/',
-    discordLink: 'https://discord.gg/',
+    coursePrice: 0,
+    registrationDeadline: '',
+    webinarTime: '',
+    contactEmail: '',
+    whatsappLink: '',
+    discordLink: '',
   })
 
   useEffect(() => {
@@ -26,12 +26,32 @@ const AdminSettingsPage = () => {
       return
     }
     
-    fetchSettings()
+    loadDefaultsAndSettings()
   }, [navigate])
 
-  const fetchSettings = async () => {
+  const loadDefaultsAndSettings = async () => {
     try {
       setIsLoading(true)
+      
+      // Fetch default constants from backend
+      const constantsResponse = await fetch('/api/config/constants')
+      const constantsResult = await constantsResponse.json()
+      
+      if (constantsResult.success && constantsResult.constants) {
+        // Set defaults from backend
+        setSettings(prevSettings => ({
+          ...prevSettings,
+          adminUsername: constantsResult.constants.DEFAULT_ADMIN_USERNAME,
+          coursePrice: constantsResult.constants.DEFAULT_COURSE_PRICE,
+          registrationDeadline: constantsResult.constants.DEFAULT_REGISTRATION_DEADLINE,
+          webinarTime: constantsResult.constants.DEFAULT_WEBINAR_TIME,
+          contactEmail: constantsResult.constants.DEFAULT_CONTACT_EMAIL,
+          whatsappLink: constantsResult.constants.DEFAULT_WHATSAPP_LINK,
+          discordLink: constantsResult.constants.DEFAULT_DISCORD_LINK,
+        }))
+      }
+      
+      // Then fetch current settings (which will override defaults if they exist)
       const response = await apiClient.getSettings()
       
       if (response.success && response.settings) {
@@ -42,8 +62,8 @@ const AdminSettingsPage = () => {
         showToast('Settings loaded successfully', 'success')
       }
     } catch (error) {
-      console.error('Error fetching settings:', error)
-      showToast('Failed to load settings. Using defaults.', 'warning')
+      console.error('Error loading settings:', error)
+      showToast('Failed to load settings. Please refresh the page.', 'error')
     } finally {
       setIsLoading(false)
     }
@@ -97,8 +117,8 @@ const AdminSettingsPage = () => {
       if (response.success) {
         showToast('Settings updated successfully!', 'success')
         
-        // Force refresh the settings cache
-        await fetchSettings()
+        // Reload settings to reflect the update
+        await loadDefaultsAndSettings()
       } else {
         showToast(response.message || 'Failed to update settings', 'error')
       }

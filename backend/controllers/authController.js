@@ -3,7 +3,15 @@ const bcrypt = require('bcryptjs');
 const axios = require("../middleware/axios");
 
 const API_BASE_URL = process.env.API_BASE_URL;
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET;
+
+// Validate JWT_SECRET in production
+if (!JWT_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('CRITICAL: JWT_SECRET must be set in production environment');
+}
+if (!JWT_SECRET) {
+  console.warn('⚠️  WARNING: Using fallback JWT secret - NOT SECURE for production');
+}
 
 // ============================================================================
 // 🚨 TEST CREDENTIALS - REMOVE IN PRODUCTION 🚨
@@ -30,11 +38,12 @@ const authController = {
       console.log("👤 User registration:", { email, name, role, source: source || 'Direct' });
 
       // ============================================================================
-      // 🚨 TEST USER CHECK - REMOVE IN PRODUCTION 🚨
+      // 🚨 DEVELOPMENT ONLY - Test User Protection
+      // Prevents registration with test email (disabled in production)
       // ============================================================================
-      // Prevent registration with test email
-      if (email.toLowerCase().trim() === TEST_USER.email) {
-        console.log("🧪 TEST EMAIL: Registration blocked - test email already exists");
+      const isDevelopment = process.env.NODE_ENV !== 'production';
+      if (isDevelopment && email.toLowerCase().trim() === TEST_USER.email) {
+        console.log("🧪 TEST EMAIL: Registration blocked - test email already exists (development only)");
         return res.status(409).json({
           success: false,
           message: "An account with this email already exists",
@@ -251,11 +260,13 @@ const authController = {
       console.log("🔐 User login attempt:", { email });
 
       // ============================================================================
-      // 🚨 TEST CREDENTIALS CHECK - REMOVE IN PRODUCTION 🚨
+      // 🚨 DEVELOPMENT ONLY - Test Credentials
+      // This bypass is DISABLED in production via NODE_ENV check
       // ============================================================================
-      // Check if test credentials are being used (for development only)
-      if (email.toLowerCase().trim() === TEST_USER.email && password === TEST_USER.password) {
+      const isDevelopment = process.env.NODE_ENV !== 'production';
+      if (isDevelopment && email.toLowerCase().trim() === TEST_USER.email && password === TEST_USER.password) {
         console.log("🧪 TEST LOGIN: Using test credentials (development only)");
+        console.log("⚠️  This bypass is disabled in production mode");
         
         // Generate JWT token for test user
         const tokenExpiry = rememberMe ? '30d' : '7d';

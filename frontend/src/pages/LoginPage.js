@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Toast from '../components/Toast';
-import { NAVIGATION_DELAY } from '../utils/constants';
+import { NAVIGATION_DELAY } from '../services/constantsService';
 
 const LoginPage = () => {
   const navigate = useNavigate();

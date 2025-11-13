@@ -18,6 +18,16 @@ const apiRoutes = require("./routes/api")
 // Security middleware
 app.use(helmet())
 
+// HTTPS redirect in production (optional - usually handled by platform)
+if (process.env.NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    if (req.headers['x-forwarded-proto'] && req.headers['x-forwarded-proto'] !== 'https') {
+      return res.redirect(301, `https://${req.headers.host}${req.url}`)
+    }
+    next()
+  })
+}
+
 // Rate limiting
 const limiter = rateLimit({
   windowMs: Number.parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
@@ -36,9 +46,9 @@ const corsOptions = {
 }
 app.use(cors(corsOptions))
 
-// Body parsing middleware
-app.use(express.json({ limit: "10mb" }))
-app.use(express.urlencoded({ extended: true, limit: "10mb" }))
+// Body parsing middleware (limit to 2MB to prevent DoS attacks)
+app.use(express.json({ limit: "2mb" }))
+app.use(express.urlencoded({ extended: true, limit: "2mb" }))
 
 // Cookie parsing middleware
 app.use(cookieParser())

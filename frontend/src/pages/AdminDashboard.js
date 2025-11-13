@@ -221,9 +221,15 @@ const AdminDashboard = () => {
 
   const handleExport = async () => {
     try {
-      // Google Sheets CSV export URL
-      const SHEET_ID = '1UinuM281y4r8gxCrCr2dvF_-7CBC2l_FVSomj0Ia-c8';
-      const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
+      // Fetch Google Sheets config from backend
+      const configResponse = await fetch('/api/config/google-sheets');
+      const configResult = await configResponse.json();
+      
+      if (!configResult.success || !configResult.config) {
+        throw new Error('Failed to fetch Google Sheets configuration');
+      }
+      
+      const CSV_URL = configResult.config.csvUrls.USER_DATA;
       
       // Fetch the CSV file
       const response = await fetch(CSV_URL);
@@ -2079,7 +2085,23 @@ const AdminDashboard = () => {
                 Query Analytics
               </h2>
               <button
-                onClick={() => window.open('https://docs.google.com/spreadsheets/d/1UinuM281y4r8gxCrCr2dvF_-7CBC2l_FVSomj0Ia-c8/edit#gid=1649167240', '_blank')}
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/config/google-sheets');
+                    const result = await response.json();
+                    if (result.success && result.config) {
+                      // Open Google Sheets edit URL with QUERIES gid
+                      const sheetEditUrl = `https://docs.google.com/spreadsheets/d/${result.config.sheetId}/edit#gid=${result.config.gids.QUERIES}`;
+                      window.open(sheetEditUrl, '_blank');
+                    } else {
+                      console.error('Failed to fetch Google Sheets config');
+                      alert('Unable to open Google Sheets. Please check backend connection.');
+                    }
+                  } catch (error) {
+                    console.error('Error opening Google Sheets:', error);
+                    alert('Failed to open Google Sheets. Please try again.');
+                  }
+                }}
                 style={{
                   padding: '0.5rem 1rem',
                   backgroundColor: 'var(--primary)',

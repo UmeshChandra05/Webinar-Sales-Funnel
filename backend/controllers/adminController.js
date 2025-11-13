@@ -3,7 +3,15 @@ const axiosInstance = require('../middleware/axios');
 require('dotenv').config();
 
 // JWT secret (should be in environment variables)
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
+
+// Validate JWT_SECRET in production
+if (!JWT_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('CRITICAL: JWT_SECRET must be set in production environment');
+}
+if (!JWT_SECRET) {
+  console.warn('⚠️  WARNING: Using fallback JWT secret - NOT SECURE for production');
+}
 
 // N8n webhook URL for admin authentication
 const ADMIN_AUTH_WEBHOOK_URL =  process.env.API_BASE_URL + '/admin-auth';

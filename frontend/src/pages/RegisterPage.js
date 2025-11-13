@@ -19,6 +19,34 @@ const RegisterPage = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [toastMessage, setToastMessage] = useState(null)
   const [passwordError, setPasswordError] = useState("")
+  const [mobileError, setMobileError] = useState("")
+  const [emailError, setEmailError] = useState("")
+  const [passwordStrength, setPasswordStrength] = useState({ score: 0, text: "", color: "" })
+
+  // Validate email format
+  const validateEmail = (email) => {
+    if (!email) {
+      setEmailError("")
+      return false
+    }
+    
+    // RFC 5322 compliant email regex (simplified)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    
+    if (!emailRegex.test(email)) {
+      setEmailError("Please enter a valid email address")
+      return false
+    }
+    
+    // Additional checks
+    if (email.length > 254) {
+      setEmailError("Email address is too long")
+      return false
+    }
+    
+    setEmailError("")
+    return true
+  }
 
   // Capture source from URL parameters on component mount
   useEffect(() => {
@@ -40,21 +68,131 @@ const RegisterPage = () => {
     setToastMessage(null)
   }
 
+  // Validate phone number format
+  const validatePhoneNumber = (phone) => {
+    if (!phone) {
+      setMobileError("")
+      return true // Optional field
+    }
+    
+    // Remove all non-digit characters for validation
+    const digitsOnly = phone.replace(/\D/g, '')
+    
+    // Check if it's a valid length (10-15 digits, supports international)
+    if (digitsOnly.length < 10) {
+      setMobileError("Phone number must be at least 10 digits")
+      return false
+    }
+    if (digitsOnly.length > 15) {
+      setMobileError("Phone number must be less than 15 digits")
+      return false
+    }
+    
+    // Check for valid formats (supports +, -, spaces, parentheses)
+    const phoneRegex = /^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{1,4}[-\s\.]?[0-9]{1,4}$/
+    if (!phoneRegex.test(phone)) {
+      setMobileError("Please enter a valid phone number")
+      return false
+    }
+    
+    setMobileError("")
+    return true
+  }
+
+  // Calculate password strength
+  const calculatePasswordStrength = (password) => {
+    if (!password) {
+      setPasswordStrength({ score: 0, text: "", color: "" })
+      return
+    }
+
+    let score = 0
+    
+    // Length check
+    if (password.length >= 6) score += 1
+    if (password.length >= 8) score += 1
+    if (password.length >= 12) score += 1
+    
+    // Character variety checks
+    if (/[a-z]/.test(password)) score += 1 // lowercase
+    if (/[A-Z]/.test(password)) score += 1 // uppercase
+    if (/[0-9]/.test(password)) score += 1 // numbers
+    if (/[^a-zA-Z0-9]/.test(password)) score += 1 // special characters
+    
+    // Determine strength level
+    let text = ""
+    let color = ""
+    
+    if (score <= 2) {
+      text = "Weak"
+      color = "#ef4444" // red
+    } else if (score <= 4) {
+      text = "Fair"
+      color = "#f59e0b" // orange
+    } else if (score <= 5) {
+      text = "Good"
+      color = "#3b82f6" // blue
+    } else {
+      text = "Strong"
+      color = "#10b981" // green
+    }
+    
+    setPasswordStrength({ score, text, color })
+  }
+
   const handleInputChange = (e) => {
     const { name, value } = e.target
+    
+    // For mobile field, only allow digits, +, -, (, ), and spaces
+    let processedValue = value
+    if (name === 'mobile') {
+      // Only allow numbers, +, -, (, ), and spaces
+      processedValue = value.replace(/[^0-9+\-() ]/g, '')
+    }
+    
+    // Use processedValue for mobile, original value for other fields
+    const finalValue = name === 'mobile' ? processedValue : value
+    
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: finalValue,
     }))
     
     // Clear password error when user types
     if (name === 'password' || name === 'confirmPassword') {
       setPasswordError("")
     }
+    
+    // Validate phone number as user types
+    if (name === 'mobile') {
+      validatePhoneNumber(processedValue)
+    }
+    
+    // Validate email as user types
+    if (name === 'email') {
+      validateEmail(value)
+    }
+    
+    // Calculate password strength as user types
+    if (name === 'password') {
+      calculatePasswordStrength(value)
+    }
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    // Validate email format
+    if (!validateEmail(formData.email)) {
+      showToast(emailError || "Please enter a valid email address.", "error")
+      return
+    }
+    
+    // Validate phone number (if provided)
+    if (formData.mobile && !validatePhoneNumber(formData.mobile)) {
+      showToast(mobileError || "Please enter a valid phone number.", "error")
+      return
+    }
     
     // Validate passwords match
     if (formData.password !== formData.confirmPassword) {
@@ -68,6 +206,12 @@ const RegisterPage = () => {
       setPasswordError("Password must be at least 6 characters long")
       showToast("Password must be at least 6 characters long.", "error")
       return
+    }
+    
+    // Warn if password is weak
+    if (passwordStrength.score <= 2 && formData.password.length >= 6) {
+      const proceed = window.confirm("Your password is weak. It's recommended to use a stronger password with uppercase, lowercase, numbers, and special characters. Continue anyway?")
+      if (!proceed) return
     }
     
     setIsLoading(true)
@@ -278,10 +422,13 @@ const RegisterPage = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className="form-input"
+                className={`form-input ${emailError ? 'border-red-500' : ''}`}
                 required
-                placeholder="Enter your email address"
+                placeholder="your.email@example.com"
               />
+              {emailError && (
+                <p className="text-red-500 text-sm mt-1">{emailError}</p>
+              )}
             </div>
 
             <div className="form-group">
@@ -294,9 +441,13 @@ const RegisterPage = () => {
                 name="mobile"
                 value={formData.mobile}
                 onChange={handleInputChange}
-                className="form-input"
-                placeholder="Enter your mobile number"
+                className={`form-input ${mobileError ? 'border-red-500' : ''}`}
+                placeholder="+1234567890 or (123) 456-7890"
+                pattern="[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{1,4}[-\s\.]?[0-9]{1,4}"
               />
+              {mobileError && (
+                <p className="text-red-500 text-sm mt-1">{mobileError}</p>
+              )}
             </div>
 
             <div className="form-group">
@@ -334,8 +485,51 @@ const RegisterPage = () => {
                 className={`form-input ${passwordError ? 'border-red-500' : ''}`}
                 required
                 minLength={6}
-                placeholder="Enter password (minimum 6 characters)"
+                placeholder="Min 8 chars, use uppercase, numbers & symbols"
               />
+              {formData.password && (
+                <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ display: 'flex', gap: '4px', flex: 1 }}>
+                    {[1, 2, 3, 4, 5].map((segment) => {
+                      let segmentColor = '#374151' // gray (unfilled)
+                      
+                      if (passwordStrength.score >= segment) {
+                        // Calculate color based on overall strength
+                        if (passwordStrength.score <= 3) {
+                          segmentColor = '#ef4444' // red
+                        } else if (passwordStrength.score <= 5) {
+                          segmentColor = '#f59e0b' // orange
+                        } else {
+                          segmentColor = '#10b981' // green
+                        }
+                      }
+                      
+                      return (
+                        <div
+                          key={segment}
+                          style={{ 
+                            height: '4px',
+                            flex: 1,
+                            borderRadius: '9999px',
+                            backgroundColor: segmentColor,
+                            transition: 'all 0.3s ease'
+                          }}
+                        />
+                      )
+                    })}
+                  </div>
+                  <span 
+                    style={{ 
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      whiteSpace: 'nowrap',
+                      color: passwordStrength.color 
+                    }}
+                  >
+                    {passwordStrength.text}
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="form-group">

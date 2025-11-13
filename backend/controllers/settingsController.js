@@ -1,9 +1,10 @@
 const axios = require("../middleware/axios");
+const { APP_CONSTANTS } = require("../config/constants");
 
 // n8n webhook URLs
 const API_BASE_URL = process.env.API_BASE_URL;
 const N8N_GET_SETTINGS_WEBHOOK = process.env.N8N_GET_SETTINGS_WEBHOOK || `${API_BASE_URL}/get-settings`;
-const N8N_UPDATE_SETTINGS_WEBHOOK = process.env.N8N_UPDATE_SETTINGS_WEBHOOK || API_BASE_URL;
+const N8N_UPDATE_SETTINGS_WEBHOOK = process.env.N8N_UPDATE_SETTINGS_WEBHOOK || (API_BASE_URL ? `${API_BASE_URL}` : null);
 
 // Helper function to convert DD-MM-YYYY to YYYY-MM-DD
 const convertDateFormat = (dateStr) => {
@@ -28,14 +29,14 @@ exports.getSettings = async (req, res) => {
       return res.json({
         success: true,
         settings: {
-          adminUsername: 'admin',
-          adminPassword: 'admin',
-          coursePrice: 4999,
-          registrationDeadline: '2025-11-07',
-          webinarTime: '2025-11-08T19:00',
-          contactEmail: 'webinar@pystack.com',
-          whatsappLink: 'www.google.com',
-          discordLink: 'www.discord.com'
+          adminUsername: APP_CONSTANTS.DEFAULT_ADMIN_USERNAME,
+          // adminPassword: Intentionally excluded from public API for security
+          coursePrice: APP_CONSTANTS.DEFAULT_COURSE_PRICE,
+          registrationDeadline: APP_CONSTANTS.DEFAULT_REGISTRATION_DEADLINE,
+          webinarTime: APP_CONSTANTS.DEFAULT_WEBINAR_TIME,
+          contactEmail: APP_CONSTANTS.DEFAULT_CONTACT_EMAIL,
+          whatsappLink: APP_CONSTANTS.DEFAULT_WHATSAPP_LINK,
+          discordLink: APP_CONSTANTS.DEFAULT_DISCORD_LINK
         },
         message: 'Using default settings - n8n not configured'
       });
@@ -69,17 +70,17 @@ exports.getSettings = async (req, res) => {
       const rawData = response.data;
       
       // Convert to our API format
+      // Note: adminPassword is intentionally excluded from public API for security
       const settings = {
-        adminUsername: rawData['Admin Username'] || 'admin',
-        adminPassword: rawData['Admin Password'] || 'admin',
-        coursePrice: parseFloat(rawData['Registration Fee']) || 4999,
-        registrationDeadline: convertDateFormat(rawData['Registration Deadline']) || '2025-11-07',
+        adminUsername: rawData['Admin Username'] || APP_CONSTANTS.DEFAULT_ADMIN_USERNAME,
+        coursePrice: parseFloat(rawData['Registration Fee']) || APP_CONSTANTS.DEFAULT_COURSE_PRICE,
+        registrationDeadline: convertDateFormat(rawData['Registration Deadline']) || APP_CONSTANTS.DEFAULT_REGISTRATION_DEADLINE,
         webinarTime: convertDateFormat(rawData['Webinar Time']) 
           ? `${convertDateFormat(rawData['Webinar Time'])}T19:00` 
-          : '2025-11-08T19:00',
-        contactEmail: rawData['Contact Email'] || 'webinar@pystack.com',
-        whatsappLink: rawData['Whatsapp Invite Link'] || 'www.google.com',
-        discordLink: rawData['Discord Community Link'] || 'www.discord.com'
+          : APP_CONSTANTS.DEFAULT_WEBINAR_TIME,
+        contactEmail: rawData['Contact Email'] || APP_CONSTANTS.DEFAULT_CONTACT_EMAIL,
+        whatsappLink: rawData['Whatsapp Invite Link'] || APP_CONSTANTS.DEFAULT_WHATSAPP_LINK,
+        discordLink: rawData['Discord Community Link'] || APP_CONSTANTS.DEFAULT_DISCORD_LINK
       };
       
       console.log('✅ Parsed settings:', settings);
@@ -95,17 +96,17 @@ exports.getSettings = async (req, res) => {
     console.error("❌ Error fetching settings from n8n:", error.message);
     
     // Return default settings on error
+    // Note: adminPassword is intentionally excluded from public API for security
     res.json({
       success: true,
       settings: {
-        adminUsername: 'admin',
-        adminPassword: 'admin',
-        coursePrice: 4999,
-        registrationDeadline: '2025-11-07',
-        webinarTime: '2025-11-08T19:00',
-        contactEmail: 'webinar@pystack.com',
-        whatsappLink: 'www.google.com',
-        discordLink: 'www.discord.com'
+        adminUsername: APP_CONSTANTS.DEFAULT_ADMIN_USERNAME,
+        coursePrice: APP_CONSTANTS.DEFAULT_COURSE_PRICE,
+        registrationDeadline: APP_CONSTANTS.DEFAULT_REGISTRATION_DEADLINE,
+        webinarTime: APP_CONSTANTS.DEFAULT_WEBINAR_TIME,
+        contactEmail: APP_CONSTANTS.DEFAULT_CONTACT_EMAIL,
+        whatsappLink: APP_CONSTANTS.DEFAULT_WHATSAPP_LINK,
+        discordLink: APP_CONSTANTS.DEFAULT_DISCORD_LINK
       },
       message: 'Using default settings due to n8n error: ' + error.message
     });
@@ -199,6 +200,15 @@ exports.updateSettings = async (req, res) => {
 
     // Send update to n8n webhook which will write to Google Sheets "Admin" tab
     console.log('Sending settings update to n8n webhook...');
+    
+    if (!N8N_UPDATE_SETTINGS_WEBHOOK) {
+      console.error('❌ N8N_UPDATE_SETTINGS_WEBHOOK not configured');
+      return res.status(503).json({
+        success: false,
+        message: "Settings update service not configured. Please contact administrator."
+      });
+    }
+    
     const response = await axios.post(`${N8N_UPDATE_SETTINGS_WEBHOOK}/post-settings`, {
       sheet: "Admin",
       action: "update_settings",

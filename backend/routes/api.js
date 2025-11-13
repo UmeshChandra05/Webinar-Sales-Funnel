@@ -9,6 +9,7 @@ const webinarController = require("../controllers/webinarController")
 const adminController = require("../controllers/adminController")
 const authController = require("../controllers/authController")
 const settingsController = require("../controllers/settingsController")
+const configController = require("../controllers/configController")
 
 // Validation middleware
 const handleValidationErrors = (req, res, next) => {
@@ -103,7 +104,26 @@ router.post("/admin/refresh-token", adminController.verifyAdminToken, adminContr
 
 // Settings routes
 router.get("/settings", settingsController.getSettings) // Public route - fetch settings
-router.put("/admin/settings", adminController.verifyAdminToken, settingsController.updateSettings) // Protected - update settings
+router.put(
+  "/admin/settings",
+  adminController.verifyAdminToken,
+  [
+    body("adminUsername").trim().isLength({ min: 1, max: 50 }).withMessage("Admin username must be 1-50 characters"),
+    body("adminPassword").optional().isLength({ min: 6 }).withMessage("Password must be at least 6 characters if provided"),
+    body("registrationFee").isNumeric().withMessage("Registration fee must be a number"),
+    body("registrationDeadline").isString().trim().isLength({ min: 1 }).withMessage("Registration deadline is required"),
+    body("webinarTime").isString().trim().isLength({ min: 1 }).withMessage("Webinar time is required"),
+    body("contactEmail").isEmail().normalizeEmail().withMessage("Valid contact email is required"),
+    body("whatsappLink").optional().isString().trim().isLength({ max: 500 }).withMessage("WhatsApp link too long"),
+    body("discordLink").optional().isString().trim().isLength({ max: 500 }).withMessage("Discord link too long"),
+  ],
+  handleValidationErrors,
+  settingsController.updateSettings
+) // Protected - update settings
+
+// Configuration routes
+router.get("/config/google-sheets", adminController.verifyAdminToken, configController.getGoogleSheetsConfig) // Protected - Get Google Sheets URLs and config (admin only)
+router.get("/config/constants", configController.getAppConstants) // Public - Get app-wide constants
 
 // AI Chat route
 router.post("/ai-chat", [

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
 import Toast from "../components/Toast"
 import { getErrorMessage, logError } from "../utils/errorHandler"
-import { COURSE_PRICE, CURRENCY_SYMBOL, NAVIGATION_DELAY, COURSE_FEATURES } from "../utils/constants"
+import { COURSE_PRICE, CURRENCY_SYMBOL, NAVIGATION_DELAY, COURSE_FEATURES } from "../services/constantsService"
 import { logPaymentStatus } from "../utils/paymentUtils"
 
 const PaymentPage = () => {

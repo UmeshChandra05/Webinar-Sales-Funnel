@@ -13,6 +13,8 @@ const ContactPage = () => {
   const [openFAQ, setOpenFAQ] = useState(null)
   const [toast, setToast] = useState({ show: false, message: "", type: "" })
   const [queryError, setQueryError] = useState("")
+  const [emailError, setEmailError] = useState("")
+  const [mobileError, setMobileError] = useState("")
   const [hasSubmitted, setHasSubmitted] = useState(false)
 
   const showToast = (message, type = "success") => {
@@ -28,6 +30,57 @@ const ContactPage = () => {
 
   const toggleFAQ = (index) => {
     setOpenFAQ(openFAQ === index ? null : index)
+  }
+
+  // Validate email format
+  const validateEmail = (email) => {
+    if (!email) {
+      setEmailError("")
+      return false
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    
+    if (!emailRegex.test(email)) {
+      setEmailError("Please enter a valid email address")
+      return false
+    }
+    
+    if (email.length > 254) {
+      setEmailError("Email address is too long")
+      return false
+    }
+    
+    setEmailError("")
+    return true
+  }
+
+  // Validate phone number format
+  const validatePhoneNumber = (phone) => {
+    if (!phone) {
+      setMobileError("")
+      return true
+    }
+    
+    const digitsOnly = phone.replace(/\D/g, '')
+    
+    if (digitsOnly.length < 10) {
+      setMobileError("Phone number must be at least 10 digits")
+      return false
+    }
+    if (digitsOnly.length > 15) {
+      setMobileError("Phone number must be less than 15 digits")
+      return false
+    }
+    
+    const phoneRegex = /^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{1,4}[-\s\.]?[0-9]{1,4}$/
+    if (!phoneRegex.test(phone)) {
+      setMobileError("Please enter a valid phone number")
+      return false
+    }
+    
+    setMobileError("")
+    return true
   }
 
   const faqData = [
@@ -75,14 +128,32 @@ const ContactPage = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
+    
+    // For mobile field, only allow digits, +, -, (, ), and spaces
+    let processedValue = value
+    if (name === 'mobile') {
+      // Only allow numbers, +, -, (, ), and spaces
+      processedValue = value.replace(/[^0-9+\-() ]/g, '')
+    }
+    
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: processedValue,
     }))
     
     // Real-time validation for query field
     if (name === 'query') {
       validateQuery(value)
+    }
+    
+    // Validate email as user types
+    if (name === 'email') {
+      validateEmail(value)
+    }
+    
+    // Validate phone number as user types
+    if (name === 'mobile') {
+      validatePhoneNumber(processedValue)
     }
   }
   
@@ -103,6 +174,18 @@ const ContactPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setHasSubmitted(true)
+    
+    // Validate email format
+    if (!validateEmail(formData.email)) {
+      showToast(emailError || "Please enter a valid email address", "error")
+      return
+    }
+    
+    // Validate phone number (if provided)
+    if (formData.mobile && !validatePhoneNumber(formData.mobile)) {
+      showToast(mobileError || "Please enter a valid phone number", "error")
+      return
+    }
     
     // Frontend validation before submission
     const trimmedQuery = formData.query.trim()
@@ -315,9 +398,26 @@ const ContactPage = () => {
                   value={formData.email}
                   onChange={handleInputChange}
                   className="form-input"
+                  style={{
+                    borderColor: emailError ? '#ef4444' : '#374151',
+                    borderWidth: '2px'
+                  }}
                   required
                   placeholder="your.email@example.com"
                 />
+                {emailError && (
+                  <div style={{
+                    color: '#ef4444',
+                    fontSize: '14px',
+                    marginTop: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    <span>⚠</span>
+                    {emailError}
+                  </div>
+                )}
               </div>
 
               <div className="form-group">
@@ -331,8 +431,33 @@ const ContactPage = () => {
                   value={formData.mobile}
                   onChange={handleInputChange}
                   className="form-input"
-                  placeholder="Enter your mobile number"
+                  style={{
+                    borderColor: mobileError ? '#ef4444' : '#374151',
+                    borderWidth: '2px'
+                  }}
+                  placeholder="Enter your mobile number (e.g., +1234567890)"
+                  pattern="[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{1,4}[-\s\.]?[0-9]{1,4}"
                 />
+                {mobileError && (
+                  <div style={{
+                    color: '#ef4444',
+                    fontSize: '14px',
+                    marginTop: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    <span>⚠</span>
+                    {mobileError}
+                  </div>
+                )}
+                <p style={{ 
+                  color: '#9ca3af', 
+                  fontSize: '12px', 
+                  marginTop: '4px' 
+                }}>
+                  Accepts formats: +1234567890, (123) 456-7890, 123-456-7890
+                </p>
               </div>
 
               <div className="form-group">

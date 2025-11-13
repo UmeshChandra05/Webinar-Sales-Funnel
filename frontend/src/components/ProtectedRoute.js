@@ -101,13 +101,7 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
 
   // User route protection
   if (!isAuthenticated) {
-    // Check if user has email in localStorage (registered but not logged in)
-    const hasUserEmail = localStorage.getItem('userEmail');
-    if (hasUserEmail) {
-      // Allow access for registered users
-      return children;
-    }
-    // Redirect to register page
+    // Redirect to register page for unauthenticated users
     return <Navigate to="/register" replace />;
   }
 

@@ -2,7 +2,8 @@
 import { useNavigate, Link } from 'react-router-dom';
 import Toast from '../components/Toast';
 import { getErrorMessage, logError } from '../utils/errorHandler';
-import { NAVIGATION_DELAY } from '../utils/constants';
+import { NAVIGATION_DELAY } from '../services/constantsService';
+import apiClient from '../utils/api';
 
 const AdminLoginPage = () => {
   const navigate = useNavigate();
@@ -40,10 +41,11 @@ const AdminLoginPage = () => {
     setIsLoading(true);
 
     // ============================================
-    // ⚠️ REMOVE IN PRODUCTION - START
-    // Development bypass for admin login
+    // ⚠️ DEVELOPMENT ONLY - Admin Bypass
+    // This bypass is DISABLED in production via NODE_ENV check
     // ============================================
-    if (formData.username === 'admin' && formData.password === 'admin') {
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    if (isDevelopment && formData.username === 'admin' && formData.password === 'admin') {
       localStorage.setItem('adminToken', 'dev-token-' + Date.now());
       localStorage.setItem('adminUser', JSON.stringify({ 
         username: 'admin', 
@@ -62,26 +64,18 @@ const AdminLoginPage = () => {
       return;
     }
     // ============================================
-    // ⚠️ REMOVE IN PRODUCTION - END
+    // END: Development Admin Bypass
     // ============================================
 
     try {
-      const response = await fetch('http://localhost:5000/api/admin/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: formData.username,
-          password: formData.password
-        }),
+      const response = await apiClient.adminLogin({
+        username: formData.username,
+        password: formData.password
       });
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        localStorage.setItem('adminToken', data.token);
-        localStorage.setItem('adminUser', JSON.stringify(data.user));
+      if (response.success) {
+        localStorage.setItem('adminToken', response.token);
+        localStorage.setItem('adminUser', JSON.stringify(response.user));
         localStorage.setItem('adminLoginTime', Date.now().toString());
         
         showToast('Login successful! Redirecting to dashboard...', 'success');
@@ -90,7 +84,7 @@ const AdminLoginPage = () => {
           navigate('/admin/dashboard');
         }, NAVIGATION_DELAY);
       } else {
-        showToast(data.message || 'Invalid username or password', 'error');
+        showToast(response.message || 'Invalid username or password', 'error');
       }
     } catch (error) {
       logError(error, 'Admin login');

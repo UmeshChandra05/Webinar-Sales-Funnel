@@ -250,6 +250,51 @@ webinar-sales-funnel-app/
 
 ---
 
+## Configuration Management
+
+### Centralized Configuration
+All Google Sheets IDs, GIDs, CSV URLs, and application constants are centralized in `backend/.env` and served via API endpoints. This enables:
+- **Environment-based configuration** - Different sheets for dev/staging/production
+- **Single source of truth** - Update Sheet IDs in one place
+- **Security** - Sheet IDs not exposed in frontend bundle
+- **Flexibility** - Easy to switch between different Google Sheets
+
+### Backend Configuration (`backend/.env`)
+```env
+# Google Sheets Configuration
+GOOGLE_SHEET_ID=1UinuM281y4r8gxCrCr2dvF_-7CBC2l_FVSomj0Ia-c8
+SHEET_GID_USER_DATA=0
+SHEET_GID_QUERIES=2082547918
+SHEET_GID_ADMIN=1904087004
+
+# n8n Webhook URL
+API_BASE_URL=https://your-n8n-instance.com/webhook
+
+# JWT Secret (change in production)
+JWT_SECRET=your-secure-random-secret
+```
+
+### Configuration API Endpoints
+- `GET /api/config/google-sheets` - Returns Sheet IDs, GIDs, and CSV URLs
+- `GET /api/config/constants` - Returns application default values
+
+### Finding Your Sheet IDs and GIDs
+See [HOW_TO_FIND_SHEET_IDS.md](./HOW_TO_FIND_SHEET_IDS.md) for detailed instructions on:
+- How to extract Sheet ID from Google Sheets URL
+- How to find GID for each tab/sheet
+- Testing your configuration
+- Troubleshooting common issues
+
+### Implementation Details
+See [CONFIGURATION_CENTRALIZATION.md](./CONFIGURATION_CENTRALIZATION.md) for:
+- Complete list of changes made
+- Migration notes
+- API documentation
+- Testing procedures
+- Production deployment checklist
+
+---
+
 ## To Be Implemented
 
 ### Query Analytics with AI-Suggested Resolutions

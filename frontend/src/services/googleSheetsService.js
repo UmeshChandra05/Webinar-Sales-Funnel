@@ -1,12 +1,47 @@
-﻿// Google Sheets CSV export service
-const SHEET_ID = '1UinuM281y4r8gxCrCr2dvF_-7CBC2l_FVSomj0Ia-c8';
-const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
-const CONTACTS_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=1649167240`; // Contacts sheet GID
+// Google Sheets CSV export service
+// URLs are fetched from backend to centralize configuration
+let SHEET_CONFIG = null;
+
+// Fetch configuration from backend
+const fetchSheetConfig = async () => {
+  if (SHEET_CONFIG) {
+    return SHEET_CONFIG;
+  }
+  
+  try {
+    const adminToken = localStorage.getItem('adminToken');
+    
+    if (!adminToken) {
+      throw new Error('Admin authentication required to access Google Sheets data');
+    }
+    
+    const response = await fetch('/api/config/google-sheets', {
+      headers: {
+        'Authorization': `Bearer ${adminToken}`
+      }
+    });
+    const result = await response.json();
+    
+    if (result.success) {
+      SHEET_CONFIG = result.config;
+      console.log('✅ Google Sheets config loaded:', SHEET_CONFIG);
+      return SHEET_CONFIG;
+    } else {
+      throw new Error(result.message || 'Failed to load configuration');
+    }
+  } catch (error) {
+    console.error('❌ Failed to fetch Google Sheets config:', error);
+    throw new Error('Unable to load Google Sheets configuration. Please ensure you are logged in as admin.');
+  }
+};
 
 export const fetchContactsData = async () => {
   try {
     console.log('Fetching contacts/tickets data...');
-    const response = await fetch(CONTACTS_CSV_URL);
+    const config = await fetchSheetConfig();
+    const QUERIES_CSV_URL = config.csvUrls.QUERIES;
+    
+    const response = await fetch(QUERIES_CSV_URL);
     
     if (!response.ok) {
       throw new Error('Failed to fetch contacts data');
@@ -52,6 +87,9 @@ export const fetchContactsData = async () => {
 export const fetchSheetData = async (dateRange = 'all') => {
   try {
     console.log('Fetching data with date range:', dateRange);
+    const config = await fetchSheetConfig();
+    const CSV_URL = config.csvUrls.USER_DATA;
+    
     const response = await fetch(CSV_URL);
     
     if (!response.ok) {
