@@ -146,9 +146,9 @@ const PaymentPage = () => {
 
   const calculateFinalPrice = () => {
     if (couponApplied && couponDiscount > 0) {
-      return COURSE_PRICE - (COURSE_PRICE * couponDiscount / 100)
+      return COURSE_PRICE() - (COURSE_PRICE() * couponDiscount / 100)
     }
-    return COURSE_PRICE
+    return COURSE_PRICE()
   }
 
   const handlePaymentSimulation = async (payment_status) => {
@@ -250,14 +250,14 @@ const PaymentPage = () => {
                     textDecorationColor: '#ef4444',
                     textDecorationThickness: '2px'
                   }}>
-                    {CURRENCY_SYMBOL}{COURSE_PRICE.toLocaleString()}
+                    {CURRENCY_SYMBOL}{COURSE_PRICE().toLocaleString()}
                   </span>
                 </div>
                 <div className="text-4xl font-bold gradient-text mb-2">
                   {CURRENCY_SYMBOL}{calculateFinalPrice().toLocaleString()}
                 </div>
                 <p className="text-green-400 text-sm mb-1">
-                  🎉 You save {CURRENCY_SYMBOL}{(COURSE_PRICE - calculateFinalPrice()).toLocaleString()} ({couponDiscount}% off)
+                  🎉 You save {CURRENCY_SYMBOL}{(COURSE_PRICE() - calculateFinalPrice()).toLocaleString()} ({couponDiscount}% off)
                 </p>
               </>
             ) : (
@@ -271,7 +271,7 @@ const PaymentPage = () => {
           <div className="mb-6">
             <h3 className="font-semibold mb-4">Your course includes:</h3>
             <ul className="space-y-2 text-gray-300">
-              {COURSE_FEATURES.map((feature, index) => (
+              {COURSE_FEATURES().map((feature, index) => (
                 <li key={index} className="flex items-center">
                   <span className="text-green-400 mr-2">✓</span>
                   {feature}
