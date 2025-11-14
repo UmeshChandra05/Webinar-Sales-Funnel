@@ -57,14 +57,14 @@ exports.getSettings = async (req, res) => {
     if (response.data) {
       // n8n should return data in format matching Google Sheets Admin tab:
       // {
-      //   "Admin Username": "admin",
-      //   "Admin Password": "admin",
-      //   "Registration Fee": 4999,
-      //   "Registration Deadline": "7-11-2025",  // DD-MM-YYYY format
-      //   "Webinar Time": "8-11-2025",  // DD-MM-YYYY format
-      //   "Contact Email": "webinar@pystack.com",
-      //   "Whatsapp Invite Link": "http://www.google.com/",
-      //   "Discord Community Link": "http://www.discord.com/"
+      //   "admin_username": "admin",
+      //   "admin_password": "admin",
+      //   "reg_fee": 4999,
+      //   "reg_deadline": "7-11-2025",  // DD-MM-YYYY format
+      //   "webinar_time": "8-11-2025",  // DD-MM-YYYY format
+      //   "contact_email": "webinar@pystack.com",
+      //   "whatsapp_invite": "http://www.google.com/",
+      //   "discord_link": "http://www.discord.com/"
       // }
       
       const rawData = response.data;
@@ -72,15 +72,15 @@ exports.getSettings = async (req, res) => {
       // Convert to our API format
       // Note: adminPassword is intentionally excluded from public API for security
       const settings = {
-        adminUsername: rawData['Admin Username'] || APP_CONSTANTS.DEFAULT_ADMIN_USERNAME,
-        coursePrice: parseFloat(rawData['Registration Fee']) || APP_CONSTANTS.DEFAULT_COURSE_PRICE,
-        registrationDeadline: convertDateFormat(rawData['Registration Deadline']) || APP_CONSTANTS.DEFAULT_REGISTRATION_DEADLINE,
-        webinarTime: convertDateFormat(rawData['Webinar Time']) 
-          ? `${convertDateFormat(rawData['Webinar Time'])}T19:00` 
+        adminUsername: rawData['admin_username'] || APP_CONSTANTS.DEFAULT_ADMIN_USERNAME,
+        coursePrice: parseFloat(rawData['reg_fee']) || APP_CONSTANTS.DEFAULT_COURSE_PRICE,
+        registrationDeadline: convertDateFormat(rawData['reg_deadline']) || APP_CONSTANTS.DEFAULT_REGISTRATION_DEADLINE,
+        webinarTime: convertDateFormat(rawData['webinar_time']) 
+          ? `${convertDateFormat(rawData['webinar_time'])}T19:00` 
           : APP_CONSTANTS.DEFAULT_WEBINAR_TIME,
-        contactEmail: rawData['Contact Email'] || APP_CONSTANTS.DEFAULT_CONTACT_EMAIL,
-        whatsappLink: rawData['Whatsapp Invite Link'] || APP_CONSTANTS.DEFAULT_WHATSAPP_LINK,
-        discordLink: rawData['Discord Community Link'] || APP_CONSTANTS.DEFAULT_DISCORD_LINK
+        contactEmail: rawData['contact_email'] || APP_CONSTANTS.DEFAULT_CONTACT_EMAIL,
+        whatsappLink: rawData['whatsapp_invite'] || APP_CONSTANTS.DEFAULT_WHATSAPP_LINK,
+        discordLink: rawData['discord_link'] || APP_CONSTANTS.DEFAULT_DISCORD_LINK
       };
       
       console.log('✅ Parsed settings:', settings);
@@ -184,18 +184,18 @@ exports.updateSettings = async (req, res) => {
 
     // Build data object for n8n webhook in the format expected by Google Sheets
     const sheetData = {
-      "Admin Username": adminUsername,
-      "Registration Fee": Number(coursePrice),
-      "Registration Deadline": formatDateForSheet(registrationDeadline),
-      "Webinar Time": formatDateForSheet(webinarTime),
-      "Contact Email": contactEmail,
-      "Whatsapp Invite Link": whatsappLink,
-      "Discord Community Link": discordLink
+      "admin_username": adminUsername,
+      "reg_fee": Number(coursePrice),
+      "reg_deadline": formatDateForSheet(registrationDeadline),
+      "webinar_time": formatDateForSheet(webinarTime),
+      "contact_email": contactEmail,
+      "whatsapp_invite": whatsappLink,
+      "discord_link": discordLink
     };
 
     // Only include password if it's provided (not empty)
     if (adminPassword && adminPassword.trim().length > 0) {
-      sheetData["Admin Password"] = adminPassword;
+      sheetData["admin_password"] = adminPassword;
     }
 
     // Send update to n8n webhook which will write to Google Sheets "Admin" tab

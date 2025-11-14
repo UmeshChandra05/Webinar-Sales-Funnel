@@ -46,14 +46,15 @@ Host: n8n-base-url
 - Document ID: `1UinuM281y4r8gxCrCr2dvF_-7CBC2l_FVSomj0Ia-c8`
 - Sheet Name: `Admin`
 - Filter: Get first row (or all rows if only one exists)
+- **IMPORTANT:** Use lowercase backend field names from sheet columns, NOT display labels
 - Map fields:
-  - `Admin Username` → `adminUsername`
-  - `Registration Fee` → `registrationFee`
-  - `Registration Deadline` → `registrationDeadline`
-  - `Webinar Time` → `webinarTime`
-  - `Contact Email` → `contactEmail`
-  - `WhatsApp Link` → `whatsappLink`
-  - `Discord Link` → `discordLink`
+  - `admin_username` (from sheet) → `adminUsername` (in response)
+  - `reg_fee` (from sheet) → `registrationFee` (in response)
+  - `reg_deadline` (from sheet) → `registrationDeadline` (in response)
+  - `webinar_time` (from sheet) → `webinarTime` (in response)
+  - `contact_email` (from sheet) → `contactEmail` (in response)
+  - `whatsapp_invite` (from sheet) → `whatsappLink` (in response)
+  - `discord_link` (from sheet) → `discordLink` (in response)
 
 **Error Response:**
 ```json
@@ -112,16 +113,17 @@ Host: n8n-base-url
 - Operation: `Append or Update row in sheet`
 - Document ID: `1UinuM281y4r8gxCrCr2dvF_-7CBC2l_FVSomj0Ia-c8`
 - Sheet Name: `Admin`
-- Matching Column: `Admin Username` (or update first row)
+- Matching Column: `admin_username` (or update first row)
+- **IMPORTANT:** Use lowercase backend field names as sheet column headers, NOT display labels
 - Map fields:
-  - `body.adminUsername` → `Admin Username`
-  - `body.adminPassword` → `Admin Password` (only if provided)
-  - `body.registrationFee` → `Registration Fee`
-  - `body.registrationDeadline` → `Registration Deadline`
-  - `body.webinarTime` → `Webinar Time`
-  - `body.contactEmail` → `Contact Email`
-  - `body.whatsappLink` → `WhatsApp Link`
-  - `body.discordLink` → `Discord Link`
+  - `body.adminUsername` → `admin_username` (sheet column)
+  - `body.adminPassword` → `admin_password` (sheet column, only if provided)
+  - `body.registrationFee` → `reg_fee` (sheet column)
+  - `body.registrationDeadline` → `reg_deadline` (sheet column)
+  - `body.webinarTime` → `webinar_time` (sheet column)
+  - `body.contactEmail` → `contact_email` (sheet column)
+  - `body.whatsappLink` → `whatsapp_invite` (sheet column)
+  - `body.discordLink` → `discord_link` (sheet column)
 
 **Important Notes:**
 - Password should only be updated if provided (optional field)
@@ -270,7 +272,7 @@ Host: n8n-base-url
 - Operation: `Get row(s) in sheet`
 - Document ID: `1UinuM281y4r8gxCrCr2dvF_-7CBC2l_FVSomj0Ia-c8`
 - Sheet Name: `Admin`
-- Get fields: `Registration Deadline`, `Webinar Time`, `Registration Fee`
+- Get fields: `reg_deadline`, `webinar_time`, `reg_fee`
 
 ---
 
@@ -492,6 +494,15 @@ Invoke-RestMethod -Uri "http://localhost:5678/webhook/config/google-sheets" -Met
 5. **Google Sheets Credentials:**
    - All Google Sheets operations use: `Google Sheets account` (OAuth2)
    - Document ID: `1UinuM281y4r8gxCrCr2dvF_-7CBC2l_FVSomj0Ia-c8`
+
+6. **⚠️ CRITICAL: Column Names in Google Sheets:**
+   - **ALWAYS use lowercase backend field names** (e.g., `admin_username`, `reg_fee`, `payment_status`)
+   - **NEVER use display labels** (e.g., ~~Admin Username~~, ~~Registration Fee~~, ~~Payment Status~~)
+   - Display labels are only for UI/frontend display
+   - Backend field names are the actual column headers in Google Sheets
+   - Example from Admin Sheet:
+     - ✅ Correct: `admin_username`, `admin_password`, `reg_fee`, `reg_deadline`, `webinar_time`, `contact_email`, `whatsapp_invite`, `discord_link`
+     - ❌ Wrong: `Admin Username`, `Admin Password`, `Registration Fee`, `Registration Deadline`, `Webinar Time`, `Contact Email`, `WhatsApp Link`, `Discord Link`
 
 ---
 
