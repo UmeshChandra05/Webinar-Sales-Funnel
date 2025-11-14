@@ -59,10 +59,10 @@ export const fetchContactsData = async () => {
     };
     
     parsedData.forEach(row => {
-      const status = (row.Status || '').toLowerCase().trim();
+      const status = (row.query_status || '').toLowerCase().trim();
       if (status === 'open') {
         ticketStats.open++;
-      } else if (status === 'closed' || status === 'resolved') {
+      } else if (status === 'closed' || status === 'answered' || status === 'resolved') {
         ticketStats.closed++;
       }
     });

@@ -55,16 +55,16 @@ exports.getSettings = async (req, res) => {
     console.log('✅ n8n response received');
     
     if (response.data) {
-      // n8n should return data in format:
+      // n8n should return data in format matching Google Sheets Admin tab:
       // {
       //   "Admin Username": "admin",
       //   "Admin Password": "admin",
       //   "Registration Fee": 4999,
-      //   "Registration Deadline": "7-11-2025",
-      //   "Webinar Time": "8-11-2025",
+      //   "Registration Deadline": "7-11-2025",  // DD-MM-YYYY format
+      //   "Webinar Time": "8-11-2025",  // DD-MM-YYYY format
       //   "Contact Email": "webinar@pystack.com",
-      //   "Whatsapp Invite Link": "www.google.com",
-      //   "Discord Community Link": "www.discord.com"
+      //   "Whatsapp Invite Link": "http://www.google.com/",
+      //   "Discord Community Link": "http://www.discord.com/"
       // }
       
       const rawData = response.data;
