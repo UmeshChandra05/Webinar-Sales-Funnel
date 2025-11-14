@@ -9,17 +9,7 @@ const fetchSheetConfig = async () => {
   }
   
   try {
-    const adminToken = localStorage.getItem('adminToken');
-    
-    if (!adminToken) {
-      throw new Error('Admin authentication required to access Google Sheets data');
-    }
-    
-    const response = await fetch('/api/config/google-sheets', {
-      headers: {
-        'Authorization': `Bearer ${adminToken}`
-      }
-    });
+    const response = await fetch('/api/config/google-sheets');
     const result = await response.json();
     
     if (result.success) {
@@ -31,7 +21,7 @@ const fetchSheetConfig = async () => {
     }
   } catch (error) {
     console.error('❌ Failed to fetch Google Sheets config:', error);
-    throw new Error('Unable to load Google Sheets configuration. Please ensure you are logged in as admin.');
+    throw new Error('Unable to load Google Sheets configuration. Please check your backend connection.');
   }
 };
 
@@ -53,6 +43,7 @@ export const fetchContactsData = async () => {
     
     // Process ticket statistics
     const ticketStats = {
+      aiProcessed: 0,
       open: 0,
       closed: 0,
       total: parsedData.length
@@ -60,10 +51,20 @@ export const fetchContactsData = async () => {
     
     parsedData.forEach(row => {
       const status = (row.query_status || '').toLowerCase().trim();
-      if (status === 'open') {
-        ticketStats.open++;
-      } else if (status === 'closed' || status === 'answered' || status === 'resolved') {
+      
+      // Count AI Processed (status === 'ai processed')
+      if (status === 'ai processed') {
+        ticketStats.aiProcessed++;
+      }
+      
+      // Count Closed (status === 'closed')
+      if (status === 'closed') {
         ticketStats.closed++;
+      }
+      
+      // Count Open (status !== 'closed')
+      if (status !== 'closed' && status !== '') {
+        ticketStats.open++;
       }
     });
     
@@ -79,7 +80,7 @@ export const fetchContactsData = async () => {
     return {
       success: false,
       error: error.message,
-      data: { open: 0, closed: 0, total: 0 }
+      data: { aiProcessed: 0, open: 0, closed: 0, total: 0 }
     };
   }
 };

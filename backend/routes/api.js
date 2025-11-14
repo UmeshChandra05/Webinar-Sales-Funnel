@@ -122,7 +122,7 @@ router.put(
 ) // Protected - update settings
 
 // Configuration routes
-router.get("/config/google-sheets", adminController.verifyAdminToken, configController.getGoogleSheetsConfig) // Protected - Get Google Sheets URLs and config (admin only)
+router.get("/config/google-sheets", configController.getGoogleSheetsConfig) // Public - Get Google Sheets URLs (read-only, safe to expose)
 router.get("/config/constants", configController.getAppConstants) // Public - Get app-wide constants
 
 // AI Chat route
@@ -131,5 +131,12 @@ router.post("/ai-chat", [
   body("sessionId").optional().isString().trim(),
   body("userId").optional().isString().trim(),
 ], handleValidationErrors, leadController.handleAIChat)
+
+// Send response route (for pending approval queries)
+router.post("/send-response", [
+  body("ticket_id").trim().isLength({ min: 1 }).withMessage("Ticket ID is required"),
+  body("query_reply").trim().isLength({ min: 1 }).withMessage("Query reply is required"),
+  body("email").isEmail().withMessage("Valid email is required"),
+], handleValidationErrors, leadController.sendQueryResponse)
 
 module.exports = router

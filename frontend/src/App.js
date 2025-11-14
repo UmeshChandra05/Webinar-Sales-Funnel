@@ -15,6 +15,7 @@ import ContactPage from "./pages/ContactPage"
 import AdminLoginPage from "./pages/AdminLoginPage"
 import AdminDashboard from "./pages/AdminDashboard"
 import AdminSettingsPage from "./pages/AdminSettingsPage"
+import QueryDetailsPage from "./pages/QueryDetailsPage"
 import NotFoundPage from "./pages/NotFoundPage"
 
 function App() {
@@ -83,6 +84,14 @@ function App() {
               element={
                 <ProtectedRoute requireAdmin={true}>
                   <AdminSettingsPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/query-details" 
+              element={
+                <ProtectedRoute requireAdmin={true}>
+                  <QueryDetailsPage />
                 </ProtectedRoute>
               } 
             />

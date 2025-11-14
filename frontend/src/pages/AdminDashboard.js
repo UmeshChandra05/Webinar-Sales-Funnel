@@ -132,6 +132,15 @@ const AdminDashboard = () => {
     total: 0
   });
 
+  // Pending approval modal state
+  const [showPendingApprovalModal, setShowPendingApprovalModal] = useState(false);
+  const [pendingQueries, setPendingQueries] = useState([]);
+  const [currentQueryIndex, setCurrentQueryIndex] = useState(0);
+  const [editableReply, setEditableReply] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [isReplyEdited, setIsReplyEdited] = useState(false);
+  const [originalReply, setOriginalReply] = useState('');
+
   const dateRangeOptions = [
     { value: 'today', label: 'Today' },
     { value: 'yesterday', label: 'Yesterday' },
@@ -175,6 +184,132 @@ const AdminDashboard = () => {
       }
     } catch (err) {
       console.error('Error loading ticket data:', err);
+    }
+  };
+
+  // Function to load pending approval queries
+  const loadPendingQueries = async () => {
+    try {
+      const result = await fetchContactsData();
+      if (result.success && result.rawData) {
+        const pending = result.rawData.filter(
+          query => query.query_status?.toLowerCase() === 'pending approval'
+        );
+        setPendingQueries(pending);
+        if (pending.length > 0) {
+          setCurrentQueryIndex(0);
+          // Remove "AI Recommendation: ", "AI Recomendation: ", or "AI Response: " prefix from reply
+          const cleanedReply = (pending[0].query_reply || '').replace(/^AI\s+(Reco(m{1,2})endation|Response):\s*/i, '');
+          setEditableReply(cleanedReply);
+          setOriginalReply(cleanedReply);
+          setIsReplyEdited(false);
+        }
+      }
+    } catch (err) {
+      console.error('Error loading pending queries:', err);
+    }
+  };
+
+  // Open pending approval modal
+  const openPendingApprovalModal = () => {
+    loadPendingQueries();
+    setShowPendingApprovalModal(true);
+  };
+
+  // Close pending approval modal
+  const closePendingApprovalModal = () => {
+    setShowPendingApprovalModal(false);
+    setCurrentQueryIndex(0);
+    setEditableReply('');
+    setIsSending(false);
+    setIsReplyEdited(false);
+    setOriginalReply('');
+  };
+
+  // Navigate to previous query
+  const goToPreviousQuery = () => {
+    if (currentQueryIndex > 0) {
+      const newIndex = currentQueryIndex - 1;
+      setCurrentQueryIndex(newIndex);
+      // Remove "AI Recommendation: ", "AI Recomendation: ", or "AI Response: " prefix from reply
+      const cleanedReply = (pendingQueries[newIndex].query_reply || '').replace(/^AI\s+(Reco(m{1,2})endation|Response):\s*/i, '');
+      setEditableReply(cleanedReply);
+      setOriginalReply(cleanedReply);
+      setIsReplyEdited(false);
+    }
+  };
+
+  // Navigate to next query
+  const goToNextQuery = () => {
+    if (currentQueryIndex < pendingQueries.length - 1) {
+      const newIndex = currentQueryIndex + 1;
+      setCurrentQueryIndex(newIndex);
+      // Remove "AI Recommendation: ", "AI Recomendation: ", or "AI Response: " prefix from reply
+      const cleanedReply = (pendingQueries[newIndex].query_reply || '').replace(/^AI\s+(Reco(m{1,2})endation|Response):\s*/i, '');
+      setEditableReply(cleanedReply);
+      setOriginalReply(cleanedReply);
+      setIsReplyEdited(false);
+    }
+  };
+
+  // Send response to webhook
+  const sendResponse = async () => {
+    if (!editableReply.trim()) {
+      alert('Please enter a reply before sending.');
+      return;
+    }
+
+    setIsSending(true);
+    try {
+      const currentQuery = pendingQueries[currentQueryIndex];
+      const payload = {
+        ticket_id: currentQuery.ticket_id,
+        name: currentQuery.name,
+        email: currentQuery.email,
+        mobile: currentQuery.mobile,
+        query: currentQuery.query,
+        query_reply: editableReply,
+        query_category: currentQuery.query_category,
+        query_status: 'Admin Processed',
+        query_resolved_by: currentQuery.query_resolved_by,
+        query_timestamp: currentQuery.query_timestamp,
+        query_resolved_timestamp: new Date().toISOString()
+      };
+
+      const response = await fetch('/api/send-response', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        // Remove current query from pending list
+        const updatedPendingQueries = pendingQueries.filter((_, index) => index !== currentQueryIndex);
+        setPendingQueries(updatedPendingQueries);
+
+        // Move to next query or close modal if no more queries
+        if (updatedPendingQueries.length > 0) {
+          const nextIndex = currentQueryIndex >= updatedPendingQueries.length ? 0 : currentQueryIndex;
+          setCurrentQueryIndex(nextIndex);
+          // Remove "AI Recommendation: ", "AI Recomendation: ", or "AI Response: " prefix from reply
+          const cleanedReply = (updatedPendingQueries[nextIndex].query_reply || '').replace(/^AI\s+(Reco(m{1,2})endation|Response):\s*/i, '');
+          setEditableReply(cleanedReply);
+          setOriginalReply(cleanedReply);
+          setIsReplyEdited(false);
+        } else {
+          alert('All pending queries have been processed!');
+          closePendingApprovalModal();
+        }
+      } else {
+        alert('Failed to send response. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error sending response:', error);
+      alert('Error sending response. Please try again.');
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -711,14 +846,51 @@ const AdminDashboard = () => {
     }));
   };
 
-  // Reset all column filters
+  // Reset all column filters and restore default view
   const resetColumnFilters = () => {
+    // Reset all column filters to 'all'
     const resetFilters = {};
     Object.keys(columnFilters).forEach(col => {
       resetFilters[col] = 'all';
     });
     setColumnFilters(resetFilters);
-    setShowAdvancedSelection(false); // Turn off advanced filters panel
+    
+    // Reset to default visible columns (first-time view)
+    setVisibleColumns({
+      name: true,
+      mobile: true,
+      email: true,
+      role: true,
+      client_status: true,
+      nurturing: true,
+      payment_status: false,
+      source: false,
+      reg_timestamp: false,
+      payable_amt: false,
+      paid_amt: false,
+      discount_percentage: false,
+      discount_amt: false,
+      couponcode_given: false,
+      couponcode_applied: false,
+      txn_id: false,
+      txn_timestamp: false,
+      currency: false
+    });
+    
+    // Reset search and filters
+    setSearchQuery('');
+    setSourceFilter('all');
+    setPaymentFilter('all');
+    
+    // Reset sorting
+    setSortConfig({ key: null, direction: 'asc' });
+    
+    // Reset pagination
+    setCurrentPage(1);
+    setItemsPerPage(25);
+    
+    // Close advanced filters panel
+    setShowAdvancedSelection(false);
   };
 
   // Download CSV function
@@ -2084,40 +2256,56 @@ const AdminDashboard = () => {
               <h2 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '0' }}>
                 Query Analytics
               </h2>
-              <button
-                onClick={async () => {
-                  try {
-                    const response = await fetch('/api/config/google-sheets');
-                    const result = await response.json();
-                    if (result.success && result.config) {
-                      // Open Google Sheets edit URL with QUERIES gid
-                      const sheetEditUrl = `https://docs.google.com/spreadsheets/d/${result.config.sheetId}/edit#gid=${result.config.gids.QUERIES}`;
-                      window.open(sheetEditUrl, '_blank');
-                    } else {
-                      console.error('Failed to fetch Google Sheets config');
-                      alert('Unable to open Google Sheets. Please check backend connection.');
-                    }
-                  } catch (error) {
-                    console.error('Error opening Google Sheets:', error);
-                    alert('Failed to open Google Sheets. Please try again.');
-                  }
-                }}
-                style={{
-                  padding: '0.5rem 1rem',
-                  backgroundColor: 'var(--primary)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '0.375rem',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  transition: 'opacity 0.2s'
-                }}
-                onMouseEnter={(e) => e.target.style.opacity = '0.8'}
-                onMouseLeave={(e) => e.target.style.opacity = '1'}
-              >
-                📋 View Tickets
-              </button>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  onClick={() => navigate('/admin/query-details')}
+                  title="Query Details"
+                  style={{
+                    padding: '0.5rem',
+                    backgroundColor: 'var(--primary)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '0.375rem',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'opacity 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '40px',
+                    height: '40px'
+                  }}
+                  onMouseEnter={(e) => e.target.style.opacity = '0.8'}
+                  onMouseLeave={(e) => e.target.style.opacity = '1'}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <g>
+                      <path d="M3 9H21M3 15H21M9 9L9 20M15 9L15 20M6.2 20H17.8C18.9201 20 19.4802 20 19.908 19.782C20.2843 19.5903 20.5903 19.2843 20.782 18.908C21 18.4802 21 17.9201 21 16.8V7.2C21 6.0799 21 5.51984 20.782 5.09202C20.5903 4.71569 20.2843 4.40973 19.908 4.21799C19.4802 4 18.9201 4 17.8 4H6.2C5.0799 4 4.51984 4 4.09202 4.21799C3.71569 4.40973 3.40973 4.71569 3.21799 5.09202C3 5.51984 3 6.07989 3 7.2V16.8C3 17.9201 3 18.4802 3.21799 18.908C3.40973 19.2843 3.71569 19.5903 4.09202 19.782C4.51984 20 5.07989 20 6.2 20Z" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </g>
+                  </svg>
+                </button>
+                <button
+                  onClick={() => {
+                    openPendingApprovalModal();
+                  }}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    backgroundColor: 'var(--primary)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '0.375rem',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'opacity 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.target.style.opacity = '0.8'}
+                  onMouseLeave={(e) => e.target.style.opacity = '1'}
+                >
+                  ⏳ Pending Approval
+                </button>
+              </div>
             </div>
             
             {/* Ticket Statistics */}
@@ -2126,21 +2314,21 @@ const AdminDashboard = () => {
                 <p style={{ fontSize: '1.75rem', fontWeight: 'bold', color: 'var(--warning)', marginBottom: '0.25rem' }}>
                   {ticketData.open}
                 </p>
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Open Tickets</p>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Open</p>
+              </div>
+              <div style={{ width: '1px', height: '3rem', backgroundColor: 'var(--border)' }}></div>
+              <div style={{ flex: '1', textAlign: 'center' }}>
+                <p style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#8b5cf6', marginBottom: '0.25rem' }}>
+                  {ticketData.aiProcessed}
+                </p>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>AI Processed</p>
               </div>
               <div style={{ width: '1px', height: '3rem', backgroundColor: 'var(--border)' }}></div>
               <div style={{ flex: '1', textAlign: 'center' }}>
                 <p style={{ fontSize: '1.75rem', fontWeight: 'bold', color: 'var(--success)', marginBottom: '0.25rem' }}>
                   {ticketData.closed}
                 </p>
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Closed Tickets</p>
-              </div>
-              <div style={{ width: '1px', height: '3rem', backgroundColor: 'var(--border)' }}></div>
-              <div style={{ flex: '1', textAlign: 'center' }}>
-                <p style={{ fontSize: '1.75rem', fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: '0.25rem' }}>
-                  {ticketData.total}
-                </p>
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Total Queries</p>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Closed</p>
               </div>
             </div>
 
@@ -2214,6 +2402,9 @@ const AdminDashboard = () => {
               <div className="flex justify-between" style={{ fontSize: '0.875rem', marginTop: '0.5rem', color: 'var(--text-secondary)' }}>
                 <span>
                   ⚠️ Open: {ticketData.open} ({ticketData.total > 0 ? ((ticketData.open / ticketData.total) * 100).toFixed(1) : 0}%)
+                </span>
+                <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>
+                  Total Tickets: {ticketData.total}
                 </span>
                 <span>
                   ✓ Resolved: {ticketData.closed} ({ticketData.total > 0 ? ((ticketData.closed / ticketData.total) * 100).toFixed(1) : 0}%)
@@ -3802,6 +3993,549 @@ const AdminDashboard = () => {
             </div>
           )}
         </section>
+
+        {/* Pending Approval Modal */}
+        {showPendingApprovalModal && pendingQueries.length > 0 && (
+          <div 
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.6)',
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'center',
+              zIndex: 1000,
+              padding: '2rem 1rem',
+              backdropFilter: 'blur(4px)',
+              overflowY: 'auto'
+            }}
+            onClick={closePendingApprovalModal}
+          >
+            <div 
+              style={{
+                backgroundColor: 'var(--surface)',
+                borderRadius: '1rem',
+                maxWidth: '900px',
+                width: '100%',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 3px var(--primary)',
+                border: '3px solid var(--primary)',
+                marginBottom: '2rem',
+                overflow: 'hidden',
+                position: 'relative'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Navigation Arrows */}
+              {pendingQueries.length > 1 && (
+                <>
+                  <button
+                    onClick={goToPreviousQuery}
+                    disabled={currentQueryIndex === 0}
+                    style={{
+                      position: 'fixed',
+                      left: 'calc(50% - 530px)',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      width: '3.5rem',
+                      height: '3.5rem',
+                      borderRadius: '50%',
+                      backgroundColor: currentQueryIndex === 0 ? '#94a3b8' : 'var(--primary)',
+                      color: 'white',
+                      border: '3px solid white',
+                      fontSize: '2rem',
+                      fontWeight: 'bold',
+                      cursor: currentQueryIndex === 0 ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 8px 20px rgba(0, 0, 0, 0.4)',
+                      opacity: currentQueryIndex === 0 ? 0.5 : 1,
+                      zIndex: 1001
+                    }}
+                    onMouseEnter={(e) => {
+                      if (currentQueryIndex > 0) {
+                        e.currentTarget.style.transform = 'translateY(-50%) scale(1.15)';
+                        e.currentTarget.style.boxShadow = '0 12px 30px rgba(0, 0, 0, 0.5)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+                      e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.4)';
+                    }}
+                  >
+                    ‹
+                  </button>
+                  <button
+                    onClick={goToNextQuery}
+                    disabled={currentQueryIndex === pendingQueries.length - 1}
+                    style={{
+                      position: 'fixed',
+                      right: 'calc(50% - 530px)',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      width: '3.5rem',
+                      height: '3.5rem',
+                      borderRadius: '50%',
+                      backgroundColor: currentQueryIndex === pendingQueries.length - 1 ? '#94a3b8' : 'var(--primary)',
+                      color: 'white',
+                      border: '3px solid white',
+                      fontSize: '2rem',
+                      fontWeight: 'bold',
+                      cursor: currentQueryIndex === pendingQueries.length - 1 ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 8px 20px rgba(0, 0, 0, 0.4)',
+                      opacity: currentQueryIndex === pendingQueries.length - 1 ? 0.5 : 1,
+                      zIndex: 1001
+                    }}
+                    onMouseEnter={(e) => {
+                      if (currentQueryIndex < pendingQueries.length - 1) {
+                        e.currentTarget.style.transform = 'translateY(-50%) scale(1.15)';
+                        e.currentTarget.style.boxShadow = '0 12px 30px rgba(0, 0, 0, 0.5)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+                      e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.4)';
+                    }}
+                  >
+                    ›
+                  </button>
+                </>
+              )}
+
+              {/* Modal Header */}
+              <div style={{
+                padding: '1rem 1.25rem',
+                background: 'linear-gradient(135deg, var(--primary) 0%, #6366f1 100%)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <div>
+                  <h2 style={{
+                    fontSize: '1.125rem',
+                    fontWeight: '700',
+                    color: 'white',
+                    marginBottom: '0.125rem',
+                    letterSpacing: '-0.025em'
+                  }}>
+                    ⏳ Pending Approval - Query {currentQueryIndex + 1} of {pendingQueries.length}
+                  </h2>
+                  <p style={{
+                    fontSize: '0.8rem',
+                    color: 'rgba(255, 255, 255, 0.9)',
+                    fontWeight: '500'
+                  }}>
+                    Ticket ID: {pendingQueries[currentQueryIndex].ticket_id}
+                  </p>
+                </div>
+                <button
+                  onClick={closePendingApprovalModal}
+                  style={{
+                    width: '2rem',
+                    height: '2rem',
+                    borderRadius: '0.5rem',
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    color: 'white',
+                    border: 'none',
+                    fontSize: '1.25rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div style={{ padding: '1.25rem' }}>
+                {/* Customer Information */}
+                <div style={{
+                  marginBottom: '1rem',
+                  padding: '0.875rem',
+                  background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%)',
+                  borderRadius: '0.5rem',
+                  border: '1px solid var(--border)'
+                }}>
+                  <h3 style={{
+                    fontSize: '0.8rem',
+                    fontWeight: '700',
+                    color: 'var(--primary)',
+                    marginBottom: '0.625rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}>
+                    👤 Customer Information
+                  </h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.625rem', fontSize: '0.8rem' }}>
+                    <div style={{ 
+                      padding: '0.5rem',
+                      backgroundColor: 'var(--surface)',
+                      borderRadius: '0.375rem',
+                      border: '1px solid var(--border)'
+                    }}>
+                      <span style={{ color: 'var(--text-secondary)', fontWeight: '600', fontSize: '0.7rem', display: 'block', marginBottom: '0.125rem' }}>Name</span>
+                      <div style={{ color: 'var(--text-primary)', fontWeight: '600', fontSize: '0.8rem' }}>{pendingQueries[currentQueryIndex].name || '-'}</div>
+                    </div>
+                    <div style={{ 
+                      padding: '0.5rem',
+                      backgroundColor: 'var(--surface)',
+                      borderRadius: '0.375rem',
+                      border: '1px solid var(--border)'
+                    }}>
+                      <span style={{ color: 'var(--text-secondary)', fontWeight: '600', fontSize: '0.7rem', display: 'block', marginBottom: '0.125rem' }}>Email</span>
+                      <div style={{ color: 'var(--text-primary)', fontWeight: '600', fontSize: '0.8rem', wordBreak: 'break-all' }}>{pendingQueries[currentQueryIndex].email || '-'}</div>
+                    </div>
+                    <div style={{ 
+                      padding: '0.5rem',
+                      backgroundColor: 'var(--surface)',
+                      borderRadius: '0.375rem',
+                      border: '1px solid var(--border)'
+                    }}>
+                      <span style={{ color: 'var(--text-secondary)', fontWeight: '600', fontSize: '0.7rem', display: 'block', marginBottom: '0.125rem' }}>Mobile</span>
+                      <div style={{ color: 'var(--text-primary)', fontWeight: '600', fontSize: '0.8rem' }}>{pendingQueries[currentQueryIndex].mobile || '-'}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status, Category, Resolved By */}
+                <div style={{
+                  marginBottom: '1rem',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '0.75rem',
+                  backgroundColor: 'var(--card-header-subtle)',
+                  borderRadius: '0.5rem',
+                  border: '1px solid var(--border)'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', flex: '1' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: '600' }}>📁 Category:</span>
+                    {pendingQueries[currentQueryIndex].query_category ? (
+                      <span style={{
+                        padding: '0.25rem 0.625rem',
+                        borderRadius: '0.375rem',
+                        fontSize: '0.75rem',
+                        fontWeight: '600',
+                        backgroundColor: 'var(--info-bg)',
+                        color: 'var(--info)',
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+                      }}>
+                        {pendingQueries[currentQueryIndex].query_category}
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>-</span>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', flex: '1', justifyContent: 'center' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: '600' }}>🔔 Status:</span>
+                    <span style={{
+                      padding: '0.25rem 0.625rem',
+                      borderRadius: '0.375rem',
+                      fontSize: '0.75rem',
+                      fontWeight: '600',
+                      backgroundColor: '#fed7aa',
+                      color: '#ea580c',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+                    }}>
+                      Pending Approval
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', flex: '1', justifyContent: 'flex-end' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: '600' }}>✓ Resolved By:</span>
+                    {pendingQueries[currentQueryIndex].query_resolved_by ? (
+                      <span style={{
+                        padding: '0.25rem 0.625rem',
+                        borderRadius: '0.375rem',
+                        fontSize: '0.75rem',
+                        fontWeight: '600',
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                        backgroundColor: pendingQueries[currentQueryIndex].query_resolved_by?.toLowerCase() === 'ai' ? '#ede9fe' : '#f0fdf4',
+                        color: pendingQueries[currentQueryIndex].query_resolved_by?.toLowerCase() === 'ai' ? '#7c3aed' : '#16a34a'
+                      }}>
+                        {pendingQueries[currentQueryIndex].query_resolved_by}
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>-</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Query Section */}
+                <div style={{ marginBottom: '1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>💬 Query</span>
+                    {pendingQueries[currentQueryIndex].query_timestamp && (
+                      <span style={{
+                        fontSize: '0.7rem',
+                        color: 'var(--text-secondary)',
+                        fontWeight: '600',
+                        padding: '0.125rem 0.5rem',
+                        backgroundColor: 'var(--card-header-subtle)',
+                        borderRadius: '0.25rem'
+                      }}>
+                        📅 {new Date(pendingQueries[currentQueryIndex].query_timestamp).toLocaleString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{
+                    padding: '0.75rem',
+                    backgroundColor: 'var(--surface)',
+                    borderRadius: '0.5rem',
+                    border: '1px solid var(--border)',
+                    fontSize: '0.85rem',
+                    color: 'var(--text-primary)',
+                    lineHeight: '1.5',
+                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                    maxHeight: '120px',
+                    overflowY: 'auto'
+                  }}>
+                    {pendingQueries[currentQueryIndex].query || '-'}
+                  </div>
+                </div>
+
+                {/* Editable Query Reply Section */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '0.8rem', color: '#ea580c', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>✏️ Edit Reply</span>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                      {pendingQueries[currentQueryIndex].query_reply?.match(/^AI\s+(Reco(m{1,2})endation|Response):/i) && (
+                        <>
+                          <span style={{
+                            fontSize: '0.7rem',
+                            color: '#b45309',
+                            fontWeight: '600',
+                            padding: '0.25rem 0.5rem',
+                            backgroundColor: '#fef3c7',
+                            borderRadius: '0.25rem',
+                            border: '1px solid #f59e0b',
+                            whiteSpace: 'nowrap'
+                          }}>
+                            ⚠️ AI Response - Customer Unsatisfied
+                          </span>
+                          <span style={{
+                            fontSize: '0.7rem',
+                            color: isReplyEdited ? '#059669' : '#dc2626',
+                            fontWeight: '600',
+                            padding: '0.25rem 0.5rem',
+                            backgroundColor: isReplyEdited ? '#d1fae5' : '#fee2e2',
+                            borderRadius: '0.25rem',
+                            border: `1px solid ${isReplyEdited ? '#10b981' : '#ef4444'}`,
+                            whiteSpace: 'nowrap'
+                          }}>
+                            {isReplyEdited ? '✓ Edited' : '⚠ Must Edit'}
+                          </span>
+                        </>
+                      )}
+                      {!pendingQueries[currentQueryIndex].query_reply?.match(/^AI\s+(Reco(m{1,2})endation|Response):/i) && isReplyEdited && (
+                        <span style={{
+                          fontSize: '0.7rem',
+                          color: '#059669',
+                          fontWeight: '600',
+                          padding: '0.25rem 0.5rem',
+                          backgroundColor: '#d1fae5',
+                          borderRadius: '0.25rem',
+                          border: '1px solid #10b981',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          ✓ Edited
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <textarea
+                    value={editableReply}
+                    onChange={(e) => {
+                      setEditableReply(e.target.value);
+                      setIsReplyEdited(e.target.value !== originalReply);
+                    }}
+                    placeholder="Enter your reply here..."
+                    style={{
+                      width: '100%',
+                      minHeight: '120px',
+                      padding: '0.75rem',
+                      backgroundColor: 'var(--surface)',
+                      borderRadius: '0.5rem',
+                      border: '2px solid #ea580c',
+                      fontSize: '0.85rem',
+                      color: 'var(--text-primary)',
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                      resize: 'vertical',
+                      outline: 'none',
+                      fontFamily: 'inherit'
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Modal Footer with Send Button */}
+              <div style={{
+                padding: '0.875rem 1.25rem',
+                borderTop: '1px solid var(--border)',
+                display: 'flex',
+                justifyContent: 'flex-end',
+                backgroundColor: 'var(--card-header)',
+                gap: '0.75rem'
+              }}>
+                <button
+                  onClick={closePendingApprovalModal}
+                  style={{
+                    padding: '0.5rem 1.5rem',
+                    backgroundColor: 'var(--border)',
+                    color: 'var(--text-primary)',
+                    border: 'none',
+                    borderRadius: '0.375rem',
+                    fontSize: '0.8rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'var(--text-secondary)';
+                    e.currentTarget.style.color = 'white';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'var(--border)';
+                    e.currentTarget.style.color = 'var(--text-primary)';
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={sendResponse}
+                  disabled={isSending || !editableReply.trim() || (pendingQueries[currentQueryIndex].query_reply?.match(/^AI\s+(Reco(m{1,2})endation|Response):/i) && !isReplyEdited)}
+                  style={{
+                    padding: '0.5rem 2rem',
+                    backgroundColor: (isSending || !editableReply.trim() || (pendingQueries[currentQueryIndex].query_reply?.match(/^AI\s+(Reco(m{1,2})endation|Response):/i) && !isReplyEdited)) ? 'var(--border)' : '#ea580c',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '0.375rem',
+                    fontSize: '0.8rem',
+                    fontWeight: '600',
+                    cursor: (isSending || !editableReply.trim() || (pendingQueries[currentQueryIndex].query_reply?.match(/^AI\s+(Reco(m{1,2})endation|Response):/i) && !isReplyEdited)) ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    opacity: (isSending || !editableReply.trim() || (pendingQueries[currentQueryIndex].query_reply?.match(/^AI\s+(Reco(m{1,2})endation|Response):/i) && !isReplyEdited)) ? 0.5 : 1
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isSending && editableReply.trim() && !(pendingQueries[currentQueryIndex].query_reply?.match(/^AI\s+(Reco(m{1,2})endation|Response):/i) && !isReplyEdited)) {
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(234, 88, 12, 0.4)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                >
+                  {isSending ? (
+                    <>
+                      <span style={{ 
+                        width: '1rem', 
+                        height: '1rem', 
+                        border: '2px solid white',
+                        borderTopColor: 'transparent',
+                        borderRadius: '50%',
+                        animation: 'spin 0.6s linear infinite'
+                      }}></span>
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <svg style={{ width: '1rem', height: '1rem', transform: 'rotate(90deg)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                      </svg>
+                      Send Response
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Pending Modal Empty State */}
+        {showPendingApprovalModal && pendingQueries.length === 0 && (
+          <div 
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.6)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+              backdropFilter: 'blur(4px)'
+            }}
+            onClick={closePendingApprovalModal}
+          >
+            <div 
+              style={{
+                backgroundColor: 'var(--surface)',
+                borderRadius: '1rem',
+                padding: '2rem',
+                maxWidth: '400px',
+                textAlign: 'center',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✅</div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
+                All Caught Up!
+              </h3>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+                There are no pending approval queries at this time.
+              </p>
+              <button
+                onClick={closePendingApprovalModal}
+                style={{
+                  padding: '0.5rem 2rem',
+                  backgroundColor: 'var(--primary)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '0.375rem',
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  cursor: 'pointer'
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
     </div>
   );
 };
