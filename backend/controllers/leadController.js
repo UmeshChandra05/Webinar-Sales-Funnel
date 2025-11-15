@@ -36,7 +36,6 @@ const leadController = {
             success: true,
             message: response.data?.message || "Thank you for your message. We will get back to you soon!",
             data: {
-              ticket_id: response.data?.ticket_id || `ticket_${Date.now()}`,
               query_timestamp: contactData.query_timestamp,
             },
           })
@@ -105,15 +104,9 @@ const leadController = {
           // Extract the AI response from n8n
           let aiResponse = null;
           
-          // Try different possible response formats from n8n
+          // n8n returns { response: "string" }
           if (response.data?.response) {
             aiResponse = response.data.response;
-          } else if (response.data?.message) {
-            aiResponse = response.data.message;
-          } else if (response.data?.ai_response) {
-            aiResponse = response.data.ai_response;
-          } else if (response.data?.reply) {
-            aiResponse = response.data.reply;
           } else if (typeof response.data === 'string') {
             aiResponse = response.data;
           } else {
@@ -229,10 +222,10 @@ const leadController = {
           
           console.log("✅ Query response sent to n8n successfully")
           
-          // Return response from n8n if available
+          // Return response from n8n if available (n8n returns { success: true })
           return res.status(200).json({
-            success: true,
-            message: response.data?.message || "Response sent successfully!",
+            success: response.data?.success !== false,
+            message: "Response sent successfully!",
             data: {
               ticket_id: responseData.ticket_id,
               query_resolved_timestamp: responseData.query_resolved_timestamp,

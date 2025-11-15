@@ -54,7 +54,7 @@ const AboutPage = () => {
             <div>
               <h3 className="text-xl font-semibold mb-4 text-purple-400">Practical Learning</h3>
               <p className="text-gray-400">
-                Theory is important, but practice makes perfect. Our courses focus on building real projects that you
+                Theory is important, but practice makes perfect. Our webinars focus on building real projects that you
                 can add to your portfolio and use in your career.
               </p>
             </div>
@@ -163,7 +163,7 @@ const AboutPage = () => {
               <div>
                 <h3 className="font-semibold mb-2">Accessibility</h3>
                 <p className="text-gray-400">
-                  Education should be accessible to everyone. We offer free resources and affordable courses to remove
+                  Education should be accessible to everyone. We offer free resources and affordable webinars to remove
                   barriers to learning.
                 </p>
               </div>

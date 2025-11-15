@@ -24,20 +24,6 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
         return;
       }
 
-      // ============================================
-      // ⚠️ REMOVE IN PRODUCTION - START
-      // Development bypass for admin verification
-      // ============================================
-      if (adminToken.startsWith('dev-token-')) {
-        console.log('✅ Development admin token detected, bypassing verification');
-        setAdminVerified(true);
-        setVerifying(false);
-        return;
-      }
-      // ============================================
-      // ⚠️ REMOVE IN PRODUCTION - END
-      // ============================================
-
       try {
         await apiClient.getAdminDashboard(adminToken);
         setAdminVerified(true);

@@ -13,9 +13,6 @@ if (!JWT_SECRET) {
   console.warn('⚠️  WARNING: Using fallback JWT secret - NOT SECURE for production');
 }
 
-// N8n webhook URL for admin authentication
-const ADMIN_AUTH_WEBHOOK_URL =  process.env.API_BASE_URL + '/admin-auth';
-
 /**
  * Validate admin credentials with N8n webhook
  */
@@ -31,15 +28,15 @@ const validateAdminCredentials = async (username, password) => {
 
     console.log('🔐 Validating admin credentials with N8n...');
     
-    const response = await axiosInstance.post(ADMIN_AUTH_WEBHOOK_URL, payload);
+    const response = await axiosInstance.post(process.env.API_BASE_URL + '/admin-auth', payload);
     
     console.log('✅ N8n credential validation response received');
     
-    // Check if N8n response indicates valid credentials
+    // n8n returns: { valid: boolean, message: string }
     if (response.data && response.data.valid === true) {
       return {
         valid: true,
-        userInfo: response.data.userInfo || { username: username, role: 'admin' }
+        userInfo: { username: username, role: 'admin' }
       };
     } else {
       return {

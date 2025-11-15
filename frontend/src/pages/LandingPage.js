@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
 import { logPaymentStatus } from "../utils/paymentUtils"
+import { getSetting } from "../services/constantsService"
 
 const LandingPage = () => {
   const navigate = useNavigate()
@@ -20,28 +21,75 @@ const LandingPage = () => {
     minutes: 0,
     seconds: 0,
   })
+  const [timerError, setTimerError] = useState(null)
 
   useEffect(() => {
-    // Set webinar date to 7 days from now
-    const webinarDate = new Date()
-    webinarDate.setDate(webinarDate.getDate() + 7)
-    webinarDate.setHours(19, 0, 0, 0) // 7 PM
+    let timer
+    
+    const initTimer = () => {
+      try {
+        // Get webinar date and time from cached settings (already preloaded)
+        const webinarDateStr = getSetting('webinarDate')
+        const webinarTimeStr = getSetting('webinarTime')
+        
+        if (!webinarDateStr || !webinarTimeStr) {
+          throw new Error('Webinar date or time not configured')
+        }
 
-    const timer = setInterval(() => {
-      const now = new Date().getTime()
-      const distance = webinarDate.getTime() - now
+        // Parse the date and time strings into a Date object
+        const webinarDate = new Date(webinarDateStr)
+        
+        // Parse time - supports both 24-hour format (HH:MM) and 12-hour format (HH:MM AM/PM)
+        const time12Match = webinarTimeStr.match(/(\d+):(\d+)\s*(AM|PM)/i)
+        const time24Match = webinarTimeStr.match(/^(\d+):(\d+)$/)
+        
+        if (time12Match) {
+          // 12-hour format with AM/PM
+          let hours = parseInt(time12Match[1])
+          const minutes = parseInt(time12Match[2])
+          const period = time12Match[3].toUpperCase()
+          
+          // Convert to 24-hour format
+          if (period === 'PM' && hours !== 12) hours += 12
+          if (period === 'AM' && hours === 12) hours = 0
+          
+          webinarDate.setHours(hours, minutes, 0, 0)
+        } else if (time24Match) {
+          // 24-hour format
+          const hours = parseInt(time24Match[1])
+          const minutes = parseInt(time24Match[2])
+          webinarDate.setHours(hours, minutes, 0, 0)
+        } else {
+          throw new Error('Invalid time format')
+        }
 
-      if (distance > 0) {
-        setTimeLeft({
-          days: Math.floor(distance / (1000 * 60 * 60 * 24)),
-          hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-          minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
-          seconds: Math.floor((distance % (1000 * 60)) / 1000),
-        })
+        timer = setInterval(() => {
+          const now = new Date().getTime()
+          const distance = webinarDate.getTime() - now
+
+          if (distance > 0) {
+            setTimeLeft({
+              days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+              hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+              minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+              seconds: Math.floor((distance % (1000 * 60)) / 1000),
+            })
+          } else {
+            setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+            clearInterval(timer)
+          }
+        }, 1000)
+      } catch (error) {
+        console.error('❌ Timer initialization error:', error)
+        setTimerError('Unable to load webinar schedule')
       }
-    }, 1000)
+    }
 
-    return () => clearInterval(timer)
+    initTimer()
+
+    return () => {
+      if (timer) clearInterval(timer)
+    }
   }, [])
 
   const handleRegisterClick = () => {
@@ -140,27 +188,33 @@ const LandingPage = () => {
 
           {/* Countdown Timer */}
           <div className="flex justify-center mb-8">
-            <div className="card bg-gray-900/50 backdrop-blur-sm border-purple-500/20">
-              <p className="text-sm text-gray-400 mb-4">Webinar starts in:</p>
-              <div className="flex gap-4 text-center">
-                <div className="flex flex-col">
-                  <span className="text-3xl font-bold text-purple-400">{timeLeft.days}</span>
-                  <span className="text-sm text-gray-400">Days</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-3xl font-bold text-purple-400">{timeLeft.hours}</span>
-                  <span className="text-sm text-gray-400">Hours</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-3xl font-bold text-purple-400">{timeLeft.minutes}</span>
-                  <span className="text-sm text-gray-400">Minutes</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-3xl font-bold text-purple-400">{timeLeft.seconds}</span>
-                  <span className="text-sm text-gray-400">Seconds</span>
+            {timerError ? (
+              <div className="card bg-gray-900/50 backdrop-blur-sm border-red-500/20">
+                <p className="text-sm text-red-400">{timerError}</p>
+              </div>
+            ) : (
+              <div className="card bg-gray-900/50 backdrop-blur-sm border-purple-500/20">
+                <p className="text-sm text-gray-400 mb-4">Webinar starts in:</p>
+                <div className="flex gap-4 text-center">
+                  <div className="flex flex-col">
+                    <span className="text-3xl font-bold text-purple-400">{timeLeft.days}</span>
+                    <span className="text-sm text-gray-400">Days</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-3xl font-bold text-purple-400">{timeLeft.hours}</span>
+                    <span className="text-sm text-gray-400">Hours</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-3xl font-bold text-purple-400">{timeLeft.minutes}</span>
+                    <span className="text-sm text-gray-400">Minutes</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-3xl font-bold text-purple-400">{timeLeft.seconds}</span>
+                    <span className="text-sm text-gray-400">Seconds</span>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
           <button 

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
 import Toast from "../components/Toast"
 import { getErrorMessage, logError } from "../utils/errorHandler"
-import { COURSE_PRICE, CURRENCY_SYMBOL, NAVIGATION_DELAY, COURSE_FEATURES } from "../services/constantsService"
+import { REGISTRATION_FEE, CURRENCY_SYMBOL, NAVIGATION_DELAY, WEBINAR_FEATURES } from "../services/constantsService"
 import { logPaymentStatus } from "../utils/paymentUtils"
 
 const PaymentPage = () => {
@@ -146,9 +146,9 @@ const PaymentPage = () => {
 
   const calculateFinalPrice = () => {
     if (couponApplied && couponDiscount > 0) {
-      return COURSE_PRICE() - (COURSE_PRICE() * couponDiscount / 100)
+      return REGISTRATION_FEE() - (REGISTRATION_FEE() * couponDiscount / 100)
     }
-    return COURSE_PRICE()
+    return REGISTRATION_FEE()
   }
 
   const handlePaymentSimulation = async (payment_status) => {
@@ -237,7 +237,7 @@ const PaymentPage = () => {
           <h1 className="text-3xl md:text-4xl font-bold mb-4">
             Complete the Payment to <span className="gradient-text">Confirm Your Seat</span>
           </h1>
-          <p className="text-xl text-gray-400">Secure your spot in the Python Full Stack course</p>
+          <p className="text-xl text-gray-400">Secure your spot in the Python Full Stack webinar</p>
         </div>
 
         <div className="card">
@@ -250,14 +250,14 @@ const PaymentPage = () => {
                     textDecorationColor: '#ef4444',
                     textDecorationThickness: '2px'
                   }}>
-                    {CURRENCY_SYMBOL}{COURSE_PRICE().toLocaleString()}
+                    {CURRENCY_SYMBOL}{REGISTRATION_FEE().toLocaleString()}
                   </span>
                 </div>
                 <div className="text-4xl font-bold gradient-text mb-2">
                   {CURRENCY_SYMBOL}{calculateFinalPrice().toLocaleString()}
                 </div>
                 <p className="text-green-400 text-sm mb-1">
-                  🎉 You save {CURRENCY_SYMBOL}{(COURSE_PRICE() - calculateFinalPrice()).toLocaleString()} ({couponDiscount}% off)
+                  🎉 You save {CURRENCY_SYMBOL}{(REGISTRATION_FEE() - calculateFinalPrice()).toLocaleString()} ({couponDiscount}% off)
                 </p>
               </>
             ) : (
@@ -269,9 +269,9 @@ const PaymentPage = () => {
           </div>
 
           <div className="mb-6">
-            <h3 className="font-semibold mb-4">Your course includes:</h3>
+            <h3 className="font-semibold mb-4">Your webinar includes:</h3>
             <ul className="space-y-2 text-gray-300">
-              {COURSE_FEATURES().map((feature, index) => (
+              {WEBINAR_FEATURES().map((feature, index) => (
                 <li key={index} className="flex items-center">
                   <span className="text-green-400 mr-2">✓</span>
                   {feature}

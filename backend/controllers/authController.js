@@ -13,22 +13,6 @@ if (!JWT_SECRET) {
   console.warn('⚠️  WARNING: Using fallback JWT secret - NOT SECURE for production');
 }
 
-// ============================================================================
-// 🚨 TEST CREDENTIALS - REMOVE IN PRODUCTION 🚨
-// ============================================================================
-// These credentials allow testing login without n8n validation
-// Email: test@example.com
-// Password: test123
-const TEST_USER = {
-  email: 'test@example.com',
-  password: 'test123', // Plain password for testing
-  name: 'Test User',
-  mobile: '1234567890',
-  role: 'Student',
-  id: 'test_user_001'
-};
-// ============================================================================
-
 const authController = {
   // Register new user
   registerUser: async (req, res) => {
@@ -36,21 +20,6 @@ const authController = {
       const { name, email, password, mobile, role, rememberMe, source } = req.body;
 
       console.log("👤 User registration:", { email, name, role, source: source || 'Direct' });
-
-      // ============================================================================
-      // 🚨 DEVELOPMENT ONLY - Test User Protection
-      // Prevents registration with test email (disabled in production)
-      // ============================================================================
-      const isDevelopment = process.env.NODE_ENV !== 'production';
-      if (isDevelopment && email.toLowerCase().trim() === TEST_USER.email) {
-        console.log("🧪 TEST EMAIL: Registration blocked - test email already exists (development only)");
-        return res.status(409).json({
-          success: false,
-          message: "An account with this email already exists",
-          errorCode: "EMAIL_ALREADY_EXISTS"
-        });
-      }
-      // ============================================================================
 
       // Hash password
       const saltRounds = 10;
@@ -82,6 +51,7 @@ const authController = {
           console.log("✅ User registration sent to n8n capture-lead successfully");
           console.log("📦 n8n Registration Response:", JSON.stringify(response.data, null, 2));
 
+          // n8n returns: { success: boolean, message: string }
           // Check if n8n explicitly indicates failure (duplicate email, etc.)
           if (response.data?.success === false) {
             console.log("⚠️ n8n rejected registration:", response.data.message);
@@ -100,7 +70,7 @@ const authController = {
             { 
               email: email,
               name: name,
-              userId: response.data?.userId || `user_${Date.now()}`,
+              userId: `user_${Date.now()}`,
               role: role,
               rememberMe: rememberMe 
             },
@@ -122,7 +92,7 @@ const authController = {
             message: "Registration successful",
             token: token,
             user: {
-              id: response.data?.userId || `user_${Date.now()}`,
+              id: `user_${Date.now()}`,
               name: name,
               email: email,
               mobile: mobile,
@@ -259,54 +229,6 @@ const authController = {
 
       console.log("🔐 User login attempt:", { email });
 
-      // ============================================================================
-      // 🚨 DEVELOPMENT ONLY - Test Credentials
-      // This bypass is DISABLED in production via NODE_ENV check
-      // ============================================================================
-      const isDevelopment = process.env.NODE_ENV !== 'production';
-      if (isDevelopment && email.toLowerCase().trim() === TEST_USER.email && password === TEST_USER.password) {
-        console.log("🧪 TEST LOGIN: Using test credentials (development only)");
-        console.log("⚠️  This bypass is disabled in production mode");
-        
-        // Generate JWT token for test user
-        const tokenExpiry = rememberMe ? '30d' : '7d';
-        const token = jwt.sign(
-          { 
-            email: TEST_USER.email,
-            name: TEST_USER.name,
-            userId: TEST_USER.id,
-            role: TEST_USER.role,
-            rememberMe: rememberMe,
-            isTestUser: true // Flag to identify test user
-          },
-          JWT_SECRET,
-          { expiresIn: tokenExpiry }
-        );
-
-        // Set secure HTTP-only cookie
-        const cookieOptions = {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict',
-          maxAge: rememberMe ? 30 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000
-        };
-        res.cookie('authToken', token, cookieOptions);
-
-        return res.status(200).json({
-          success: true,
-          message: "Login successful (TEST MODE)",
-          token: token,
-          user: {
-            id: TEST_USER.id,
-            name: TEST_USER.name,
-            email: TEST_USER.email,
-            mobile: TEST_USER.mobile,
-            role: TEST_USER.role
-          }
-        });
-      }
-      // ============================================================================
-
       // Query user from n8n/Google Sheets
       if (API_BASE_URL && API_BASE_URL !== "API_URL") {
         try {
@@ -333,37 +255,23 @@ const authController = {
           console.log("📦 Response status:", response.status);
           console.log("📦 Response data:", JSON.stringify(response.data, null, 2));
 
-          // Check if n8n returned an error response (200 OK but with error data)
-          if (response.data?.success === false || response.data?.error) {
-            console.error("❌ n8n returned error response:", response.data.message || response.data.error);
-            // If it's a service unavailable error from n8n
-            if (response.data.message?.includes('unavailable') || response.data.message?.includes('service')) {
-              return res.status(503).json({
-                success: false,
-                message: "Authentication service temporarily unavailable. Please try again later.",
-                errorCode: "SERVICE_UNAVAILABLE"
-              });
-            }
-            // User not found from n8n
+          // Check if n8n returned an error response: { success: false, message: string }
+          if (response.data?.success === false) {
+            console.error("❌ n8n returned error response:", response.data.message);
             return res.status(404).json({
               success: false,
               message: response.data.message || "No account found with this email address"
             });
           }
 
-          // n8n should return the user data with the HASHED password
-          // Handle different response formats
+          // n8n returns: { user: { email, name, password, mobile, role, id, payment_status, couponcode_given } }
           let userData = null;
           
           if (response.data?.user) {
-            // Format 1: { user: { ...userData } }
             userData = response.data.user;
           } else if (response.data?.email) {
-            // Format 2: Direct user data { email, name, password, ... }
+            // Fallback: Direct user data
             userData = response.data;
-          } else if (Array.isArray(response.data) && response.data.length > 0) {
-            // Format 3: Array with user data [{ email, name, password, ... }]
-            userData = response.data[0];
           }
 
           if (!userData || !userData.email) {
@@ -426,13 +334,13 @@ const authController = {
             message: "Login successful",
             token: token,
             user: {
-              id: userData.id || userData.userId,
+              id: userData.id || `user_${Date.now()}`,
               name: userData.name,
               email: userData.email || email,
               mobile: userData.mobile || "NA",
               role: userData.role,
               payment_status: userData.payment_status || null,
-              couponCode: userData.CouponCode || userData.couponcode_given || null
+              couponCode: userData.couponcode_given || null
             }
           });
 
@@ -592,35 +500,33 @@ const authController = {
             },
           });
 
-          // Handle different response formats from n8n (same as login)
+          // Handle response format from n8n (same as login)
           let userData = null;
           
           if (response.data?.user) {
             userData = response.data.user;
           } else if (response.data?.email) {
             userData = response.data;
-          } else if (Array.isArray(response.data) && response.data.length > 0) {
-            userData = response.data[0];
           }
 
           if (userData && userData.email) {
             console.log("✅ Fresh user data retrieved from n8n:", {
               email: userData.email,
               payment_status: userData.payment_status,
-              couponCode: userData.CouponCode || userData.couponcode_given
+              couponCode: userData.couponcode_given
             });
             
             return res.status(200).json({
               success: true,
               message: "Token is valid",
               user: {
-                id: userData.id || userData.userId || req.user.userId,
+                id: userData.id || req.user.userId,
                 name: userData.name || req.user.name,
                 email: userData.email || email,
                 mobile: userData.mobile || "NA",
                 role: userData.role || req.user.role,
                 payment_status: userData.payment_status || null,
-                couponCode: userData.CouponCode || userData.couponcode_given || null
+                couponCode: userData.couponcode_given || null
               }
             });
           }

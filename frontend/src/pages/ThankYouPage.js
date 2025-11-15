@@ -81,7 +81,7 @@ const ThankYouPage = () => {
             <div className="text-6xl mb-6">⏰</div>
             <h2 className="text-2xl font-semibold mb-4">Need Time to Confirm</h2>
             <p className="text-gray-400 mb-6">
-              We understand this is an important decision. Your interest has been recorded for the Python Full Stack course.
+              We understand this is an important decision. Your interest has been recorded for the Python Full Stack webinar.
             </p>
             
             <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-6 mb-6">
@@ -89,7 +89,7 @@ const ThankYouPage = () => {
               <div className="text-left space-y-2">
                 <div className="flex items-center">
                   <span className="text-blue-400 mr-2">📚</span>
-                  <span>Secure your spot in the course</span>
+                  <span>Secure your spot in the webinar</span>
                 </div>
                 <div className="flex items-center">
                   <span className="text-blue-400 mr-2">💬</span>
@@ -97,7 +97,7 @@ const ThankYouPage = () => {
                 </div>
                 <div className="flex items-center">
                   <span className="text-blue-400 mr-2">🎥</span>
-                  <span>Receive all course materials and recordings</span>
+                  <span>Receive all webinar materials and recordings</span>
                 </div>
                 <div className="flex items-center">
                   <span className="text-blue-400 mr-2">🏆</span>
@@ -176,7 +176,7 @@ const ThankYouPage = () => {
               <div className="flex items-center p-3 bg-gray-800/50 rounded-lg">
                 <span className="text-2xl mr-3">📚</span>
                 <div>
-                  <h3 className="font-semibold">Course Materials</h3>
+                  <h3 className="font-semibold">Webinar Materials</h3>
                   <p className="text-sm text-gray-400">Download slides and code samples</p>
                 </div>
               </div>

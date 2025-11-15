@@ -46,13 +46,13 @@ const paymentController = {
             })
             console.log("✅ Need time to confirm data sent to n8n successfully")
             
-            // Return success with n8n response
+            // Return success with n8n response (n8n returns { payment_status: "string" })
             return res.status(200).json({
               success: true,
-              message: response.data?.message || "Time to confirm request recorded successfully",
+              message: "Time to confirm request recorded successfully",
               data: {
                 txn_id: paymentData.txn_id,
-                payment_status: paymentData.payment_status,
+                payment_status: response.data?.payment_status || paymentData.payment_status,
                 txn_timestamp: paymentData.txn_timestamp,
                 whatsapp_link: null,
                 confirmation_pending: true,
@@ -108,7 +108,7 @@ const paymentController = {
             message: `Payment ${payment_status} processed successfully`,
             data: {
               txn_id: paymentData.txn_id,
-              payment_status: paymentData.payment_status,
+              payment_status: response.data?.payment_status || paymentData.payment_status,
               txn_timestamp: paymentData.txn_timestamp,
               paid_amt: paymentData.paid_amt,
               reg_fee: paymentData.reg_fee,
@@ -194,18 +194,18 @@ const paymentController = {
 
           console.log("✅ n8n coupon validation response:", response.data)
 
-          // n8n should return: { success: true/false, discount_percentage: number, message: string }
+          // n8n returns: { success: boolean, discount: number, message: string }
           if (response.data && response.data.success) {
             return res.status(200).json({
               success: true,
               message: response.data.message || "Coupon applied successfully",
-              discount_percentage: response.data.discount_percentage || 0,
+              discount_percentage: response.data.discount || 0,
               couponcode_applied: couponcode_applied.toUpperCase(),
             })
           } else {
             return res.status(200).json({
               success: false,
-              message: response.data.message || "Invalid coupon code",
+              message: response.data?.message || "Invalid coupon code",
             })
           }
 

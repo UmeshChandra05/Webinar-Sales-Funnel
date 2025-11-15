@@ -2,11 +2,14 @@
 
 import { useState, useEffect } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
+import { useAuth } from "../contexts/AuthContext"
 import apiClient from "../utils/api"
+import { NAVIGATION_DELAY } from "../services/constantsService"
 
 const RegisterPage = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const { initializeAuth } = useAuth()
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -244,11 +247,17 @@ const RegisterPage = () => {
           role: formData.role,
         }))
 
+        // Immediately update AuthContext state to reflect authentication
+        await initializeAuth()
+
+        console.log('✅ Registration successful, user authenticated, navigating to payment page...')
         showToast("Registration successful! You're now logged in.", "success")
 
+        // Navigate immediately to payment page
         setTimeout(() => {
-          navigate("/payment")
-        }, 2000)
+          console.log('🚀 Navigating to /payment...')
+          navigate("/payment", { replace: true })
+        }, NAVIGATION_DELAY())
       } else {
         const errorMessage = result.message || "Registration failed. Please try again."
         showToast(errorMessage, "error")

@@ -140,6 +140,10 @@ const AdminDashboard = () => {
   const [isSending, setIsSending] = useState(false);
   const [isReplyEdited, setIsReplyEdited] = useState(false);
   const [originalReply, setOriginalReply] = useState('');
+  const [isLoadingQueries, setIsLoadingQueries] = useState(false);
+  
+  // Toast notification state
+  const [toastMessage, setToastMessage] = useState(null);
 
   const dateRangeOptions = [
     { value: 'today', label: 'Today' },
@@ -189,6 +193,7 @@ const AdminDashboard = () => {
 
   // Function to load pending approval queries
   const loadPendingQueries = async () => {
+    setIsLoadingQueries(true);
     try {
       const result = await fetchContactsData();
       if (result.success && result.rawData) {
@@ -207,6 +212,8 @@ const AdminDashboard = () => {
       }
     } catch (err) {
       console.error('Error loading pending queries:', err);
+    } finally {
+      setIsLoadingQueries(false);
     }
   };
 
@@ -239,6 +246,16 @@ const AdminDashboard = () => {
     }
   };
 
+  // Toast notification helper
+  const showToast = (message, type = 'info') => {
+    setToastMessage({ message, type });
+    setTimeout(() => setToastMessage(null), 4000);
+  };
+
+  const dismissToast = () => {
+    setToastMessage(null);
+  };
+
   // Navigate to next query
   const goToNextQuery = () => {
     if (currentQueryIndex < pendingQueries.length - 1) {
@@ -255,7 +272,7 @@ const AdminDashboard = () => {
   // Send response to webhook
   const sendResponse = async () => {
     if (!editableReply.trim()) {
-      alert('Please enter a reply before sending.');
+      showToast('Please enter a reply before sending.', 'warning');
       return;
     }
 
@@ -299,15 +316,15 @@ const AdminDashboard = () => {
           setOriginalReply(cleanedReply);
           setIsReplyEdited(false);
         } else {
-          alert('All pending queries have been processed!');
+          showToast('All pending queries have been processed!', 'success');
           closePendingApprovalModal();
         }
       } else {
-        alert('Failed to send response. Please try again.');
+        showToast('Failed to send response. Please try again.', 'error');
       }
     } catch (error) {
       console.error('Error sending response:', error);
-      alert('Error sending response. Please try again.');
+      showToast('Error sending response. Please try again.', 'error');
     } finally {
       setIsSending(false);
     }
@@ -896,7 +913,7 @@ const AdminDashboard = () => {
   // Download CSV function
   const downloadCSV = () => {
     if (filteredLeads.length === 0) {
-      alert('No data to download');
+      showToast('No data to download', 'warning');
       return;
     }
 
@@ -1553,6 +1570,82 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: '20px',
+            right: '20px',
+            zIndex: 1000,
+            backgroundColor: 'white',
+            borderRadius: '8px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+            animation: 'slideIn 0.3s ease-out',
+            minWidth: '300px',
+            maxWidth: '400px',
+            overflow: 'hidden'
+          }}
+        >
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            padding: '16px',
+            gap: '12px'
+          }}>
+            <div style={{
+              width: '24px',
+              height: '24px',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: toastMessage.type === 'success' ? '#10b981' : toastMessage.type === 'error' ? '#ef4444' : toastMessage.type === 'warning' ? '#f59e0b' : '#3b82f6',
+              color: 'white',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              flexShrink: 0
+            }}>
+              {toastMessage.type === 'success' ? '✓' : toastMessage.type === 'error' ? '✕' : toastMessage.type === 'warning' ? '⚠' : 'ℹ'}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{
+                color: '#1f2937',
+                fontSize: '14px',
+                fontWeight: '500',
+                lineHeight: '1.4'
+              }}>
+                {toastMessage.message}
+              </div>
+            </div>
+            <button
+              onClick={dismissToast}
+              style={{
+                border: 'none',
+                background: 'transparent',
+                color: '#9ca3af',
+                fontSize: '18px',
+                cursor: 'pointer',
+                padding: '0',
+                width: '20px',
+                height: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}
+            >
+              ×
+            </button>
+          </div>
+          <div style={{
+            height: '4px',
+            backgroundColor: toastMessage.type === 'success' ? '#10b981' : toastMessage.type === 'error' ? '#ef4444' : toastMessage.type === 'warning' ? '#f59e0b' : '#3b82f6',
+            animation: 'shrink 4s linear'
+          }}></div>
+        </div>
+      )}
+
       {/* Error Message */}
       {error && (
         <div style={{
@@ -3994,8 +4087,56 @@ const AdminDashboard = () => {
           )}
         </section>
 
-        {/* Pending Approval Modal */}
-        {showPendingApprovalModal && pendingQueries.length > 0 && (
+        {/* Pending Approval Modal - Loading State */}
+        {showPendingApprovalModal && isLoadingQueries && (
+          <div 
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.6)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+              backdropFilter: 'blur(4px)'
+            }}
+            onClick={closePendingApprovalModal}
+          >
+            <div 
+              style={{
+                backgroundColor: 'var(--surface)',
+                borderRadius: '1rem',
+                padding: '3rem',
+                maxWidth: '400px',
+                textAlign: 'center',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{
+                width: '60px',
+                height: '60px',
+                border: '4px solid rgba(139, 92, 246, 0.3)',
+                borderTop: '4px solid var(--primary)',
+                borderRadius: '50%',
+                margin: '0 auto 1.5rem',
+                animation: 'spin 1s linear infinite'
+              }}></div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
+                Loading Queries...
+              </h3>
+              <p style={{ color: 'var(--text-secondary)' }}>
+                Please wait while we fetch pending approval queries.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Pending Approval Modal - With Queries */}
+        {showPendingApprovalModal && !isLoadingQueries && pendingQueries.length > 0 && (
           <div 
             style={{
               position: 'fixed',
@@ -4483,7 +4624,7 @@ const AdminDashboard = () => {
         )}
 
         {/* Pending Modal Empty State */}
-        {showPendingApprovalModal && pendingQueries.length === 0 && (
+        {showPendingApprovalModal && !isLoadingQueries && pendingQueries.length === 0 && (
           <div 
             style={{
               position: 'fixed',
@@ -4536,6 +4677,34 @@ const AdminDashboard = () => {
             </div>
           </div>
         )}
+
+        {/* CSS Animations */}
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+          
+          @keyframes slideIn {
+            from {
+              transform: translateX(100%);
+              opacity: 0;
+            }
+            to {
+              transform: translateX(0);
+              opacity: 1;
+            }
+          }
+          
+          @keyframes shrink {
+            from {
+              width: 100%;
+            }
+            to {
+              width: 0%;
+            }
+          }
+        `}</style>
     </div>
   );
 };

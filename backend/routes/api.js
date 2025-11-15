@@ -112,6 +112,7 @@ router.put(
     body("adminPassword").optional().isLength({ min: 6 }).withMessage("Password must be at least 6 characters if provided"),
     body("registrationFee").isNumeric().withMessage("Registration fee must be a number"),
     body("registrationDeadline").isString().trim().isLength({ min: 1 }).withMessage("Registration deadline is required"),
+    body("webinarDate").isString().trim().isLength({ min: 1 }).withMessage("Webinar date is required"),
     body("webinarTime").isString().trim().isLength({ min: 1 }).withMessage("Webinar time is required"),
     body("contactEmail").isEmail().normalizeEmail().withMessage("Valid contact email is required"),
     body("whatsappLink").optional().isString().trim().isLength({ max: 500 }).withMessage("WhatsApp link too long"),

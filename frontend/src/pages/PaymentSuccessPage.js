@@ -42,7 +42,7 @@ const PaymentSuccessPage = () => {
             Payment <span className="gradient-text">Successful!</span>
           </h1>
 
-          <p className="text-xl text-gray-400 mb-8">Your seat is confirmed! Welcome to the Python Full Stack course!</p>
+          <p className="text-xl text-gray-400 mb-8">Your seat is confirmed! Welcome to the Python Full Stack webinar!</p>
 
           <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-6 mb-8">
             <h3 className="font-semibold text-green-400 mb-4">You will receive via email:</h3>
@@ -53,7 +53,7 @@ const PaymentSuccessPage = () => {
               </li>
               <li className="flex items-center">
                 <span className="text-green-400 mr-2">📚</span>
-                <span><strong>Course Resources</strong> - After the webinar completion</span>
+                <span><strong>Webinar Resources</strong> - After the webinar completion</span>
               </li>
               <li className="flex items-center">
                 <span className="text-green-400 mr-2">💬</span>

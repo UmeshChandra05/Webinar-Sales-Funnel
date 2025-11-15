@@ -8,6 +8,8 @@ let cachedConstants = null;
 let cachedSettings = null;
 let lastConstantsFetch = null;
 let lastSettingsFetch = null;
+let pendingConstantsRequest = null;
+let pendingSettingsRequest = null;
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
@@ -22,7 +24,14 @@ const fetchConstants = async () => {
       return cachedConstants;
     }
 
+    // Deduplicate simultaneous requests
+    if (pendingConstantsRequest) {
+      console.log('⏳ Waiting for pending constants request...');
+      return pendingConstantsRequest;
+    }
+
     console.log('🔄 Fetching constants from backend...');
+    pendingConstantsRequest = (async () => {
     const response = await fetch('/api/config/constants', {
       method: 'GET',
       headers: {
@@ -40,11 +49,16 @@ const fetchConstants = async () => {
       }
     }
 
-    console.warn('⚠️ Failed to fetch constants, using fallback');
-    return getFallbackConstants();
+    throw new Error('Failed to fetch constants from server');
+    })();
+
+    const result = await pendingConstantsRequest;
+    pendingConstantsRequest = null;
+    return result;
   } catch (error) {
     console.error('❌ Error fetching constants:', error);
-    return getFallbackConstants();
+    pendingConstantsRequest = null;
+    throw error;
   }
 };
 
@@ -53,13 +67,20 @@ const fetchConstants = async () => {
  */
 const fetchSettings = async () => {
   try {
-    // Check cache
-    if (lastSettingsFetch && Date.now() - lastSettingsFetch < CACHE_DURATION) {
-      console.log('📋 Using cached settings');
+    // Check cache - no expiration, cache forever until manually refreshed
+    if (cachedSettings && lastSettingsFetch) {
+      console.log('📋 Using cached settings (loaded at app startup)');
       return cachedSettings;
     }
 
+    // Deduplicate simultaneous requests
+    if (pendingSettingsRequest) {
+      console.log('⏳ Waiting for pending settings request...');
+      return pendingSettingsRequest;
+    }
+
     console.log('🔄 Fetching settings from backend...');
+    pendingSettingsRequest = (async () => {
     const response = await fetch('/api/settings', {
       method: 'GET',
       headers: {
@@ -72,60 +93,34 @@ const fetchSettings = async () => {
       if (data.success && data.settings) {
         cachedSettings = data.settings;
         lastSettingsFetch = Date.now();
-        console.log('✅ Settings fetched successfully');
+        console.log('✅ Settings fetched and cached');
         return cachedSettings;
       }
     }
 
-    console.warn('⚠️ Failed to fetch settings, using defaults from constants');
-    const constants = await getConstants();
-    return {
-      coursePrice: constants.DEFAULT_COURSE_PRICE,
-      registrationDeadline: constants.DEFAULT_REGISTRATION_DEADLINE,
-      webinarTime: constants.DEFAULT_WEBINAR_TIME,
-      contactEmail: constants.DEFAULT_CONTACT_EMAIL,
-      whatsappLink: constants.DEFAULT_WHATSAPP_LINK,
-      discordLink: constants.DEFAULT_DISCORD_LINK,
-      courseFeatures: constants.DEFAULT_COURSE_FEATURES
-    };
+    throw new Error('Failed to fetch settings from server');
+    })();
+
+    const result = await pendingSettingsRequest;
+    pendingSettingsRequest = null;
+    return result;
   } catch (error) {
     console.error('❌ Error fetching settings:', error);
-    const constants = await getConstants();
-    return {
-      coursePrice: constants.DEFAULT_COURSE_PRICE,
-      registrationDeadline: constants.DEFAULT_REGISTRATION_DEADLINE,
-      webinarTime: constants.DEFAULT_WEBINAR_TIME,
-      contactEmail: constants.DEFAULT_CONTACT_EMAIL,
-      whatsappLink: constants.DEFAULT_WHATSAPP_LINK,
-      discordLink: constants.DEFAULT_DISCORD_LINK,
-      courseFeatures: constants.DEFAULT_COURSE_FEATURES
-    };
+    pendingSettingsRequest = null;
+    throw error;
   }
 };
 
 /**
- * Fallback constants (used only if backend is completely unavailable)
+ * Fallback constants for UI-only values that don't depend on backend data
+ * Data constants must come from API or throw errors
  */
 const getFallbackConstants = () => ({
+  // UI constants only - these don't require backend configuration
   CURRENCY_SYMBOL: '₹',
   CURRENCY: 'INR',
   TOAST_DURATION: 4000,
-  NAVIGATION_DELAY: 1500,
-  DEFAULT_COURSE_PRICE: 4999,
-  DEFAULT_REGISTRATION_DEADLINE: '2025-11-07',
-  DEFAULT_WEBINAR_TIME: '2025-11-08T19:00',
-  DEFAULT_CONTACT_EMAIL: 'webinar@pystack.com',
-  DEFAULT_WHATSAPP_LINK: 'https://wa.me/',
-  DEFAULT_DISCORD_LINK: 'https://discord.gg/',
-  DEFAULT_ADMIN_USERNAME: 'admin',
-  DEFAULT_COURSE_FEATURES: [
-    'Complete 5-day Python Full Stack course',
-    'Lifetime access to all recordings',
-    'Downloadable code templates and projects',
-    'Private WhatsApp community access',
-    '1-on-1 mentorship session (30 minutes)',
-    'Certificate of completion'
-  ]
+  NAVIGATION_DELAY: 1500
 });
 
 /**
@@ -140,12 +135,18 @@ export const getConstants = async () => {
 
 /**
  * Get settings (from cache or fetch if needed)
+ * @param {boolean} forceRefresh - If true, bypasses cache and fetches fresh data (admin use only)
  */
-export const getSettings = async () => {
-  if (!cachedSettings) {
-    return await fetchSettings();
+export const getSettings = async (forceRefresh = false) => {
+  if (forceRefresh) {
+    console.log('🔄 Force refreshing settings (admin update)...');
+    return await refreshSettings();
   }
-  return cachedSettings;
+  // Return cached settings if available, otherwise fetch
+  if (cachedSettings) {
+    return cachedSettings;
+  }
+  return await fetchSettings();
 };
 
 /**
@@ -166,14 +167,20 @@ export const refreshSettings = async () => {
 
 /**
  * Get a specific constant value synchronously
- * Returns cached value or fallback if not loaded
+ * Returns cached value or fallback for UI constants only
+ * Throws error for missing data constants to ensure API issues are visible
  */
 export const getConstant = (key) => {
   if (cachedConstants) {
     return cachedConstants[key];
   }
+  // Only allow fallback for UI constants
   const fallback = getFallbackConstants();
-  return fallback[key];
+  if (key in fallback) {
+    return fallback[key];
+  }
+  // For data constants, throw error instead of silently using defaults
+  throw new Error(`Constant '${key}' not loaded. Ensure getConstants() is called before accessing data constants.`);
 };
 
 /**
@@ -184,22 +191,70 @@ export const getSetting = (key) => {
   return cachedSettings ? cachedSettings[key] : undefined;
 };
 
-// Initialize on module load
-fetchConstants();
-fetchSettings();
-
 // Export commonly used values as named exports for convenience
+// UI constants - safe to use with fallbacks
 export const CURRENCY_SYMBOL = () => getConstant('CURRENCY_SYMBOL');
 export const CURRENCY = () => getConstant('CURRENCY');
 export const TOAST_DURATION = () => getConstant('TOAST_DURATION');
 export const NAVIGATION_DELAY = () => getConstant('NAVIGATION_DELAY');
-export const COURSE_PRICE = () => getSetting('coursePrice') || getConstant('DEFAULT_COURSE_PRICE');
-export const REGISTRATION_DEADLINE = () => getSetting('registrationDeadline') || getConstant('DEFAULT_REGISTRATION_DEADLINE');
-export const WEBINAR_TIME = () => getSetting('webinarTime') || getConstant('DEFAULT_WEBINAR_TIME');
-export const CONTACT_EMAIL = () => getSetting('contactEmail') || getConstant('DEFAULT_CONTACT_EMAIL');
-export const WHATSAPP_LINK = () => getSetting('whatsappLink') || getConstant('DEFAULT_WHATSAPP_LINK');
-export const DISCORD_LINK = () => getSetting('discordLink') || getConstant('DEFAULT_DISCORD_LINK');
-export const COURSE_FEATURES = () => getSetting('courseFeatures') || getConstant('DEFAULT_COURSE_FEATURES');
+
+// Data constants - must come from API, throw errors if missing
+export const REGISTRATION_FEE = () => {
+  const value = getSetting('registrationFee');
+  if (value === undefined) {
+    throw new Error('Registration fee not loaded. Ensure getSettings() is called before accessing this value.');
+  }
+  return value;
+};
+export const REGISTRATION_DEADLINE = () => {
+  const value = getSetting('registrationDeadline');
+  if (value === undefined) {
+    throw new Error('Registration deadline not loaded. Ensure getSettings() is called before accessing this value.');
+  }
+  return value;
+};
+export const WEBINAR_DATE = () => {
+  const value = getSetting('webinarDate');
+  if (value === undefined) {
+    throw new Error('Webinar date not loaded. Ensure getSettings() is called before accessing this value.');
+  }
+  return value;
+};
+export const WEBINAR_TIME = () => {
+  const value = getSetting('webinarTime');
+  if (value === undefined) {
+    throw new Error('Webinar time not loaded. Ensure getSettings() is called before accessing this value.');
+  }
+  return value;
+};
+export const CONTACT_EMAIL = () => {
+  const value = getSetting('contactEmail');
+  if (value === undefined) {
+    throw new Error('Contact email not loaded. Ensure getSettings() is called before accessing this value.');
+  }
+  return value;
+};
+export const WHATSAPP_LINK = () => {
+  const value = getSetting('whatsappLink');
+  if (value === undefined) {
+    throw new Error('WhatsApp link not loaded. Ensure getSettings() is called before accessing this value.');
+  }
+  return value;
+};
+export const DISCORD_LINK = () => {
+  const value = getSetting('discordLink');
+  if (value === undefined) {
+    throw new Error('Discord link not loaded. Ensure getSettings() is called before accessing this value.');
+  }
+  return value;
+};
+export const WEBINAR_FEATURES = () => {
+  const value = getSetting('webinarFeatures');
+  if (value === undefined) {
+    throw new Error('Webinar features not loaded. Ensure getSettings() is called before accessing this value.');
+  }
+  return value;
+};
 
 export default {
   getConstants,
@@ -212,11 +267,12 @@ export default {
   CURRENCY,
   TOAST_DURATION,
   NAVIGATION_DELAY,
-  COURSE_PRICE,
+  REGISTRATION_FEE,
   REGISTRATION_DEADLINE,
+  WEBINAR_DATE,
   WEBINAR_TIME,
   CONTACT_EMAIL,
   WHATSAPP_LINK,
   DISCORD_LINK,
-  COURSE_FEATURES
+  WEBINAR_FEATURES
 };

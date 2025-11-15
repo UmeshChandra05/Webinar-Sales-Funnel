@@ -25,27 +25,16 @@ exports.getSettings = async (req, res) => {
     console.log('n8n webhook URL:', N8N_GET_SETTINGS_WEBHOOK);
     
     if (!API_BASE_URL || API_BASE_URL === "API_URL") {
-      console.log('⚠️ API_BASE_URL not configured, using default settings');
-      return res.json({
-        success: true,
-        settings: {
-          adminUsername: APP_CONSTANTS.DEFAULT_ADMIN_USERNAME,
-          // adminPassword: Intentionally excluded from public API for security
-          coursePrice: APP_CONSTANTS.DEFAULT_COURSE_PRICE,
-          registrationDeadline: APP_CONSTANTS.DEFAULT_REGISTRATION_DEADLINE,
-          webinarTime: APP_CONSTANTS.DEFAULT_WEBINAR_TIME,
-          contactEmail: APP_CONSTANTS.DEFAULT_CONTACT_EMAIL,
-          whatsappLink: APP_CONSTANTS.DEFAULT_WHATSAPP_LINK,
-          discordLink: APP_CONSTANTS.DEFAULT_DISCORD_LINK
-        },
-        message: 'Using default settings - n8n not configured'
+      console.error('❌ API_BASE_URL not configured');
+      return res.status(500).json({
+        success: false,
+        message: 'API_BASE_URL not configured. Please configure n8n webhook URL in backend/.env file.',
+        error: 'Configuration error'
       });
     }
     
-    // Fetch settings from n8n webhook
-    const response = await axios.post(N8N_GET_SETTINGS_WEBHOOK, {
-      action: "get_settings"
-    }, {
+    // Fetch settings from n8n webhook using GET request
+    const response = await axios.get(N8N_GET_SETTINGS_WEBHOOK, {
       timeout: 10000,
       headers: {
         "Content-Type": "application/json",
@@ -53,35 +42,50 @@ exports.getSettings = async (req, res) => {
     });
     
     console.log('✅ n8n response received');
+    console.log('📦 Raw n8n response data:', JSON.stringify(response.data, null, 2));
     
     if (response.data) {
-      // n8n should return data in format matching Google Sheets Admin tab:
-      // {
-      //   "admin_username": "admin",
-      //   "admin_password": "admin",
-      //   "reg_fee": 4999,
-      //   "reg_deadline": "7-11-2025",  // DD-MM-YYYY format
-      //   "webinar_time": "8-11-2025",  // DD-MM-YYYY format
-      //   "contact_email": "webinar@pystack.com",
-      //   "whatsapp_invite": "http://www.google.com/",
-      //   "discord_link": "http://www.discord.com/"
-      // }
+      // n8n returns: { success: boolean, settings: { ... } }
       
-      const rawData = response.data;
+      if (!response.data.success) {
+        throw new Error('n8n returned success=false');
+      }
+      
+      const settingsData = response.data.settings;
+      
+      if (!settingsData) {
+        throw new Error('No settings object in n8n response');
+      }
+      
+      console.log('📊 n8n settings data:', JSON.stringify(settingsData, null, 2));
       
       // Convert to our API format
-      // Note: adminPassword is intentionally excluded from public API for security
       const settings = {
-        adminUsername: rawData['admin_username'] || APP_CONSTANTS.DEFAULT_ADMIN_USERNAME,
-        coursePrice: parseFloat(rawData['reg_fee']) || APP_CONSTANTS.DEFAULT_COURSE_PRICE,
-        registrationDeadline: convertDateFormat(rawData['reg_deadline']) || APP_CONSTANTS.DEFAULT_REGISTRATION_DEADLINE,
-        webinarTime: convertDateFormat(rawData['webinar_time']) 
-          ? `${convertDateFormat(rawData['webinar_time'])}T19:00` 
-          : APP_CONSTANTS.DEFAULT_WEBINAR_TIME,
-        contactEmail: rawData['contact_email'] || APP_CONSTANTS.DEFAULT_CONTACT_EMAIL,
-        whatsappLink: rawData['whatsapp_invite'] || APP_CONSTANTS.DEFAULT_WHATSAPP_LINK,
-        discordLink: rawData['discord_link'] || APP_CONSTANTS.DEFAULT_DISCORD_LINK
+        adminUsername: 'admin', // Not exposed by n8n for security
+        registrationFee: parseFloat(settingsData.reg_fee) || 0,
+        registrationDeadline: convertDateFormat(settingsData.reg_deadline),
+        webinarDate: convertDateFormat(settingsData.webinar_date),
+        webinarTime: settingsData.webinar_time,
+        contactEmail: settingsData.contact_email,
+        whatsappLink: settingsData.whatsapp_invite,
+        discordLink: settingsData.discord_link,
+        webinarFeatures: settingsData.webinar_features || []
       };
+      
+      console.log('🔄 Mapped settings:', JSON.stringify(settings, null, 2));
+      
+      // Validate required fields are present
+      const requiredFields = ['adminUsername', 'registrationFee', 'registrationDeadline', 'webinarDate', 'webinarTime', 'contactEmail', 'whatsappLink', 'discordLink'];
+      const missingFields = requiredFields.filter(field => {
+        const value = settings[field];
+        return value === undefined || value === null || value === '' || (typeof value === 'number' && isNaN(value));
+      });
+      
+      if (missingFields.length > 0) {
+        console.error('❌ Missing fields:', missingFields);
+        console.error('❌ Settings object:', JSON.stringify(settings, null, 2));
+        throw new Error(`Missing or invalid required fields from n8n: ${missingFields.join(', ')}. Please check Google Sheets Admin tab has all required data.`);
+      }
       
       console.log('✅ Parsed settings:', settings);
       
@@ -95,20 +99,11 @@ exports.getSettings = async (req, res) => {
   } catch (error) {
     console.error("❌ Error fetching settings from n8n:", error.message);
     
-    // Return default settings on error
-    // Note: adminPassword is intentionally excluded from public API for security
-    res.json({
-      success: true,
-      settings: {
-        adminUsername: APP_CONSTANTS.DEFAULT_ADMIN_USERNAME,
-        coursePrice: APP_CONSTANTS.DEFAULT_COURSE_PRICE,
-        registrationDeadline: APP_CONSTANTS.DEFAULT_REGISTRATION_DEADLINE,
-        webinarTime: APP_CONSTANTS.DEFAULT_WEBINAR_TIME,
-        contactEmail: APP_CONSTANTS.DEFAULT_CONTACT_EMAIL,
-        whatsappLink: APP_CONSTANTS.DEFAULT_WHATSAPP_LINK,
-        discordLink: APP_CONSTANTS.DEFAULT_DISCORD_LINK
-      },
-      message: 'Using default settings due to n8n error: ' + error.message
+    // Return error without fallback data - force proper configuration
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch settings from n8n. Please ensure n8n webhook is configured and accessible.',
+      error: error.message
     });
   }
 };
@@ -119,20 +114,21 @@ exports.updateSettings = async (req, res) => {
     const {
       adminUsername,
       adminPassword,
-      coursePrice,
+      registrationFee,
       registrationDeadline,
+      webinarDate,
       webinarTime,
       contactEmail,
       whatsappLink,
       discordLink
     } = req.body;
 
-    // Validate required fields (password is optional)
-    if (!adminUsername || !coursePrice || !registrationDeadline || 
-        !webinarTime || !contactEmail || !whatsappLink || !discordLink) {
+    // Validate required fields (password, whatsappLink, discordLink are optional)
+    if (!adminUsername || !registrationFee || !registrationDeadline || 
+        !webinarDate || !webinarTime || !contactEmail) {
       return res.status(400).json({
         success: false,
-        message: "All fields except password are required"
+        message: "Required fields: adminUsername, registrationFee, registrationDeadline, webinarDate, webinarTime, contactEmail"
       });
     }
 
@@ -145,31 +141,37 @@ exports.updateSettings = async (req, res) => {
       });
     }
 
-    // Validate URLs
+    // Validate URLs (only if provided)
     const urlRegex = /^https?:\/\/.+/;
-    if (!urlRegex.test(whatsappLink) || !urlRegex.test(discordLink)) {
+    if (whatsappLink && whatsappLink.trim() && !urlRegex.test(whatsappLink)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid URL format for links"
+        message: "Invalid URL format for WhatsApp link"
+      });
+    }
+    if (discordLink && discordLink.trim() && !urlRegex.test(discordLink)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid URL format for Discord link"
       });
     }
 
-    // Validate course price
-    if (isNaN(coursePrice) || coursePrice < 0) {
+    // Validate registration fee
+    if (isNaN(registrationFee) || registrationFee < 0) {
       return res.status(400).json({
         success: false,
-        message: "Course price must be a positive number"
+        message: "Registration fee must be a positive number"
       });
     }
 
-    // Validate registration deadline is before webinar time
+    // Validate registration deadline is before webinar date
     const deadlineDate = new Date(registrationDeadline);
-    const webinarDate = new Date(webinarTime);
+    const webinarDateTime = new Date(webinarDate);
     
-    if (deadlineDate >= webinarDate) {
+    if (deadlineDate >= webinarDateTime) {
       return res.status(400).json({
         success: false,
-        message: "Registration deadline must be before webinar time"
+        message: "Registration deadline must be before webinar date"
       });
     }
 
@@ -185,9 +187,10 @@ exports.updateSettings = async (req, res) => {
     // Build data object for n8n webhook in the format expected by Google Sheets
     const sheetData = {
       "admin_username": adminUsername,
-      "reg_fee": Number(coursePrice),
+      "reg_fee": Number(registrationFee),
       "reg_deadline": formatDateForSheet(registrationDeadline),
-      "webinar_time": formatDateForSheet(webinarTime),
+      "webinar_date": formatDateForSheet(webinarDate),
+      "webinar_time": webinarTime,
       "contact_email": contactEmail,
       "whatsapp_invite": whatsappLink,
       "discord_link": discordLink
@@ -216,18 +219,21 @@ exports.updateSettings = async (req, res) => {
     });
 
     console.log('Settings updated successfully in Google Sheets');
+    console.log('📦 n8n Update Response:', JSON.stringify(response.data, null, 2));
 
+    // n8n returns: { success: boolean, message: string, settings: {...} }
     res.json({
-      success: true,
-      message: "Settings updated successfully in Google Sheets",
-      settings: {
-        adminUsername,
-        coursePrice: Number(coursePrice),
-        registrationDeadline,
-        webinarTime,
-        contactEmail,
-        whatsappLink,
-        discordLink
+      success: response.data?.success !== false,
+      message: response.data?.message || 'Settings updated successfully',
+      settings: response.data?.settings || {
+        admin_username: adminUsername,
+        reg_fee: Number(registrationFee),
+        reg_deadline: formatDateForSheet(registrationDeadline),
+        webinar_date: formatDateForSheet(webinarDate),
+        webinar_time: webinarTime,
+        contact_email: contactEmail,
+        whatsapp_invite: whatsappLink,
+        discord_link: discordLink
       }
     });
 

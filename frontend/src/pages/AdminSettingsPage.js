@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import apiClient from "../utils/api"
+import { getSettings } from "../services/constantsService"
 
 const AdminSettingsPage = () => {
   const navigate = useNavigate()
@@ -11,8 +12,9 @@ const AdminSettingsPage = () => {
   const [settings, setSettings] = useState({
     adminUsername: '',
     adminPassword: '',
-    coursePrice: 0,
+    registrationFee: 0,
     registrationDeadline: '',
+    webinarDate: '',
     webinarTime: '',
     contactEmail: '',
     whatsappLink: '',
@@ -20,50 +22,29 @@ const AdminSettingsPage = () => {
   })
 
   useEffect(() => {
-    const adminToken = localStorage.getItem('adminToken')
-    if (!adminToken) {
-      navigate('/admin/login')
-      return
-    }
-    
     loadDefaultsAndSettings()
-  }, [navigate])
+  }, [])
 
   const loadDefaultsAndSettings = async () => {
     try {
       setIsLoading(true)
       
-      // Fetch default constants from backend
-      const constantsResponse = await fetch('/api/config/constants')
-      const constantsResult = await constantsResponse.json()
+      // Force refresh settings from backend (bypasses cache for admin page)
+      const settingsData = await getSettings(true)
       
-      if (constantsResult.success && constantsResult.constants) {
-        // Set defaults from backend
+      if (settingsData) {
         setSettings(prevSettings => ({
           ...prevSettings,
-          adminUsername: constantsResult.constants.DEFAULT_ADMIN_USERNAME,
-          coursePrice: constantsResult.constants.DEFAULT_COURSE_PRICE,
-          registrationDeadline: constantsResult.constants.DEFAULT_REGISTRATION_DEADLINE,
-          webinarTime: constantsResult.constants.DEFAULT_WEBINAR_TIME,
-          contactEmail: constantsResult.constants.DEFAULT_CONTACT_EMAIL,
-          whatsappLink: constantsResult.constants.DEFAULT_WHATSAPP_LINK,
-          discordLink: constantsResult.constants.DEFAULT_DISCORD_LINK,
-        }))
-      }
-      
-      // Then fetch current settings (which will override defaults if they exist)
-      const response = await apiClient.getSettings()
-      
-      if (response.success && response.settings) {
-        setSettings(prevSettings => ({
-          ...prevSettings,
-          ...response.settings
+          ...settingsData
         }))
         showToast('Settings loaded successfully', 'success')
+      } else {
+        throw new Error('Failed to load settings')
       }
     } catch (error) {
       console.error('Error loading settings:', error)
-      showToast('Failed to load settings. Please refresh the page.', 'error')
+      showToast('Failed to load settings from server: ' + (error.message || 'Unknown error'), 'error')
+      // Don't set loading to false here, keep loading state to prevent form submission with invalid data
     } finally {
       setIsLoading(false)
     }
@@ -100,19 +81,25 @@ const AdminSettingsPage = () => {
       }
     }
 
-    // Validate registration deadline is before webinar time
+    // Validate registration deadline is before webinar date
     const deadlineDate = new Date(settings.registrationDeadline)
-    const webinarDate = new Date(settings.webinarTime)
+    const webinarDateTime = new Date(settings.webinarDate)
     
-    if (deadlineDate >= webinarDate) {
-      showToast('Registration deadline must be before webinar time', 'error')
+    if (deadlineDate >= webinarDateTime) {
+      showToast('Registration deadline must be before webinar date', 'error')
       return
     }
 
     setIsSaving(true)
 
     try {
-      const response = await apiClient.updateSettings(settings, adminToken)
+      // Prepare settings data - remove password if empty
+      const settingsToSend = { ...settings }
+      if (!settingsToSend.adminPassword || settingsToSend.adminPassword.trim() === '') {
+        delete settingsToSend.adminPassword
+      }
+      
+      const response = await apiClient.updateSettings(settingsToSend, adminToken)
       
       if (response.success) {
         showToast('Settings updated successfully!', 'success')
@@ -299,20 +286,36 @@ const AdminSettingsPage = () => {
           }
 
           .form-input[type="date"],
+          .form-input[type="time"],
           .form-input[type="datetime-local"] {
             position: relative;
+            cursor: pointer;
           }
 
           .form-input[type="date"]::-webkit-calendar-picker-indicator,
+          .form-input[type="time"]::-webkit-calendar-picker-indicator,
           .form-input[type="datetime-local"]::-webkit-calendar-picker-indicator {
             cursor: pointer;
             filter: invert(0.8);
-            opacity: 0.8;
+            opacity: 0.9;
+            font-size: 1.1rem;
+            padding: 4px;
+            margin-left: 4px;
           }
 
           .form-input[type="date"]::-webkit-calendar-picker-indicator:hover,
+          .form-input[type="time"]::-webkit-calendar-picker-indicator:hover,
           .form-input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
             opacity: 1;
+            background-color: rgba(139, 92, 246, 0.1);
+            border-radius: 4px;
+          }
+
+          /* Enhanced date/time input focus states */
+          .form-input[type="date"]:focus,
+          .form-input[type="time"]:focus {
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
           }
 
           .form-helper-text {
@@ -433,22 +436,25 @@ const AdminSettingsPage = () => {
               <h2 className="section-title">
                 🔐 Admin Credentials
               </h2>
-              <div className="form-grid">
-                <div className="form-group">
-                  <label htmlFor="adminUsername" className="form-label">
-                    Admin Username
-                  </label>
-                  <input
-                    type="text"
-                    id="adminUsername"
-                    name="adminUsername"
-                    value={settings.adminUsername}
-                    onChange={handleInputChange}
-                    className="form-input"
-                    required
-                  />
-                </div>
+              
+              {/* Username in single row */}
+              <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                <label htmlFor="adminUsername" className="form-label">
+                  Admin Username
+                </label>
+                <input
+                  type="text"
+                  id="adminUsername"
+                  name="adminUsername"
+                  value={settings.adminUsername}
+                  onChange={handleInputChange}
+                  className="form-input"
+                  required
+                />
+              </div>
 
+              {/* Password and Confirm Password in same row */}
+              <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
                   <label htmlFor="adminPassword" className="form-label">
                     Admin Password
@@ -481,20 +487,27 @@ const AdminSettingsPage = () => {
                       borderColor: settings.adminPassword && confirmPassword && settings.adminPassword !== confirmPassword ? '#ef4444' : ''
                     }}
                   />
-                  {settings.adminPassword && confirmPassword && settings.adminPassword !== confirmPassword && (
-                    <p style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '0.25rem' }}>
+                </div>
+              </div>
+              
+              {/* Password match indicator */}
+              {settings.adminPassword && confirmPassword && (
+                <div style={{ marginTop: '0.5rem' }}>
+                  {settings.adminPassword !== confirmPassword ? (
+                    <p style={{ fontSize: '0.75rem', color: '#ef4444' }}>
                       ❌ Passwords do not match
                     </p>
-                  )}
-                  {settings.adminPassword && confirmPassword && settings.adminPassword === confirmPassword && (
-                    <p style={{ fontSize: '0.75rem', color: '#10b981', marginTop: '0.25rem' }}>
+                  ) : (
+                    <p style={{ fontSize: '0.75rem', color: '#10b981' }}>
                       ✓ Passwords match
                     </p>
                   )}
                 </div>
-              </div>
-              <p style={{ fontSize: '0.875rem', color: '#a1a1aa', marginTop: '0.5rem' }}>
-                💡 Leave password fields blank if you don't want to change it. New password will be stored in Google Sheets.
+              )}
+              
+              {/* Helper message */}
+              <p style={{ fontSize: '0.875rem', color: '#a1a1aa', marginTop: '1rem', fontStyle: 'italic' }}>
+                💡 Only change password if you want to update it. Leave both fields blank to keep the current password.
               </p>
             </div>
 
@@ -505,19 +518,48 @@ const AdminSettingsPage = () => {
               </h2>
               <div className="form-grid">
                 <div className="form-group">
-                  <label htmlFor="coursePrice" className="form-label">
-                    Registration Fee (₹)
+                  <label htmlFor="webinarDate" className="form-label">
+                    Webinar Date
                   </label>
                   <input
-                    type="number"
-                    id="coursePrice"
-                    name="coursePrice"
-                    value={settings.coursePrice}
+                    type="date"
+                    id="webinarDate"
+                    name="webinarDate"
+                    value={settings.webinarDate}
                     onChange={handleInputChange}
                     className="form-input"
                     required
-                    min="0"
+                    min={new Date().toISOString().split('T')[0]}
+                    style={{ 
+                      colorScheme: 'dark',
+                      cursor: 'pointer'
+                    }}
                   />
+                  <p className="form-helper-text">
+                    📅 Select the webinar date
+                  </p>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="webinarTime" className="form-label">
+                    Webinar Time
+                  </label>
+                  <input
+                    type="time"
+                    id="webinarTime"
+                    name="webinarTime"
+                    value={settings.webinarTime}
+                    onChange={handleInputChange}
+                    className="form-input"
+                    required
+                    style={{ 
+                      colorScheme: 'dark',
+                      cursor: 'pointer'
+                    }}
+                  />
+                  <p className="form-helper-text">
+                    🕐 Select the webinar time
+                  </p>
                 </div>
 
                 <div className="form-group">
@@ -532,38 +574,31 @@ const AdminSettingsPage = () => {
                     onChange={handleInputChange}
                     className="form-input"
                     required
-                    max={settings.webinarTime ? settings.webinarTime.split('T')[0] : ''}
+                    max={settings.webinarDate || ''}
                     style={{ 
                       colorScheme: 'dark',
                       cursor: 'pointer'
                     }}
                   />
                   <p className="form-helper-text">
-                    ⚠️ Must be before webinar time
+                    ⚠️ Must be before webinar date
                   </p>
                 </div>
 
-                <div className="form-group form-field-full">
-                  <label htmlFor="webinarTime" className="form-label">
-                    Webinar Date & Time
+                <div className="form-group">
+                  <label htmlFor="registrationFee" className="form-label">
+                    Registration Fee (₹)
                   </label>
                   <input
-                    type="datetime-local"
-                    id="webinarTime"
-                    name="webinarTime"
-                    value={settings.webinarTime}
+                    type="number"
+                    id="registrationFee"
+                    name="registrationFee"
+                    value={settings.registrationFee}
                     onChange={handleInputChange}
                     className="form-input"
                     required
-                    min={new Date().toISOString().slice(0, 16)}
-                    style={{ 
-                      colorScheme: 'dark',
-                      cursor: 'pointer'
-                    }}
+                    min="0"
                   />
-                  <p className="form-helper-text">
-                    📅 Select both date and time for the webinar
-                  </p>
                 </div>
               </div>
             </div>

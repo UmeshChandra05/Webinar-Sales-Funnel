@@ -83,17 +83,18 @@ const APP_CONSTANTS = {
   NAVIGATION_DELAY: 1500,
   
   // Default Settings
-  DEFAULT_COURSE_PRICE: 4999,
+  DEFAULT_REGISTRATION_FEE: 4999,
   DEFAULT_REGISTRATION_DEADLINE: '2025-11-07',
-  DEFAULT_WEBINAR_TIME: '2025-11-08T19:00',
+  DEFAULT_WEBINAR_DATE: '2025-11-08',
+  DEFAULT_WEBINAR_TIME: '19:00',
   DEFAULT_CONTACT_EMAIL: 'webinar@pystack.com',
   DEFAULT_WHATSAPP_LINK: 'https://wa.me/',
   DEFAULT_DISCORD_LINK: 'https://discord.gg/',
   DEFAULT_ADMIN_USERNAME: 'admin',
   
-  // Course Features
-  DEFAULT_COURSE_FEATURES: [
-    'Complete 5-day Python Full Stack course',
+  // Webinar Features
+  DEFAULT_WEBINAR_FEATURES: [
+    'Complete 5-day Python Full Stack webinar',
     'Lifetime access to all recordings',
     'Downloadable code templates and projects',
     'Private WhatsApp community access',
