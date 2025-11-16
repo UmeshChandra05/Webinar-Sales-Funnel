@@ -69,7 +69,7 @@ exports.getSettings = async (req, res) => {
         contactEmail: settingsData.contact_email,
         whatsappLink: settingsData.whatsapp_invite,
         discordLink: settingsData.discord_link,
-        webinarFeatures: settingsData.webinar_features || []
+        webinarFeatures: settingsData.webinar_features || APP_CONSTANTS.DEFAULT_WEBINAR_FEATURES
       };
       
       console.log('🔄 Mapped settings:', JSON.stringify(settings, null, 2));
