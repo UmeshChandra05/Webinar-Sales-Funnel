@@ -5,15 +5,43 @@ const API_BASE_URL = process.env.API_BASE_URL
 const paymentController = {
   simulatePaymentAsync: async (req, res) => {
     try {
-      const { email, payment_status, txn_id, couponcode_applied, discount_percentage } = req.body
 
-      // Calculate final amount based on coupon discount
-      const reg_fee = 4999
-      const discount_amt = couponcode_applied && discount_percentage > 0 ? 
-        Math.round(reg_fee * discount_percentage / 100) : 
-        0
-      const payable_amt = reg_fee - discount_amt
-      const paid_amt = payment_status === "Success" ? payable_amt : (payment_status === "Need Time" ? 0 : 0)
+      const { email, payment_status, txn_id, couponcode_applied, discount_percentage } = req.body;
+
+      // Fetch registration fee from settingsController (admin panel)
+      // This assumes settingsController exposes a getCurrentSettingsSync or similar method, or you can require settings directly if cached
+      const settingsController = require("./settingsController");
+
+      // Always use registrationFee from cached settings
+      const settings = settingsController.getCachedSettings ? settingsController.getCachedSettings() : null;
+      let reg_fee = settings && settings.registrationFee ? Number(settings.registrationFee) : null;
+      if (!reg_fee || isNaN(reg_fee) || reg_fee <= 0) {
+        return res.status(500).json({
+          success: false,
+          error: "Registration fee is not set. Please check admin settings.",
+          message: "Registration fee missing or invalid."
+        });
+      }
+
+      // Calculate discount and payable amount
+      const discount_amt = couponcode_applied && discount_percentage > 0 ?
+        Math.round(reg_fee * discount_percentage / 100) : 0;
+      // Payable amount is always reg_fee - discount, regardless of payment status
+      const payable_amt = reg_fee - discount_amt;
+      // Paid amount is only nonzero for success, 0 otherwise
+      const paid_amt = payment_status === "Success" ? payable_amt : 0;
+
+
+      // Debug log for tracing values sent to n8n
+      console.log('[Payment Debug] Sending to n8n:', {
+        reg_fee,
+        discount_amt,
+        payable_amt,
+        paid_amt,
+        payment_status,
+        couponcode_applied,
+        discount_percentage
+      });
 
       const paymentData = {
         email,
@@ -27,7 +55,7 @@ const paymentController = {
         discount_amt,
         payable_amt,
         currency: "INR",
-      }
+      };
 
       console.log(`💳 Payment simulation: ${payment_status} for ${email}`)
 

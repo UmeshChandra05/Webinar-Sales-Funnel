@@ -36,17 +36,26 @@ const PaymentPage = () => {
 
   useEffect(() => {
     // Get email from authenticated user or localStorage
-    // ProtectedRoute already handles authentication, so we just need to get the email
-    const email = user?.email || localStorage.getItem("userEmail")
+    const email = user?.email || localStorage.getItem("userEmail");
     if (email) {
-      setUserEmail(email)
+      setUserEmail(email);
     }
-    
-    // Pre-fill coupon code if user has one
-    if (user?.couponCode) {
-      setCouponCode(user.couponCode)
+
+    // Check for coupon in URL params
+    const params = new URLSearchParams(window.location.search);
+    const urlCoupon = params.get("coupon");
+    if (urlCoupon) {
+      setCouponCode(urlCoupon.toUpperCase());
+      // Optionally auto-apply if not already applied
+      if (!couponApplied) {
+        setTimeout(() => {
+          validateCouponCode();
+        }, 300); // slight delay to ensure state is set
+      }
+    } else if (user?.couponCode) {
+      setCouponCode(user.couponCode);
     }
-  }, [user])
+  }, [user]);
 
   // Test backend connectivity
   useEffect(() => {

@@ -1,3 +1,15 @@
+// In-memory cache for settings
+let cachedSettings = null;
+let lastSettingsFetch = null;
+const SETTINGS_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Helper to get cached settings synchronously
+exports.getCachedSettings = () => {
+  if (cachedSettings && lastSettingsFetch && (Date.now() - lastSettingsFetch < SETTINGS_CACHE_DURATION)) {
+    return cachedSettings;
+  }
+  return null;
+};
 const axios = require("../middleware/axios");
 const { APP_CONSTANTS } = require("../config/constants");
 
@@ -71,6 +83,10 @@ exports.getSettings = async (req, res) => {
         discordLink: settingsData.discord_link,
         webinarFeatures: settingsData.webinar_features || APP_CONSTANTS.DEFAULT_WEBINAR_FEATURES
       };
+
+      // Cache settings in memory
+      cachedSettings = settings;
+      lastSettingsFetch = Date.now();
       
       console.log('🔄 Mapped settings:', JSON.stringify(settings, null, 2));
       
