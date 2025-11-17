@@ -85,10 +85,6 @@ const ContactPage = () => {
 
   const faqData = [
     {
-      question: "What is the cost of the webinar?",
-      answer: "The webinar is priced at ₹4,999 INR. This is a one-time payment for complete access to the entire Python Full Stack Development session."
-    },
-    {
       question: "Is this a one-time webinar or recurring?",
       answer: "This is a special one-time webinar event. We don't host regular recurring sessions, making this an exclusive opportunity to learn Python Full Stack Development."
     },
