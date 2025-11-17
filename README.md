@@ -5,7 +5,6 @@
 [![Node.js](https://img.shields.io/badge/Node.js-16%2B-green.svg)](https://nodejs.org/)
 [![React](https://img.shields.io/badge/React-18.2-blue.svg)](https://reactjs.org/)
 [![Express](https://img.shields.io/badge/Express-4.18-lightgrey.svg)](https://expressjs.com/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 A comprehensive webinar sales funnel application designed for educational institutions and trainers to manage webinar registrations, payments, and customer interactions. Features a modern React frontend, Node.js/Express backend, and seamless integration with n8n workflows for automation and Google Sheets for data storage.
 
@@ -26,7 +25,6 @@ A comprehensive webinar sales funnel application designed for educational instit
 - [Security Features](#security-features)
 - [Deployment](#deployment)
 - [Contributing](#contributing)
-- [License](#license)
 
 ---
 
@@ -1172,12 +1170,6 @@ Use GitHub Issues to report bugs or request features. Include:
 
 ---
 
-## 📄 License
-
-This project is licensed under the **MIT License**. See [LICENSE](LICENSE) file for details.
-
----
-
 ## 🙏 Acknowledgments
 
 - **n8n**: Workflow automation platform
@@ -1185,7 +1177,7 @@ This project is licensed under the **MIT License**. See [LICENSE](LICENSE) file 
 - **Chart.js**: Data visualization library
 - **React**: UI library
 - **Express**: Backend framework
-- **OpenAI/Claude**: AI chatbot intelligence (if used)
+- **OpenAI/Claude**: AI chatbot intelligence
 
 ---
 
@@ -1233,12 +1225,7 @@ For questions, issues, or feature requests:
 Planned features for future releases:
 
 - [ ] Real payment gateway integration (Razorpay/Stripe)
-- [ ] Email marketing integration (Mailchimp/SendGrid)
-- [ ] Advanced analytics with custom reports
 - [ ] Multi-language support (i18n)
-- [ ] Mobile app (React Native)
-- [ ] Referral program system
-- [ ] Installment payment options
 - [ ] Certificate generation and distribution
 - [ ] Video streaming integration
 - [ ] Discussion forum
@@ -1259,7 +1246,5 @@ Planned features for future releases:
 - [JWT Best Practices](https://jwt.io/introduction) - JWT security
 
 ---
-
-**Made with ❤️ by PyStack Development Team**
 
 *Last Updated: November 17, 2025*
