@@ -25,7 +25,7 @@ const paymentController = {
 
       // Calculate discount and payable amount
       const discount_amt = couponcode_applied && discount_percentage > 0 ?
-        Math.round(reg_fee * discount_percentage / 100) : 0;
+        reg_fee * discount_percentage / 100 : 0;
       // Payable amount is always reg_fee - discount, regardless of payment status
       const payable_amt = reg_fee - discount_amt;
       // Paid amount is only nonzero for success, 0 otherwise
@@ -201,11 +201,18 @@ const paymentController = {
 
       console.log(`🎟️ Validating coupon: ${couponcode_applied} for ${email}`)
 
+
+      // Fetch registration fee from settings
+      const settingsController = require("./settingsController");
+      const settings = settingsController.getCachedSettings ? settingsController.getCachedSettings() : null;
+      const registrationFee = settings && settings.registrationFee ? Number(settings.registrationFee) : null;
+
       const couponData = {
         couponcode_applied: couponcode_applied.trim().toUpperCase(),
         email: email.toLowerCase(),
         timestamp: new Date().toISOString(),
-        action: "validate_coupon"
+        action: "validate_coupon",
+        registrationFee
       }
 
       // If API_BASE_URL is configured, send to n8n for validation
@@ -227,7 +234,7 @@ const paymentController = {
             return res.status(200).json({
               success: true,
               message: response.data.message || "Coupon applied successfully",
-              discount_percentage: response.data.discount || 0,
+              discount_percentage: response.data.discount_percentage || 0,
               couponcode_applied: couponcode_applied.toUpperCase(),
             })
           } else {

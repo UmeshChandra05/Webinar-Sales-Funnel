@@ -12,6 +12,7 @@ const PaymentPage = () => {
   const [userEmail, setUserEmail] = useState("")
   const [loadingButton, setLoadingButton] = useState(null)
   const [couponCode, setCouponCode] = useState("")
+  const [urlCoupon, setUrlCoupon] = useState("")
   const [couponApplied, setCouponApplied] = useState(false)
   const [couponDiscount, setCouponDiscount] = useState(0)
   const [couponLoading, setCouponLoading] = useState(false)
@@ -34,28 +35,43 @@ const PaymentPage = () => {
     }
   }, [hasCompletedPayment, navigate, user])
 
+
+  // Set userEmail from login info or localStorage
   useEffect(() => {
-    // Get email from authenticated user or localStorage
     const email = user?.email || localStorage.getItem("userEmail");
     if (email) {
       setUserEmail(email);
     }
+  }, [user]);
 
-    // Check for coupon in URL params
+
+  // Set couponCode and urlCoupon from URL or user info
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const urlCoupon = params.get("coupon");
-    if (urlCoupon) {
-      setCouponCode(urlCoupon.toUpperCase());
-      // Optionally auto-apply if not already applied
-      if (!couponApplied) {
-        setTimeout(() => {
-          validateCouponCode();
-        }, 300); // slight delay to ensure state is set
-      }
+    const couponParam = params.get("coupon");
+    if (couponParam) {
+      setUrlCoupon(couponParam.toUpperCase());
+      setCouponCode(couponParam.toUpperCase());
     } else if (user?.couponCode) {
       setCouponCode(user.couponCode);
+      setUrlCoupon("");
+    } else {
+      setUrlCoupon("");
     }
   }, [user]);
+
+  // Validate coupon from URL only after both couponCode and userEmail are set and not yet applied
+  useEffect(() => {
+    if (
+      urlCoupon &&
+      couponCode &&
+      couponCode.toUpperCase() === urlCoupon.toUpperCase() &&
+      userEmail &&
+      !couponApplied
+    ) {
+      validateCouponCode();
+    }
+  }, [couponCode, userEmail, couponApplied, urlCoupon]);
 
   // Test backend connectivity
   useEffect(() => {
