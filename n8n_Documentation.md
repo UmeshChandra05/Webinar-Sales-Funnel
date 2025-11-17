@@ -1,6 +1,6 @@
 # Webinar Sales Funnel Workflow - Complete Documentation
 
-## 📋 Table of Contents
+##  Table of Contents
 - [Overview](#overview)
 - [Architecture](#architecture)
 - [Workflow Modules](#workflow-modules)
@@ -127,7 +127,7 @@ User Registration → Validation → Database Storage → Email Confirmation
 - Continues with urgency emails if payment still pending
 
 **Email Sequence**:
-- **Nurture1**: "Your Python Full Stack Webinar Spot is Waiting! 🚀"
+- **Nurture1**: "Your Python Full Stack Webinar Spot is Waiting! "
 - **Send a message**: "Do you want to continue your registration?"
 - **Urgency Email**: "⏰Final Call: Secure Your Python Webinar Spot Now!"
 
@@ -522,7 +522,7 @@ Closed → 20-second wait → Final confirmation email
 - **Content**: Reservation confirmation, urgency message
 
 ### 5. Nurture Level 1
-- **Subject**: Your Python Full Stack Webinar Spot is Waiting! 🚀
+- **Subject**: Your Python Full Stack Webinar Spot is Waiting! 
 - **Content**: Reminder, benefits, call-to-action
 
 ### 6. Nurture Level 2
@@ -530,7 +530,7 @@ Closed → 20-second wait → Final confirmation email
 - **Content**: Continuation prompt, support offer
 
 ### 7. Discount Offer
-- **Subject**: We've Reserved Your Spot – Get {X}% Off Now! 🎉
+- **Subject**: We've Reserved Your Spot – Get {X}% Off Now! 
 - **Content**: Personalized discount code, urgency
 
 ### 8. Urgency Email

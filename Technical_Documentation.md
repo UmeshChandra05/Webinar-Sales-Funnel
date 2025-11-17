@@ -91,16 +91,16 @@ This application was developed for the **Python Full Stack in 5 Days Webinar** p
 
 | Capability | Implementation | Status |
 |-----------|----------------|--------|
-| User Registration | JWT + bcrypt password hashing | ✅ Production |
-| User Authentication | Token-based with refresh mechanism | ✅ Production |
-| Payment Processing | Simulated gateway (ready for real integration) | ✅ Production |
-| Coupon Management | Backend validation via n8n | ✅ Production |
-| AI Chat Support | n8n + LLM integration | ✅ Production |
-| Admin Dashboard | Real-time analytics with Chart.js | ✅ Production |
-| Data Export | CSV download from Google Sheets | ✅ Production |
-| Email Automation | n8n SMTP integration | ✅ Production |
-| Source Attribution | UTM parameter tracking | ✅ Production |
-| Role-based Access | User + Admin separation | ✅ Production |
+| User Registration | JWT + bcrypt password hashing |  Production |
+| User Authentication | Token-based with refresh mechanism |  Production |
+| Payment Processing | Simulated gateway (ready for real integration) |  Production |
+| Coupon Management | Backend validation via n8n |  Production |
+| AI Chat Support | n8n + LLM integration |  Production |
+| Admin Dashboard | Real-time analytics with Chart.js |  Production |
+| Data Export | CSV download from Google Sheets |  Production |
+| Email Automation | n8n SMTP integration |  Production |
+| Source Attribution | UTM parameter tracking |  Production |
+| Role-based Access | User + Admin separation |  Production |
 
 ---
 
@@ -111,87 +111,87 @@ This application was developed for the **Python Full Stack in 5 Days Webinar** p
 The application follows a **three-tier architecture** with clear separation of concerns:
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                     PRESENTATION TIER                            │
-│                    (React Frontend SPA)                          │
-│                                                                   │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
-│  │   Landing    │  │    Auth      │  │    Payment   │          │
-│  │     Page     │  │    Pages     │  │     Page     │          │
-│  └──────────────┘  └──────────────┘  └──────────────┘          │
-│                                                                   │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
-│  │    Admin     │  │   Contact    │  │  AI Chatbot  │          │
-│  │  Dashboard   │  │     Form     │  │    Widget    │          │
-│  └──────────────┘  └──────────────┘  └──────────────┘          │
-└────────────────────────────┬────────────────────────────────────┘
-                             │
-                             │ HTTPS/REST API
-                             │ (JSON Payloads)
-                             ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      APPLICATION TIER                            │
-│                  (Node.js + Express Backend)                     │
-│                                                                   │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │                    Core Services                         │   │
-│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐       │   │
-│  │  │    Auth    │  │  Payment   │  │   Admin    │       │   │
-│  │  │ Controller │  │ Controller │  │ Controller │       │   │
-│  │  └────────────┘  └────────────┘  └────────────┘       │   │
-│  │                                                          │   │
-│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐       │   │
-│  │  │    Lead    │  │  Settings  │  │   Config   │       │   │
-│  │  │ Controller │  │ Controller │  │ Controller │       │   │
-│  │  └────────────┘  └────────────┘  └────────────┘       │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                                                                   │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │                  Middleware Layer                        │   │
-│  │  • JWT Verification      • Request Validation           │   │
-│  │  • Rate Limiting         • Error Handling               │   │
-│  │  • CORS Management       • Security Headers             │   │
-│  └─────────────────────────────────────────────────────────┘   │
-└────────────────────────────┬────────────────────────────────────┘
-                             │
-                             │ HTTP Webhooks
-                             │ (JSON Payloads)
-                             ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      INTEGRATION TIER                            │
-│                  (n8n Workflow Automation)                       │
-│                                                                   │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │                  Workflow Orchestration                  │   │
-│  │                                                           │   │
-│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐       │   │
-│  │  │    User    │  │  Payment   │  │    Email   │       │   │
-│  │  │ Management │  │ Processing │  │ Automation │       │   │
-│  │  └────────────┘  └────────────┘  └────────────┘       │   │
-│  │                                                           │   │
-│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐       │   │
-│  │  │  AI Chat   │  │   Coupon   │  │   Admin    │       │   │
-│  │  │ Processing │  │ Validation │  │   Alerts   │       │   │
-│  │  └────────────┘  └────────────┘  └────────────┘       │   │
-│  └─────────────────────────────────────────────────────────┘   │
-└────────────────────────────┬────────────────────────────────────┘
-                             │
-                             │ Google Sheets API
-                             │ (Read/Write Operations)
-                             ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                        DATA TIER                                 │
-│                   (Google Sheets Storage)                        │
-│                                                                   │
-│  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐   │
-│  │   User Data    │  │    Queries     │  │     Admin      │   │
-│  │    (GID: 0)    │  │  (GID: Custom) │  │  (GID: Custom) │   │
-│  │                │  │                 │  │                │   │
-│  │ • Registrations│  │ • Contact Forms │  │ • Settings     │   │
-│  │ • Payments     │  │ • AI Chats      │  │ • Credentials  │   │
-│  │ • Transactions │  │ • Tickets       │  │ • Config       │   │
-│  └────────────────┘  └────────────────┘  └────────────────┘   │
-└─────────────────────────────────────────────────────────────────┘
+
+                     PRESENTATION TIER                            
+                    (React Frontend SPA)                          
+                                                                   
+                
+     Landing          Auth            Payment             
+       Page           Pages            Page               
+                
+                                                                   
+                
+      Admin          Contact        AI Chatbot            
+    Dashboard          Form           Widget              
+                
+
+                             
+                              HTTPS/REST API
+                              (JSON Payloads)
+                             
+
+                      APPLICATION TIER                            
+                  (Node.js + Express Backend)                     
+                                                                   
+     
+                      Core Services                            
+                  
+        Auth        Payment        Admin              
+     Controller    Controller    Controller           
+                  
+                                                               
+                  
+        Lead        Settings       Config             
+     Controller    Controller    Controller           
+                  
+     
+                                                                   
+     
+                    Middleware Layer                           
+    • JWT Verification      • Request Validation              
+    • Rate Limiting         • Error Handling                  
+    • CORS Management       • Security Headers                
+     
+
+                             
+                              HTTP Webhooks
+                              (JSON Payloads)
+                             
+
+                      INTEGRATION TIER                            
+                  (n8n Workflow Automation)                       
+                                                                   
+     
+                    Workflow Orchestration                     
+                                                                
+                  
+        User        Payment         Email             
+     Management    Processing    Automation           
+                  
+                                                                
+                  
+      AI Chat        Coupon        Admin              
+     Processing    Validation      Alerts             
+                  
+     
+
+                             
+                              Google Sheets API
+                              (Read/Write Operations)
+                             
+
+                        DATA TIER                                 
+                   (Google Sheets Storage)                        
+                                                                   
+         
+     User Data          Queries            Admin         
+      (GID: 0)        (GID: Custom)     (GID: Custom)    
+                                                          
+   • Registrations   • Contact Forms    • Settings        
+   • Payments        • AI Chats         • Credentials     
+   • Transactions    • Tickets          • Config          
+         
+
 ```
 
 ### 2.2 Communication Patterns
@@ -337,71 +337,71 @@ const response = await axios.post(`${API_BASE_URL}/capture-lead`, {
 
 ```
 frontend/src/
-├── components/               # Reusable UI Components
-│   ├── AIChatWidget.js      # Floating chatbot (context-aware)
-│   ├── Navigation.js        # Header navigation (auth-aware routing)
-│   ├── ProtectedRoute.js    # Route guard (authentication + authorization)
-│   └── Toast.js             # Notification system (success/error/warning)
-│
-├── contexts/                 # React Context Providers
-│   └── AuthContext.js       # Global auth state (user, token, helpers)
-│
-├── pages/                    # Route-level Components
-│   ├── LandingPage.js       # Public: Hero, features, countdown
-│   ├── RegisterPage.js      # Public: User registration form
-│   ├── LoginPage.js         # Public: User authentication
-│   ├── PaymentPage.js       # Protected: Payment simulation
-│   ├── PaymentSuccessPage.js # Protected: Post-payment confirmation
-│   ├── PaymentFailedPage.js # Protected: Payment failure handling
-│   ├── ThankYouPage.js      # Protected: Post-registration message
-│   ├── AboutPage.js         # Public: Webinar information
-│   ├── ContactPage.js       # Public: Support contact form
-│   ├── AdminLoginPage.js    # Admin: Authentication portal
-│   ├── AdminDashboard.js    # Admin: Analytics + lead management
-│   ├── AdminSettingsPage.js # Admin: Configuration panel
-│   ├── QueryDetailsPage.js  # Admin: Query/ticket management
-│   └── NotFoundPage.js      # Error: 404 handler
-│
-├── services/                 # API Integration Layer
-│   ├── constantsService.js  # Settings/constants fetching + caching
-│   └── googleSheetsService.js # Direct Google Sheets data fetching
-│
-├── utils/                    # Helper Functions
-│   ├── api.js               # Axios wrapper for backend API calls
-│   ├── errorHandler.js      # Centralized error handling logic
-│   └── paymentUtils.js      # Payment status utilities
-│
-├── App.js                    # Root component (routing + auth provider)
-├── index.js                  # React DOM render entry point
-└── index.css                 # Global styles + CSS variables
+ components/               # Reusable UI Components
+    AIChatWidget.js      # Floating chatbot (context-aware)
+    Navigation.js        # Header navigation (auth-aware routing)
+    ProtectedRoute.js    # Route guard (authentication + authorization)
+    Toast.js             # Notification system (success/error/warning)
+
+ contexts/                 # React Context Providers
+    AuthContext.js       # Global auth state (user, token, helpers)
+
+ pages/                    # Route-level Components
+    LandingPage.js       # Public: Hero, features, countdown
+    RegisterPage.js      # Public: User registration form
+    LoginPage.js         # Public: User authentication
+    PaymentPage.js       # Protected: Payment simulation
+    PaymentSuccessPage.js # Protected: Post-payment confirmation
+    PaymentFailedPage.js # Protected: Payment failure handling
+    ThankYouPage.js      # Protected: Post-registration message
+    AboutPage.js         # Public: Webinar information
+    ContactPage.js       # Public: Support contact form
+    AdminLoginPage.js    # Admin: Authentication portal
+    AdminDashboard.js    # Admin: Analytics + lead management
+    AdminSettingsPage.js # Admin: Configuration panel
+    QueryDetailsPage.js  # Admin: Query/ticket management
+    NotFoundPage.js      # Error: 404 handler
+
+ services/                 # API Integration Layer
+    constantsService.js  # Settings/constants fetching + caching
+    googleSheetsService.js # Direct Google Sheets data fetching
+
+ utils/                    # Helper Functions
+    api.js               # Axios wrapper for backend API calls
+    errorHandler.js      # Centralized error handling logic
+    paymentUtils.js      # Payment status utilities
+
+ App.js                    # Root component (routing + auth provider)
+ index.js                  # React DOM render entry point
+ index.css                 # Global styles + CSS variables
 ```
 
 #### 2.4.2 Backend Components Breakdown
 
 ```
 backend/
-├── config/                   # Configuration Management
-│   └── constants.js         # App constants + Google Sheets URLs
-│
-├── controllers/              # Business Logic Layer
-│   ├── authController.js    # User registration, login, token mgmt
-│   ├── paymentController.js # Payment processing, coupon validation
-│   ├── adminController.js   # Admin auth, dashboard data
-│   ├── leadController.js    # Contact forms, AI chat, query responses
-│   ├── settingsController.js # Settings CRUD operations
-│   ├── configController.js  # Configuration endpoints
-│   └── webinarController.js # Webinar info endpoints
-│
-├── middleware/               # Request/Response Interceptors
-│   └── axios.js             # Configured axios instance for n8n calls
-│
-├── routes/                   # API Route Definitions
-│   └── api.js               # All API endpoints with validation
-│
-├── server.js                 # Express app initialization
-├── index.js                  # Legacy entry point
-├── package.json              # Dependencies + scripts
-└── .env                      # Environment variables
+ config/                   # Configuration Management
+    constants.js         # App constants + Google Sheets URLs
+
+ controllers/              # Business Logic Layer
+    authController.js    # User registration, login, token mgmt
+    paymentController.js # Payment processing, coupon validation
+    adminController.js   # Admin auth, dashboard data
+    leadController.js    # Contact forms, AI chat, query responses
+    settingsController.js # Settings CRUD operations
+    configController.js  # Configuration endpoints
+    webinarController.js # Webinar info endpoints
+
+ middleware/               # Request/Response Interceptors
+    axios.js             # Configured axios instance for n8n calls
+
+ routes/                   # API Route Definitions
+    api.js               # All API endpoints with validation
+
+ server.js                 # Express app initialization
+ index.js                  # Legacy entry point
+ package.json              # Dependencies + scripts
+ .env                      # Environment variables
 ```
 
 ### 2.5 Data Flow Diagrams
@@ -409,120 +409,120 @@ backend/
 #### 2.5.1 User Registration Flow
 
 ```
-┌─────────┐         ┌─────────┐         ┌─────────┐         ┌─────────┐
-│ Browser │         │ Backend │         │   n8n   │         │ G.Sheets│
-└────┬────┘         └────┬────┘         └────┬────┘         └────┬────┘
-     │                   │                   │                   │
-     │ POST /register    │                   │                   │
-     ├──────────────────>│                   │                   │
-     │                   │                   │                   │
-     │                   │ Validate Email    │                   │
-     │                   ├────────┐          │                   │
-     │                   │        │          │                   │
-     │                   │<───────┘          │                   │
-     │                   │                   │                   │
-     │                   │ Hash Password     │                   │
-     │                   ├────────┐          │                   │
-     │                   │        │          │                   │
-     │                   │<───────┘          │                   │
-     │                   │                   │                   │
-     │                   │ POST /capture-lead│                   │
-     │                   ├──────────────────>│                   │
-     │                   │                   │                   │
-     │                   │                   │ Append User Data  │
-     │                   │                   ├──────────────────>│
-     │                   │                   │                   │
-     │                   │                   │    Success        │
-     │                   │                   │<──────────────────┤
-     │                   │                   │                   │
-     │                   │                   │ Trigger Email     │
-     │                   │                   ├────────┐          │
-     │                   │                   │        │          │
-     │                   │                   │<───────┘          │
-     │                   │                   │                   │
-     │                   │      Success      │                   │
-     │                   │<──────────────────┤                   │
-     │                   │                   │                   │
-     │                   │ Generate JWT      │                   │
-     │                   ├────────┐          │                   │
-     │                   │        │          │                   │
-     │                   │<───────┘          │                   │
-     │                   │                   │                   │
-     │    201 Created    │                   │                   │
-     │    + JWT Token    │                   │                   │
-     │<──────────────────┤                   │                   │
-     │                   │                   │                   │
-     │ Store Token       │                   │                   │
-     ├────────┐          │                   │                   │
-     │        │          │                   │                   │
-     │<───────┘          │                   │                   │
-     │                   │                   │                   │
-     │ Navigate to /payment                  │                   │
-     ├────────┐          │                   │                   │
-     │        │          │                   │                   │
-     │<───────┘          │                   │                   │
-     │                   │                   │                   │
+                           
+ Browser           Backend             n8n             G.Sheets
+                           
+                                                              
+      POST /register                                          
+     >                                      
+                                                              
+                         Validate Email                       
+                                                     
+                                                             
+                        <                             
+                                                              
+                         Hash Password                        
+                                                     
+                                                             
+                        <                             
+                                                              
+                         POST /capture-lead                   
+                        >                   
+                                                              
+                                            Append User Data  
+                                           >
+                                                              
+                                               Success        
+                                           <
+                                                              
+                                            Trigger Email     
+                                                     
+                                                             
+                                           <          
+                                                              
+                              Success                         
+                        <                   
+                                                              
+                         Generate JWT                         
+                                                     
+                                                             
+                        <                             
+                                                              
+         201 Created                                          
+         + JWT Token                                          
+     <                                      
+                                                              
+      Store Token                                             
+                                                     
+                                                             
+     <                                                
+                                                              
+      Navigate to /payment                                     
+                                                     
+                                                             
+     <                                                
+                                                              
 ```
 
 #### 2.5.2 Payment Processing Flow
 
 ```
-┌─────────┐         ┌─────────┐         ┌─────────┐         ┌─────────┐
-│ Browser │         │ Backend │         │   n8n   │         │ G.Sheets│
-└────┬────┘         └────┬────┘         └────┬────┘         └────┬────┘
-     │                   │                   │                   │
-     │ POST /simulate-payment                │                   │
-     ├──────────────────>│                   │                   │
-     │                   │                   │                   │
-     │                   │ Fetch Settings    │                   │
-     │                   ├────────┐          │                   │
-     │                   │        │          │                   │
-     │                   │<───────┘          │                   │
-     │                   │                   │                   │
-     │                   │ Calculate Amounts │                   │
-     │                   │ (reg_fee,         │                   │
-     │                   │  discount,        │                   │
-     │                   │  payable)         │                   │
-     │                   ├────────┐          │                   │
-     │                   │        │          │                   │
-     │                   │<───────┘          │                   │
-     │                   │                   │                   │
-     │                   │ POST /simulate-payment               │
-     │                   ├──────────────────>│                   │
-     │                   │                   │                   │
-     │                   │                   │ Update User Data  │
-     │                   │                   │ (payment_status,  │
-     │                   │                   │  txn_id, amounts) │
-     │                   │                   ├──────────────────>│
-     │                   │                   │                   │
-     │                   │                   │    Success        │
-     │                   │                   │<──────────────────┤
-     │                   │                   │                   │
-     │                   │                   │ Send Confirmation │
-     │                   │                   │ Email             │
-     │                   │                   ├────────┐          │
-     │                   │                   │        │          │
-     │                   │                   │<───────┘          │
-     │                   │                   │                   │
-     │                   │                   │ Get WhatsApp Link │
-     │                   │                   ├────────┐          │
-     │                   │                   │        │          │
-     │                   │                   │<───────┘          │
-     │                   │                   │                   │
-     │                   │ Success +         │                   │
-     │                   │ WhatsApp Link     │                   │
-     │                   │<──────────────────┤                   │
-     │                   │                   │                   │
-     │ 200 OK +          │                   │                   │
-     │ Payment Data      │                   │                   │
-     │<──────────────────┤                   │                   │
-     │                   │                   │                   │
-     │ Navigate to       │                   │                   │
-     │ /payment-success  │                   │                   │
-     ├────────┐          │                   │                   │
-     │        │          │                   │                   │
-     │<───────┘          │                   │                   │
-     │                   │                   │                   │
+                           
+ Browser           Backend             n8n             G.Sheets
+                           
+                                                              
+      POST /simulate-payment                                   
+     >                                      
+                                                              
+                         Fetch Settings                       
+                                                     
+                                                             
+                        <                             
+                                                              
+                         Calculate Amounts                    
+                         (reg_fee,                            
+                          discount,                           
+                          payable)                            
+                                                     
+                                                             
+                        <                             
+                                                              
+                         POST /simulate-payment               
+                        >                   
+                                                              
+                                            Update User Data  
+                                            (payment_status,  
+                                             txn_id, amounts) 
+                                           >
+                                                              
+                                               Success        
+                                           <
+                                                              
+                                            Send Confirmation 
+                                            Email             
+                                                     
+                                                             
+                                           <          
+                                                              
+                                            Get WhatsApp Link 
+                                                     
+                                                             
+                                           <          
+                                                              
+                         Success +                            
+                         WhatsApp Link                        
+                        <                   
+                                                              
+      200 OK +                                                
+      Payment Data                                            
+     <                                      
+                                                              
+      Navigate to                                             
+      /payment-success                                        
+                                                     
+                                                             
+     <                                                
+                                                              
 ```
 
 ### 2.6 Scalability Considerations
@@ -989,67 +989,67 @@ The Authentication & User Management module provides comprehensive user identity
 #### 4.2.1 Authentication Flow Diagram
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                   AUTHENTICATION FLOW                         │
-└──────────────────────────────────────────────────────────────┘
 
-┌─────────────┐                                    ┌─────────────┐
-│   Browser   │                                    │   Backend   │
-│   (React)   │                                    │  (Express)  │
-└──────┬──────┘                                    └──────┬──────┘
-       │                                                  │
-       │  1. Submit credentials (email, password)        │
-       ├────────────────────────────────────────────────>│
-       │                                                  │
-       │                                         2. Validate format
-       │                                         ├────────┐
-       │                                         │        │
-       │                                         │<───────┘
-       │                                                  │
-       │                                         3. Forward to n8n
-       │                                         ├──────────────────┐
-       │                                         │        ┌─────────▼───┐
-       │                                         │        │     n8n     │
-       │                                         │        │  Workflow   │
-       │                                         │        └─────────┬───┘
-       │                                         │                  │
-       │                                         │         4. Query Google Sheets
-       │                                         │         ├──────────────────┐
-       │                                         │         │    ┌─────────────▼────┐
-       │                                         │         │    │  Google Sheets   │
-       │                                         │         │    │   (User Data)    │
-       │                                         │         │    └─────────────┬────┘
-       │                                         │         │                  │
-       │                                         │         │     5. Return user data
-       │                                         │         │<─────────────────┘
-       │                                         │                  │
-       │                                         │  6. Return to backend
-       │                                         │<─────────────────┘
-       │                                                  │
-       │                                         7. Compare password
-       │                                         (bcrypt.compare)
-       │                                         ├────────┐
-       │                                         │        │
-       │                                         │<───────┘
-       │                                                  │
-       │                                         8. Generate JWT
-       │                                         ├────────┐
-       │                                         │        │
-       │                                         │<───────┘
-       │                                                  │
-       │  9. Return token + Set Cookie                   │
-       │<────────────────────────────────────────────────┤
-       │                                                  │
-       │  10. Store token in localStorage                │
-       ├────────┐                                        │
-       │        │                                        │
-       │<───────┘                                        │
-       │                                                  │
-       │  11. Navigate to protected route                │
-       ├────────┐                                        │
-       │        │                                        │
-       │<───────┘                                        │
-       │                                                  │
+                   AUTHENTICATION FLOW                         
+
+
+                                    
+   Browser                                          Backend   
+   (React)                                         (Express)  
+                                    
+                                                         
+         1. Submit credentials (email, password)        
+       >
+                                                         
+                                                2. Validate format
+                                                
+                                                        
+                                                <
+                                                         
+                                                3. Forward to n8n
+                                                
+                                                        
+                                                             n8n     
+                                                          Workflow   
+                                                        
+                                                                  
+                                                         4. Query Google Sheets
+                                                         
+                                                             
+                                                               Google Sheets   
+                                                                (User Data)    
+                                                             
+                                                                           
+                                                              5. Return user data
+                                                         <
+                                                                  
+                                                  6. Return to backend
+                                                <
+                                                         
+                                                7. Compare password
+                                                (bcrypt.compare)
+                                                
+                                                        
+                                                <
+                                                         
+                                                8. Generate JWT
+                                                
+                                                        
+                                                <
+                                                         
+         9. Return token + Set Cookie                   
+       <
+                                                         
+         10. Store token in localStorage                
+                                               
+                                                       
+       <                                        
+                                                         
+         11. Navigate to protected route                
+                                               
+                                                       
+       <                                        
+                                                         
 ```
 
 #### 4.2.2 Token Structure
@@ -1058,9 +1058,9 @@ The Authentication & User Management module provides comprehensive user identity
 ```
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVzZXJAZXhhbXBsZS5jb20iLCJuYW1lIjoiSm9obiBEb2UiLCJ1c2VySWQiOiJ1c2VyXzE3MzE2NzIwMDAwMDAiLCJyb2xlIjoiU3R1ZGVudCIsInJlbWVtYmVyTWUiOnRydWUsImlhdCI6MTczMTY3MjAwMCwiZXhwIjoxNzMyMjc2ODAwfQ.signature_hash_here
 
-┌─────────────────┬──────────────────────────────────────────────────────────────────┬────────────────┐
-│     HEADER      │                        PAYLOAD                                     │   SIGNATURE    │
-└─────────────────┴──────────────────────────────────────────────────────────────────┴────────────────┘
+
+     HEADER                              PAYLOAD                                        SIGNATURE    
+
 ```
 
 **Decoded Header**:
@@ -1462,11 +1462,11 @@ loginUser: async (req, res) => {
 **Example Hash**:
 ```
 $2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy
-│  │  │ │                          │
-│  │  │ └─ Cost factor (10)         │
-│  │  └─ Salt (22 chars)            │
-│  └─ Algorithm version (2a)        │
-└─ Identifier ($2a$ = bcrypt)       └─ Hash (31 chars)
+                               
+      Cost factor (10)         
+     Salt (22 chars)            
+   Algorithm version (2a)        
+ Identifier ($2a$ = bcrypt)        Hash (31 chars)
 ```
 
 **Security Properties**:
@@ -1681,7 +1681,7 @@ const refreshUserData = async (forceRefresh = false) => {
   
   // Skip refresh if payment already completed (unless forced)
   if (!forceRefresh && user?.payment_status === "Success") {
-    console.log('⏭️ Skipping refresh - payment completed');
+    console.log('⏭ Skipping refresh - payment completed');
     return user;
   }
   
@@ -1934,12 +1934,12 @@ verifyAdminToken: async (req, res, next) => {
 
 **NEVER Store Plain Passwords**:
 ```javascript
-// ❌ WRONG - Never do this
+//  WRONG - Never do this
 const userData = {
   password: req.body.password  // Plain text!
 };
 
-// ✅ CORRECT - Always hash
+//  CORRECT - Always hash
 const hashedPassword = await bcrypt.hash(req.body.password, 10);
 const userData = {
   password: hashedPassword
@@ -1956,18 +1956,18 @@ const userData = {
 #### 4.9.2 JWT Security
 
 **Token Security Checklist**:
-- ✅ Strong secret (min 32 characters, random)
-- ✅ HTTPS only in production
-- ✅ HTTP-only cookies (XSS protection)
-- ✅ SameSite=Strict (CSRF protection)
-- ✅ Short expiry times (7-30 days max)
-- ✅ No sensitive data in payload (email/name only)
-- ✅ Verify signature on every request
-- ✅ Rotate secrets periodically
+-  Strong secret (min 32 characters, random)
+-  HTTPS only in production
+-  HTTP-only cookies (XSS protection)
+-  SameSite=Strict (CSRF protection)
+-  Short expiry times (7-30 days max)
+-  No sensitive data in payload (email/name only)
+-  Verify signature on every request
+-  Rotate secrets periodically
 
 **Token Payload Guidelines**:
 ```javascript
-// ✅ GOOD - Non-sensitive identifiers
+//  GOOD - Non-sensitive identifiers
 {
   email: "user@example.com",
   name: "John Doe",
@@ -1975,7 +1975,7 @@ const userData = {
   role: "Student"
 }
 
-// ❌ BAD - Sensitive data
+//  BAD - Sensitive data
 {
   password: "hashed_password",  // Never include
   creditCard: "1234-5678-9012", // Never include
@@ -2130,154 +2130,154 @@ The Payment Processing System simulates a comprehensive payment flow for webinar
 #### 5.2.1 Payment Process Flow
 
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│                     PAYMENT PROCESSING FLOW                           │
-└──────────────────────────────────────────────────────────────────────┘
 
-┌─────────────┐                                         ┌──────────────┐
-│   User      │                                         │   Backend    │
-│  (React)    │                                         │  (Express)   │
-└──────┬──────┘                                         └──────┬───────┘
-       │                                                       │
-       │  1. Navigate to /payment                             │
-       ├────────┐                                             │
-       │        │ Load user data from localStorage            │
-       │<───────┘                                             │
-       │                                                       │
-       │  2. [Optional] Enter coupon code                     │
-       ├────────┐                                             │
-       │        │                                             │
-       │<───────┘                                             │
-       │                                                       │
-       │  3. Click "Validate Coupon"                          │
-       ├─────────────────────────────────────────────────────>│
-       │  POST /api/payment/validate-coupon                   │
-       │  { email, couponCode }                               │
-       │                                                       │
-       │                                         4. Forward to n8n
-       │                                         ├──────────────────┐
-       │                                         │     ┌────────────▼───┐
-       │                                         │     │      n8n       │
-       │                                         │     │   Workflow     │
-       │                                         │     └────────────┬───┘
-       │                                         │                  │
-       │                                         │      5. Query Google Sheets
-       │                                         │      ├─────────────────┐
-       │                                         │      │  ┌──────────────▼─────┐
-       │                                         │      │  │  Google Sheets     │
-       │                                         │      │  │  (Admin Tab)       │
-       │                                         │      │  └──────────────┬─────┘
-       │                                         │      │                 │
-       │                                         │      │  6. Return coupon data
-       │                                         │      │<────────────────┘
-       │                                         │                  │
-       │                                         │  7. Return validation
-       │                                         │<─────────────────┘
-       │                                                       │
-       │  8. Coupon validation result                         │
-       │<─────────────────────────────────────────────────────┤
-       │  { valid: true, discount: 30, finalPrice: 699 }      │
-       │                                                       │
-       │  9. Display discounted price                         │
-       ├────────┐                                             │
-       │        │ Update UI with discount                     │
-       │<───────┘                                             │
-       │                                                       │
-       │  10. Click "Proceed to Payment"                      │
-       ├─────────────────────────────────────────────────────>│
-       │  POST /api/payment/simulate-payment                  │
-       │  { email, amount, couponCode, name, mobile }         │
-       │                                                       │
-       │                                        11. Simulate payment
-       │                                        ├────────┐
-       │                                        │        │
-       │                                        │        │ Random outcome:
-       │                                        │        │ • 60% Success
-       │                                        │        │ • 30% Need Time
-       │                                        │        │ • 10% Failed
-       │                                        │<───────┘
-       │                                                       │
-       │                                        12. Forward to n8n
-       │                                        ├──────────────────┐
-       │                                        │     ┌────────────▼───┐
-       │                                        │     │      n8n       │
-       │                                        │     │   Workflow     │
-       │                                        │     └────────────┬───┘
-       │                                        │                  │
-       │                                        │     13. Update Google Sheets
-       │                                        │     ├─────────────────┐
-       │                                        │     │  ┌──────────────▼─────┐
-       │                                        │     │  │  Google Sheets     │
-       │                                        │     │  │  (User Data Tab)   │
-       │                                        │     │  │  - payment_status  │
-       │                                        │     │  │  - couponcode_used │
-       │                                        │     │  │  - amount_paid     │
-       │                                        │     │  │  - payment_timestamp│
-       │                                        │     │  └──────────────┬─────┘
-       │                                        │     │                 │
-       │                                        │     │  14. Return success
-       │                                        │     │<────────────────┘
-       │                                        │                  │
-       │                                        │  15. Return to backend
-       │                                        │<─────────────────┘
-       │                                                       │
-       │  16. Payment result                                  │
-       │<─────────────────────────────────────────────────────┤
-       │  { success: true, status: "Success",                 │
-       │    whatsappLink: "https://..." }                     │
-       │                                                       │
-       │  17. Navigate based on status                        │
-       ├────────┐                                             │
-       │        │ • Success → /payment-success               │
-       │        │ • Need Time → /thank-you                    │
-       │        │ • Failed → /payment-failed                  │
-       │<───────┘                                             │
-       │                                                       │
-       │  18. [If Success] Display WhatsApp invite            │
-       ├────────┐                                             │
-       │        │ Show link + auto-open option                │
-       │<───────┘                                             │
-       │                                                       │
+                     PAYMENT PROCESSING FLOW                           
+
+
+                                         
+   User                                                  Backend    
+  (React)                                               (Express)   
+                                         
+                                                              
+         1. Navigate to /payment                             
+                                                    
+                Load user data from localStorage            
+       <                                             
+                                                              
+         2. [Optional] Enter coupon code                     
+                                                    
+                                                            
+       <                                             
+                                                              
+         3. Click "Validate Coupon"                          
+       >
+         POST /api/payment/validate-coupon                   
+         { email, couponCode }                               
+                                                              
+                                                4. Forward to n8n
+                                                
+                                                     
+                                                           n8n       
+                                                        Workflow     
+                                                     
+                                                                  
+                                                      5. Query Google Sheets
+                                                      
+                                                        
+                                                          Google Sheets     
+                                                          (Admin Tab)       
+                                                        
+                                                                       
+                                                        6. Return coupon data
+                                                      <
+                                                                  
+                                                  7. Return validation
+                                                <
+                                                              
+         8. Coupon validation result                         
+       <
+         { valid: true, discount: 30, finalPrice: 699 }      
+                                                              
+         9. Display discounted price                         
+                                                    
+                Update UI with discount                     
+       <                                             
+                                                              
+         10. Click "Proceed to Payment"                      
+       >
+         POST /api/payment/simulate-payment                  
+         { email, amount, couponCode, name, mobile }         
+                                                              
+                                               11. Simulate payment
+                                               
+                                                       
+                                                        Random outcome:
+                                                        • 60% Success
+                                                        • 30% Need Time
+                                                        • 10% Failed
+                                               <
+                                                              
+                                               12. Forward to n8n
+                                               
+                                                    
+                                                          n8n       
+                                                       Workflow     
+                                                    
+                                                                 
+                                                    13. Update Google Sheets
+                                                    
+                                                      
+                                                        Google Sheets     
+                                                        (User Data Tab)   
+                                                        - payment_status  
+                                                        - couponcode_used 
+                                                        - amount_paid     
+                                                        - payment_timestamp
+                                                      
+                                                                     
+                                                      14. Return success
+                                                    <
+                                                                 
+                                                 15. Return to backend
+                                               <
+                                                              
+         16. Payment result                                  
+       <
+         { success: true, status: "Success",                 
+           whatsappLink: "https://..." }                     
+                                                              
+         17. Navigate based on status                        
+                                                    
+                • Success → /payment-success               
+                • Need Time → /thank-you                    
+                • Failed → /payment-failed                  
+       <                                             
+                                                              
+         18. [If Success] Display WhatsApp invite            
+                                                    
+                Show link + auto-open option                
+       <                                             
+                                                              
 ```
 
 #### 5.2.2 Payment Status State Machine
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                   PAYMENT STATUS STATES                       │
-└──────────────────────────────────────────────────────────────┘
 
-                    ┌──────────────┐
-                    │    NULL      │
-                    │  (No Payment)│
-                    └──────┬───────┘
-                           │
-                           │ User clicks "Proceed to Payment"
-                           │
-                           ▼
-                    ┌──────────────┐
-                    │  Processing  │ (Backend simulation running)
-                    │              │
-                    └──────┬───────┘
-                           │
-                           │ Random outcome (backend)
-                           │
-            ┌──────────────┼──────────────┐
-            │              │              │
-            │ 60%          │ 30%          │ 10%
-            │              │              │
-            ▼              ▼              ▼
-    ┌───────────┐  ┌──────────────┐  ┌──────────┐
-    │  Success  │  │  Need Time   │  │  Failed  │
-    │           │  │              │  │          │
-    └─────┬─────┘  └──────┬───────┘  └────┬─────┘
-          │                │               │
-          │                │               │
-          ▼                ▼               ▼
-┌──────────────────┐  ┌──────────────┐  ┌───────────────┐
-│ WhatsApp Invite  │  │ Manual Review│  │ Error Page    │
-│ + Course Access  │  │ by Admin     │  │ Retry Option  │
-└──────────────────┘  └──────────────┘  └───────────────┘
+                   PAYMENT STATUS STATES                       
+
+
+                    
+                        NULL      
+                      (No Payment)
+                    
+                           
+                            User clicks "Proceed to Payment"
+                           
+                           
+                    
+                      Processing   (Backend simulation running)
+                                  
+                    
+                           
+                            Random outcome (backend)
+                           
+            
+                                        
+             60%           30%           10%
+                                        
+                                        
+        
+      Success      Need Time       Failed  
+                                           
+        
+                                         
+                                         
+                                         
+    
+ WhatsApp Invite     Manual Review   Error Page    
+ + Course Access     by Admin        Retry Option  
+    
 
 FINAL STATES:
 - Success: Payment complete, user gets access
@@ -2543,36 +2543,36 @@ function getPaymentMessage(status) {
 
 **Distribution**:
 ```
-┌──────────────────────────────────────────────────────────┐
-│              PAYMENT OUTCOME DISTRIBUTION                 │
-└──────────────────────────────────────────────────────────┘
 
-Success (60%)   ████████████████████████████████████████
-                │                                         │
-                │ • Payment confirmed                     │
-                │ • WhatsApp invite generated             │
-                │ • Course access granted                 │
-                │ • Navigate to /payment-success          │
-                │                                         │
-                └─────────────────────────────────────────┘
+              PAYMENT OUTCOME DISTRIBUTION                 
 
-Need Time (30%) ████████████████████
-                │                                         │
-                │ • Pending verification                  │
-                │ • Admin manual review                   │
-                │ • User notified via email               │
-                │ • Navigate to /thank-you                │
-                │                                         │
-                └─────────────────────────────────────────┘
 
-Failed (10%)    ██████
-                │                                         │
-                │ • Payment declined                      │
-                │ • No charge applied                     │
-                │ • Retry option provided                 │
-                │ • Navigate to /payment-failed           │
-                │                                         │
-                └─────────────────────────────────────────┘
+Success (60%)   
+                                                         
+                 • Payment confirmed                     
+                 • WhatsApp invite generated             
+                 • Course access granted                 
+                 • Navigate to /payment-success          
+                                                         
+                
+
+Need Time (30%) 
+                                                         
+                 • Pending verification                  
+                 • Admin manual review                   
+                 • User notified via email               
+                 • Navigate to /thank-you                
+                                                         
+                
+
+Failed (10%)    
+                                                         
+                 • Payment declined                      
+                 • No charge applied                     
+                 • Retry option provided                 
+                 • Navigate to /payment-failed           
+                                                         
+                
 ```
 
 **Real-World Mapping**:
@@ -2903,25 +2903,25 @@ https://wa.me/?text=ENCODED_MESSAGE
 ```javascript
 const generateWhatsAppMessage = (name, groupLink) => {
   const message = `
-🎉 Congratulations ${name}!
+ Congratulations ${name}!
 
 Your payment is confirmed for the webinar.
 
-📅 Event Details:
+ Event Details:
 • Date: [Webinar Date]
 • Time: [Webinar Time]
 • Duration: [Duration]
 
 Join our exclusive WhatsApp group for:
-✅ Live updates
-✅ Course materials
-✅ Q&A sessions
-✅ Networking with peers
+ Live updates
+ Course materials
+ Q&A sessions
+ Networking with peers
 
 Click here to join:
 ${groupLink}
 
-See you there! 🚀
+See you there! 
   `.trim();
   
   return encodeURIComponent(message);
@@ -3327,146 +3327,146 @@ The AI Chat & Customer Support module provides intelligent conversational assist
 #### 6.2.1 Chat Flow Diagram
 
 ```
-┌────────────────────────────────────────────────────────────────────┐
-│                      AI CHAT CONVERSATION FLOW                      │
-└────────────────────────────────────────────────────────────────────┘
 
-┌──────────────┐                                      ┌───────────────┐
-│    User      │                                      │   Backend     │
-│  (Browser)   │                                      │  (Express)    │
-└──────┬───────┘                                      └───────┬───────┘
-       │                                                      │
-       │  1. Click chat bubble icon                          │
-       ├────────┐                                            │
-       │        │ Widget opens                               │
-       │<───────┘                                            │
-       │                                                      │
-       │  2. Type message and click Send                     │
-       ├─────────────────────────────────────────────────────>│
-       │  POST /api/leads/ai-chat                            │
-       │  { email, query, context }                          │
-       │                                                      │
-       │                                      3. Validate input
-       │                                      ├────────┐
-       │                                      │        │
-       │                                      │<───────┘
-       │                                                      │
-       │                                      4. Forward to n8n
-       │                                      ├─────────────────┐
-       │                                      │   ┌─────────────▼──┐
-       │                                      │   │      n8n       │
-       │                                      │   │   AI Workflow  │
-       │                                      │   └─────────────┬──┘
-       │                                      │                 │
-       │                                      │   5. Retrieve FAQ context
-       │                                      │   ├──────────────────┐
-       │                                      │   │   ┌──────────────▼──┐
-       │                                      │   │   │  Google Sheets  │
-       │                                      │   │   │   (FAQ Data)    │
-       │                                      │   │   └──────────────┬──┘
-       │                                      │   │                  │
-       │                                      │   │   6. Return FAQs
-       │                                      │   │<─────────────────┘
-       │                                      │                 │
-       │                                      │   7. Build LLM prompt
-       │                                      │   (Query + FAQ context)
-       │                                      │   ├────────┐
-       │                                      │   │        │
-       │                                      │   │<───────┘
-       │                                      │                 │
-       │                                      │   8. Call OpenAI/Claude API
-       │                                      │   ├──────────────────┐
-       │                                      │   │   ┌──────────────▼──┐
-       │                                      │   │   │   OpenAI/Claude │
-       │                                      │   │   │   GPT-4/Claude  │
-       │                                      │   │   └──────────────┬──┘
-       │                                      │   │                  │
-       │                                      │   │   9. Return AI response
-       │                                      │   │<─────────────────┘
-       │                                      │                 │
-       │                                      │   10. Store query + response
-       │                                      │   ├──────────────────┐
-       │                                      │   │   ┌──────────────▼──┐
-       │                                      │   │   │  Google Sheets  │
-       │                                      │   │   │  (Queries Tab)  │
-       │                                      │   │   │  - User query   │
-       │                                      │   │   │  - AI response  │
-       │                                      │   │   │  - Timestamp    │
-       │                                      │   │   │  - Status       │
-       │                                      │   │   └──────────────┬──┘
-       │                                      │   │                  │
-       │                                      │   │   11. Confirmation
-       │                                      │   │<─────────────────┘
-       │                                      │                 │
-       │                                      │   12. Return to backend
-       │                                      │<──────────────────┘
-       │                                                      │
-       │  13. AI response                                    │
-       │<─────────────────────────────────────────────────────┤
-       │  { success: true, response: "..." }                 │
-       │                                                      │
-       │  14. Display response in chat                       │
-       ├────────┐                                            │
-       │        │ Append to conversation                     │
-       │<───────┘                                            │
-       │                                                      │
-       │  15. User can continue conversation                 │
-       │  (repeat from step 2)                               │
-       │                                                      │
+                      AI CHAT CONVERSATION FLOW                      
+
+
+                                      
+    User                                               Backend     
+  (Browser)                                           (Express)    
+                                      
+                                                             
+         1. Click chat bubble icon                          
+                                                   
+                Widget opens                               
+       <                                            
+                                                             
+         2. Type message and click Send                     
+       >
+         POST /api/leads/ai-chat                            
+         { email, query, context }                          
+                                                             
+                                             3. Validate input
+                                             
+                                                     
+                                             <
+                                                             
+                                             4. Forward to n8n
+                                             
+                                                
+                                                      n8n       
+                                                   AI Workflow  
+                                                
+                                                              
+                                                5. Retrieve FAQ context
+                                                
+                                                   
+                                                     Google Sheets  
+                                                      (FAQ Data)    
+                                                   
+                                                                  
+                                                   6. Return FAQs
+                                                <
+                                                              
+                                                7. Build LLM prompt
+                                                (Query + FAQ context)
+                                                
+                                                        
+                                                <
+                                                              
+                                                8. Call OpenAI/Claude API
+                                                
+                                                   
+                                                      OpenAI/Claude 
+                                                      GPT-4/Claude  
+                                                   
+                                                                  
+                                                   9. Return AI response
+                                                <
+                                                              
+                                                10. Store query + response
+                                                
+                                                   
+                                                     Google Sheets  
+                                                     (Queries Tab)  
+                                                     - User query   
+                                                     - AI response  
+                                                     - Timestamp    
+                                                     - Status       
+                                                   
+                                                                  
+                                                   11. Confirmation
+                                                <
+                                                              
+                                                12. Return to backend
+                                             <
+                                                             
+         13. AI response                                    
+       <
+         { success: true, response: "..." }                 
+                                                             
+         14. Display response in chat                       
+                                                   
+                Append to conversation                     
+       <                                            
+                                                             
+         15. User can continue conversation                 
+         (repeat from step 2)                               
+                                                             
 ```
 
 #### 6.2.2 Query Status State Machine
 
 ```
-┌────────────────────────────────────────────────────────────┐
-│                   QUERY STATUS STATES                       │
-└────────────────────────────────────────────────────────────┘
 
-                    ┌──────────────┐
-                    │   New Query  │
-                    │  (Submitted) │
-                    └──────┬───────┘
-                           │
-                           │ Stored in Google Sheets
-                           │
-                           ▼
-                    ┌──────────────┐
-                    │ AI Processing│
-                    │              │
-                    └──────┬───────┘
-                           │
-                           │ LLM generates response
-                           │
-            ┌──────────────┼──────────────┐
-            │              │              │
-            │ Confident    │ Uncertain    │ Complex
-            │              │              │
-            ▼              ▼              ▼
-    ┌───────────┐  ┌──────────────┐  ┌──────────┐
-    │Auto-Reply │  │Pending Review│  │ Escalated│
-    │(Answered) │  │  (Flagged)   │  │          │
-    └─────┬─────┘  └──────┬───────┘  └────┬─────┘
-          │                │               │
-          │                │               │
-          │                ▼               │
-          │         ┌──────────────┐       │
-          │         │Admin Reviews │       │
-          │         │              │       │
-          │         └──────┬───────┘       │
-          │                │               │
-          │      ┌─────────┴─────────┐     │
-          │      │                   │     │
-          │      ▼                   ▼     │
-          │  ┌────────┐        ┌─────────┐│
-          │  │Approved│        │Rejected ││
-          │  │        │        │         ││
-          │  └───┬────┘        └────┬────┘│
-          │      │                  │     │
-          │      ▼                  ▼     │
-          │  ┌──────────────────────────┐ │
-          └─>│   Response Sent to User  │<┘
-             │                          │
-             └──────────────────────────┘
+                   QUERY STATUS STATES                       
+
+
+                    
+                       New Query  
+                      (Submitted) 
+                    
+                           
+                            Stored in Google Sheets
+                           
+                           
+                    
+                     AI Processing
+                                  
+                    
+                           
+                            LLM generates response
+                           
+            
+                                        
+             Confident     Uncertain     Complex
+                                        
+                                        
+        
+    Auto-Reply   Pending Review   Escalated
+    (Answered)     (Flagged)               
+        
+                                         
+                                         
+                                         
+                          
+                   Admin Reviews        
+                                        
+                          
+                                         
+                     
+                                        
+                                        
+                    
+            Approved        Rejected 
+                                     
+                    
+                                       
+                                       
+             
+          >   Response Sent to User  <
+                                       
+             
 
 STATUS VALUES:
 - "New": Query just submitted
@@ -3601,7 +3601,7 @@ const AIChatWidget = () => {
               <BotIcon />
               <div>
                 <h4>AI Assistant</h4>
-                <span className="status">● Online</span>
+                <span className="status"> Online</span>
               </div>
             </div>
             <button onClick={() => setIsOpen(false)}>
@@ -4204,13 +4204,13 @@ const QueryManagement = () => {
                 className="approve-btn"
                 onClick={() => handleApprove(query.query_id)}
               >
-                ✓ Approve
+                 Approve
               </button>
               <button 
                 className="reject-btn"
                 onClick={() => setSelectedQuery(query)}
               >
-                ✗ Reject
+                 Reject
               </button>
             </div>
           </div>
@@ -4476,10 +4476,10 @@ const handleRateMessage = (messageId, rating) => {
 // In message component
 <div className="message-rating">
   <button onClick={() => handleRateMessage(message.id, 'positive')}>
-    👍
+    
   </button>
   <button onClick={() => handleRateMessage(message.id, 'negative')}>
-    👎
+    
   </button>
 </div>
 ```
@@ -4540,73 +4540,73 @@ The Admin Dashboard provides comprehensive analytics, lead management, and syste
 #### 7.2.1 Dashboard Layout Structure
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                        ADMIN DASHBOARD LAYOUT                            │
-└─────────────────────────────────────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────────────────────────────────┐
-│  HEADER                                                                  │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐                │
-│  │ Logout   │  │ Refresh  │  │ Export   │  │ Settings │                │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘                │
-└─────────────────────────────────────────────────────────────────────────┘
+                        ADMIN DASHBOARD LAYOUT                            
 
-┌─────────────────────────────────────────────────────────────────────────┐
-│  DATE FILTER                                                             │
-│  ┌──────────────┐  to  ┌──────────────┐  ┌──────────┐  ┌──────────┐   │
-│  │  Start Date  │ ───> │   End Date   │  │  Apply   │  │  Clear   │   │
-│  └──────────────┘      └──────────────┘  └──────────┘  └──────────┘   │
-└─────────────────────────────────────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────────────────────────────────┐
-│  KEY METRICS (4 Cards)                                                   │
-│  ┌────────────────┐ ┌────────────────┐ ┌────────────────┐ ┌───────────┐│
-│  │  Total Leads   │ │  Paid Users    │ │ Revenue (₹)    │ │ Pending   ││
-│  │     1,247      │ │      856       │ │   854,144      │ │    45     ││
-│  │  +12% ↑        │ │   +8% ↑        │ │  +15% ↑        │ │   -3% ↓   ││
-│  └────────────────┘ └────────────────┘ └────────────────┘ └───────────┘│
-└─────────────────────────────────────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────────────────────────────────┐
-│  CHARTS SECTION (3 Charts)                                               │
-│  ┌───────────────────────────────────────────────────────────────────┐  │
-│  │  LINE CHART: Daily Registrations (Last 30 Days)                   │  │
-│  │  [Trend line showing registration peaks and valleys]              │  │
-│  └───────────────────────────────────────────────────────────────────┘  │
-│                                                                           │
-│  ┌──────────────────────────┐  ┌────────────────────────────────────┐  │
-│  │  BAR CHART:              │  │  DONUT CHART:                      │  │
-│  │  Payment Status          │  │  Traffic Sources                   │  │
-│  │  Success:    856         │  │  Direct:        45%                │  │
-│  │  Need Time:   45         │  │  Facebook:      25%                │  │
-│  │  Failed:      38         │  │  Google Ads:    20%                │  │
-│  │  Pending:    308         │  │  LinkedIn:      10%                │  │
-│  └──────────────────────────┘  └────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────────┘
+  HEADER                                                                  
+                        
+   Logout      Refresh     Export      Settings                 
+                        
 
-┌─────────────────────────────────────────────────────────────────────────┐
-│  TABS: [Leads] [Queries] [Settings]                                     │
-└─────────────────────────────────────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────────────────────────────────┐
-│  LEADS TABLE (18 Columns)                                                │
-│  ┌────────────┬─────────┬──────────────┬─────────┬────────┬─────────┐  │
-│  │ Timestamp  │  Name   │    Email     │  Mobile │ Status │ Amount  │...│
-│  ├────────────┼─────────┼──────────────┼─────────┼────────┼─────────┤  │
-│  │ 11/17 10AM │ John D  │ john@ex.com  │ 9876... │Success │  ₹999   │...│
-│  │ 11/17 09AM │ Jane S  │ jane@ex.com  │ 9845... │Need Time│  ₹699   │...│
-│  │ 11/17 08AM │ Bob M   │ bob@ex.com   │ 9712... │Pending │  -      │...│
-│  └────────────┴─────────┴──────────────┴─────────┴────────┴─────────┘  │
-│                                                                           │
-│  ┌──────────────┐  ┌─────────────┐  ┌──────────┐  Showing 1-50 of 1,247│
-│  │  🔍 Search   │  │  Filter by  │  │ Download │  ◀ 1 2 3 4 5 ▶        │
-│  └──────────────┘  └─────────────┘  └──────────┘                        │
-└─────────────────────────────────────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────────────────────────────────┐
-│  FOOTER                                                                  │
-│  Auto-refresh in 28s | Last updated: Nov 17, 2024 10:30:45 AM           │
-└─────────────────────────────────────────────────────────────────────────┘
+  DATE FILTER                                                             
+    to         
+    Start Date   >    End Date       Apply       Clear      
+               
+
+
+
+  KEY METRICS (4 Cards)                                                   
+     
+    Total Leads      Paid Users      Revenue (₹)      Pending   
+       1,247             856           854,144           45     
+    +12% ↑            +8% ↑           +15% ↑            -3% ↓   
+     
+
+
+
+  CHARTS SECTION (3 Charts)                                               
+    
+    LINE CHART: Daily Registrations (Last 30 Days)                     
+    [Trend line showing registration peaks and valleys]                
+    
+                                                                           
+      
+    BAR CHART:                  DONUT CHART:                        
+    Payment Status              Traffic Sources                     
+    Success:    856             Direct:        45%                  
+    Need Time:   45             Facebook:      25%                  
+    Failed:      38             Google Ads:    20%                  
+    Pending:    308             LinkedIn:      10%                  
+      
+
+
+
+  TABS: [Leads] [Queries] [Settings]                                     
+
+
+
+  LEADS TABLE (18 Columns)                                                
+    
+   Timestamp    Name       Email       Mobile  Status  Amount  ...
+    
+   11/17 10AM  John D   john@ex.com   9876... Success   ₹999   ...
+   11/17 09AM  Jane S   jane@ex.com   9845... Need Time  ₹699   ...
+   11/17 08AM  Bob M    bob@ex.com    9712... Pending   -      ...
+    
+                                                                           
+        Showing 1-50 of 1,247
+     Search       Filter by     Download    1 2 3 4 5         
+                              
+
+
+
+  FOOTER                                                                  
+  Auto-refresh in 28s | Last updated: Nov 17, 2024 10:30:45 AM           
+
 ```
 
 ### 7.3 Key Metrics Cards
@@ -4757,7 +4757,7 @@ const MetricCard = ({ title, value, change, icon, color }) => {
     title="Total Leads"
     value={metrics.totalLeads}
     change={12.5}
-    icon="👥"
+    icon=""
     color="blue"
   />
   
@@ -4765,7 +4765,7 @@ const MetricCard = ({ title, value, change, icon, color }) => {
     title="Paid Users"
     value={metrics.paidUsers}
     change={8.3}
-    icon="✅"
+    icon=""
     color="green"
   />
   
@@ -4773,7 +4773,7 @@ const MetricCard = ({ title, value, change, icon, color }) => {
     title="Total Revenue"
     value={`₹${metrics.totalRevenue.toLocaleString('en-IN')}`}
     change={15.7}
-    icon="💰"
+    icon=""
     color="purple"
   />
   
@@ -5051,24 +5051,24 @@ const TrafficSourcesChart = ({ sourceBreakdown }) => {
 
 | # | Column Name | Type | Width | Sortable | Filterable | Description |
 |---|-------------|------|-------|----------|------------|-------------|
-| 1 | `reg_timestamp` | Date | 150px | ✅ | ✅ | Registration date & time |
-| 2 | `name` | String | 150px | ✅ | ✅ | User's full name |
-| 3 | `email` | String | 200px | ✅ | ✅ | Email address (unique) |
-| 4 | `mobile` | String | 120px | ❌ | ✅ | Phone number |
-| 5 | `role` | String | 100px | ✅ | ✅ | User role (Student, Professional, etc.) |
-| 6 | `source` | String | 120px | ✅ | ✅ | Traffic source (UTM) |
-| 7 | `payment_status` | String | 120px | ✅ | ✅ | Payment status (Success, Need Time, Failed) |
-| 8 | `amount_paid` | Number | 100px | ✅ | ❌ | Amount paid in ₹ |
-| 9 | `couponcode_used` | String | 120px | ❌ | ✅ | Coupon code applied |
-| 10 | `discount_applied` | Number | 100px | ✅ | ❌ | Discount percentage |
-| 11 | `payment_timestamp` | Date | 150px | ✅ | ✅ | Payment completion time |
-| 12 | `transaction_id` | String | 180px | ❌ | ✅ | Unique transaction ID |
-| 13 | `whatsapp_invite_sent` | Boolean | 80px | ✅ | ✅ | Invite sent status |
-| 14 | `ip_address` | String | 130px | ❌ | ❌ | User's IP address |
-| 15 | `user_agent` | String | 200px | ❌ | ❌ | Browser/device info |
-| 16 | `lead_score` | Number | 80px | ✅ | ❌ | Lead quality score (0-100) |
-| 17 | `last_activity` | Date | 150px | ✅ | ❌ | Last interaction timestamp |
-| 18 | `notes` | String | 200px | ❌ | ❌ | Admin notes |
+| 1 | `reg_timestamp` | Date | 150px |  |  | Registration date & time |
+| 2 | `name` | String | 150px |  |  | User's full name |
+| 3 | `email` | String | 200px |  |  | Email address (unique) |
+| 4 | `mobile` | String | 120px |  |  | Phone number |
+| 5 | `role` | String | 100px |  |  | User role (Student, Professional, etc.) |
+| 6 | `source` | String | 120px |  |  | Traffic source (UTM) |
+| 7 | `payment_status` | String | 120px |  |  | Payment status (Success, Need Time, Failed) |
+| 8 | `amount_paid` | Number | 100px |  |  | Amount paid in ₹ |
+| 9 | `couponcode_used` | String | 120px |  |  | Coupon code applied |
+| 10 | `discount_applied` | Number | 100px |  |  | Discount percentage |
+| 11 | `payment_timestamp` | Date | 150px |  |  | Payment completion time |
+| 12 | `transaction_id` | String | 180px |  |  | Unique transaction ID |
+| 13 | `whatsapp_invite_sent` | Boolean | 80px |  |  | Invite sent status |
+| 14 | `ip_address` | String | 130px |  |  | User's IP address |
+| 15 | `user_agent` | String | 200px |  |  | Browser/device info |
+| 16 | `lead_score` | Number | 80px |  |  | Lead quality score (0-100) |
+| 17 | `last_activity` | Date | 150px |  |  | Last interaction timestamp |
+| 18 | `notes` | String | 200px |  |  | Admin notes |
 
 #### 7.5.2 Table Component Implementation
 
@@ -5824,7 +5824,7 @@ class ConstantsService {
   async getConstants() {
     // Return cached data if available (infinite cache)
     if (this.cache !== null) {
-      console.log('📦 Returning cached constants');
+      console.log(' Returning cached constants');
       return this.cache;
     }
     
@@ -5844,7 +5844,7 @@ class ConstantsService {
     this.loading = true;
     
     try {
-      console.log('🌐 Fetching constants from backend...');
+      console.log(' Fetching constants from backend...');
       const response = await fetch('/api/config/get-settings', {
         method: 'GET',
         headers: {
@@ -5865,14 +5865,14 @@ class ConstantsService {
         // Notify all listeners
         this.notifyListeners(this.cache);
         
-        console.log('✅ Constants cached successfully');
+        console.log(' Constants cached successfully');
         return this.cache;
       } else {
         throw new Error('Invalid response format');
       }
       
     } catch (error) {
-      console.error('❌ Failed to fetch constants:', error);
+      console.error(' Failed to fetch constants:', error);
       
       // Return default values on error
       return this.getDefaultConstants();
@@ -5886,7 +5886,7 @@ class ConstantsService {
    * Manually refresh cache (called after admin updates settings)
    */
   async refreshConstants() {
-    console.log('🔄 Manual refresh triggered');
+    console.log(' Manual refresh triggered');
     this.cache = null;
     this.cacheTimestamp = null;
     return await this.getConstants();
@@ -5949,7 +5949,7 @@ class ConstantsService {
   clearCache() {
     this.cache = null;
     this.cacheTimestamp = null;
-    console.log('🗑️ Cache cleared');
+    console.log(' Cache cleared');
   }
 }
 
@@ -6143,7 +6143,7 @@ const AdminSettingsPage = () => {
       
       {hasChanges && (
         <div className="unsaved-warning">
-          ⚠️ You have unsaved changes
+           You have unsaved changes
         </div>
       )}
       
@@ -6493,7 +6493,7 @@ export const settingsMetadata = {
     label: 'Maintenance Mode',
     type: 'boolean',
     category: 'System',
-    description: '⚠️ Enable to show maintenance page to all users'
+    description: ' Enable to show maintenance page to all users'
   }
 };
 ```
@@ -6591,55 +6591,55 @@ The n8n Workflow Integration module orchestrates all business process automation
 #### 9.2.1 Overall Workflow Structure
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│                    n8n WORKFLOW ARCHITECTURE                      │
-└──────────────────────────────────────────────────────────────────┘
 
-                        ┌───────────────┐
-                        │  Express API  │
-                        │   (Backend)   │
-                        └───────┬───────┘
-                                │
-                                │ HTTP POST/GET
-                                │
-                                ▼
-                    ┌───────────────────────┐
-                    │   n8n Webhook Node    │
-                    │  (Entry Point for     │
-                    │   each workflow)      │
-                    └───────────┬───────────┘
-                                │
-                                ▼
-                    ┌───────────────────────┐
-                    │   Function Node       │
-                    │  (Data validation &   │
-                    │   transformation)     │
-                    └───────────┬───────────┘
-                                │
-                    ┌───────────┴───────────┐
-                    │                       │
-                    ▼                       ▼
-        ┌──────────────────────┐  ┌──────────────────────┐
-        │  Google Sheets Node  │  │   HTTP Request Node  │
-        │  - Append Row        │  │   - OpenAI API       │
-        │  - Get Rows          │  │   - Claude API       │
-        │  - Update Row        │  │   - WhatsApp API     │
-        │  - Lookup            │  │   - Email Service    │
-        └──────────┬───────────┘  └──────────┬───────────┘
-                   │                         │
-                   └─────────┬───────────────┘
-                             │
-                             ▼
-                 ┌───────────────────────┐
-                 │   Function Node       │
-                 │  (Format response)    │
-                 └───────────┬───────────┘
-                             │
-                             ▼
-                 ┌───────────────────────┐
-                 │  Respond to Webhook   │
-                 │  (Return to backend)  │
-                 └───────────────────────┘
+                    n8n WORKFLOW ARCHITECTURE                      
+
+
+                        
+                          Express API  
+                           (Backend)   
+                        
+                                
+                                 HTTP POST/GET
+                                
+                                
+                    
+                       n8n Webhook Node    
+                      (Entry Point for     
+                       each workflow)      
+                    
+                                
+                                
+                    
+                       Function Node       
+                      (Data validation &   
+                       transformation)     
+                    
+                                
+                    
+                                           
+                                           
+          
+          Google Sheets Node       HTTP Request Node  
+          - Append Row             - OpenAI API       
+          - Get Rows               - Claude API       
+          - Update Row             - WhatsApp API     
+          - Lookup                 - Email Service    
+          
+                                            
+                   
+                             
+                             
+                 
+                    Function Node       
+                   (Format response)    
+                 
+                             
+                             
+                 
+                   Respond to Webhook   
+                   (Return to backend)  
+                 
 ```
 
 ### 9.3 Workflow Details
@@ -7330,33 +7330,33 @@ if (apiKey !== expectedKey) {
 ### 10.5 Entity Relationships
 
 ```
-┌─────────────┐       ┌─────────────┐
-│    User     │       │   Coupon    │
-│             │       │             │
-│ email (PK)  │───────│ coupon_code │
-│ name        │  uses │ discount_%  │
-│ password    │       │ max_uses    │
-│ mobile      │       │ status      │
-│ role        │       └─────────────┘
-│ source      │
-│ payment_*   │       ┌─────────────┐
-└─────────────┘       │   Query     │
-       │              │             │
-       │  submits     │ query_id(PK)│
-       └──────────────│ email       │
-                      │ query       │
-                      │ ai_response │
-                      │ status      │
-                      └─────────────┘
+       
+    User               Coupon    
+                                 
+ email (PK)   coupon_code 
+ name          uses  discount_%  
+ password            max_uses    
+ mobile              status      
+ role               
+ source      
+ payment_*          
+          Query     
+                                  
+         submits      query_id(PK)
+        email       
+                       query       
+                       ai_response 
+                       status      
                       
-┌─────────────────────┐
-│     Settings        │
-│                     │
-│ setting_key (PK)    │
-│ value               │
-│ type                │
-│ category            │
-└─────────────────────┘
+                      
+
+     Settings        
+                     
+ setting_key (PK)    
+ value               
+ type                
+ category            
+
 ```
 
 **Relationships**:
@@ -7938,12 +7938,12 @@ X-RateLimit-Reset: 1731672900
 - Payload: Non-sensitive data only (email, name, userId, role)
 
 **Best Practices Implemented**:
-✅ Tokens signed with strong secret  
-✅ Short expiry times (7-30 days max)  
-✅ HTTP-only cookies for token storage  
-✅ Signature verification on every request  
-✅ No sensitive data in JWT payload  
-✅ Separate admin tokens  
+ Tokens signed with strong secret  
+ Short expiry times (7-30 days max)  
+ HTTP-only cookies for token storage  
+ Signature verification on every request  
+ No sensitive data in JWT payload  
+ Separate admin tokens  
 
 #### 12.1.2 Password Security
 
@@ -8140,7 +8140,7 @@ app.use(helmet({
 
 #### 12.5.1 SQL Injection
 
-**Status**: ✅ Not Applicable (No SQL database)
+**Status**:  Not Applicable (No SQL database)
 - Using Google Sheets as data store
 - n8n handles all sheet operations
 - No direct SQL queries
@@ -8148,19 +8148,19 @@ app.use(helmet({
 #### 12.5.2 XSS (Cross-Site Scripting)
 
 **Prevention Measures**:
-✅ HTTP-only cookies (tokens not accessible via JavaScript)  
-✅ Content Security Policy headers  
-✅ Input sanitization on backend  
-✅ Output encoding in React (automatic)  
-✅ No `dangerouslySetInnerHTML` usage  
+ HTTP-only cookies (tokens not accessible via JavaScript)  
+ Content Security Policy headers  
+ Input sanitization on backend  
+ Output encoding in React (automatic)  
+ No `dangerouslySetInnerHTML` usage  
 
 #### 12.5.3 CSRF (Cross-Site Request Forgery)
 
 **Prevention Measures**:
-✅ SameSite cookie attribute (strict)  
-✅ Origin header verification  
-✅ CORS configuration  
-✅ JWT tokens in Authorization header  
+ SameSite cookie attribute (strict)  
+ Origin header verification  
+ CORS configuration  
+ JWT tokens in Authorization header  
 
 #### 12.5.4 Timing Attacks
 
@@ -8860,13 +8860,13 @@ pm2 startup
 
 | Browser | Minimum Version | Notes |
 |---------|-----------------|-------|
-| Chrome | 90+ | ✅ Fully supported |
-| Firefox | 88+ | ✅ Fully supported |
-| Safari | 14+ | ✅ Fully supported |
-| Edge | 90+ | ✅ Fully supported (Chromium-based) |
-| Opera | 76+ | ✅ Fully supported |
-| Samsung Internet | 14+ | ✅ Mobile supported |
-| IE 11 | ❌ | Not supported |
+| Chrome | 90+ |  Fully supported |
+| Firefox | 88+ |  Fully supported |
+| Safari | 14+ |  Fully supported |
+| Edge | 90+ |  Fully supported (Chromium-based) |
+| Opera | 76+ |  Fully supported |
+| Samsung Internet | 14+ |  Mobile supported |
+| IE 11 |  | Not supported |
 
 **Required Features**:
 - ES6+ JavaScript support

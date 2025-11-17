@@ -56,11 +56,11 @@ This platform serves as an all-in-one solution for:
 ### 1.4 Core Value
 
 The platform eliminates the complexity of managing multiple tools by providing:
-- ✅ **Unified Experience**: Single platform for marketing, sales, and support
-- ✅ **Automated Workflows**: Reduce manual work with intelligent automation
-- ✅ **Data-Driven Insights**: Make informed decisions with comprehensive analytics
-- ✅ **Scalable Infrastructure**: Handle growth from dozens to thousands of attendees
-- ✅ **Professional Presence**: Polished, modern interface that builds trust
+-  **Unified Experience**: Single platform for marketing, sales, and support
+-  **Automated Workflows**: Reduce manual work with intelligent automation
+-  **Data-Driven Insights**: Make informed decisions with comprehensive analytics
+-  **Scalable Infrastructure**: Handle growth from dozens to thousands of attendees
+-  **Professional Presence**: Polished, modern interface that builds trust
 
 ---
 
@@ -71,20 +71,20 @@ The platform eliminates the complexity of managing multiple tools by providing:
 The platform is built on a modern three-tier architecture:
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                 USER INTERFACE                       │
-│   (React 18 - Modern, Responsive Web Application)   │
-└─────────────────────────────────────────────────────┘
+
+                 USER INTERFACE                       
+   (React 18 - Modern, Responsive Web Application)   
+
                         ↓
-┌─────────────────────────────────────────────────────┐
-│              BACKEND API SERVER                      │
-│     (Node.js + Express - Secure API Layer)          │
-└─────────────────────────────────────────────────────┘
+
+              BACKEND API SERVER                      
+     (Node.js + Express - Secure API Layer)          
+
                         ↓
-┌─────────────────────────────────────────────────────┐
-│         AUTOMATION & DATA LAYER                      │
-│  (n8n Workflows + Google Sheets Database)           │
-└─────────────────────────────────────────────────────┘
+
+         AUTOMATION & DATA LAYER                      
+  (n8n Workflows + Google Sheets Database)           
+
 ```
 
 ### 2.2 Technology Foundation
@@ -203,7 +203,7 @@ The platform is built on a modern three-tier architecture:
 - Extended decision window (48 hours)
 - Payment link remains active
 
-**🔴 Payment Failed:**
+** Payment Failed:**
 - Error details provided
 - Retry payment option available
 - Alternative payment methods suggested
@@ -232,7 +232,7 @@ The platform is built on a modern three-tier architecture:
 - **Headline**: "Master Python Full Stack Development in Just 5 Days"
 - **Subheadline**: Clear value proposition about learning backend + frontend
 - **Call-to-Action Button**: Changes based on user status
-  - Not logged in: "💡 I'm Interested - Show Me Details"
+  - Not logged in: " I'm Interested - Show Me Details"
   - Logged in (not paid): "Complete Payment" (with urgency styling)
   - Logged in (paid): "Access Webinar Materials"
 
@@ -274,12 +274,12 @@ The platform is built on a modern three-tier architecture:
 
 | Field | Type | Required | Validation |
 |-------|------|----------|------------|
-| **Full Name** | Text | ✅ Yes | 2-100 characters |
-| **Email** | Email | ✅ Yes | Valid email format, unique |
-| **Password** | Password | ✅ Yes | Minimum 6 characters |
-| **Confirm Password** | Password | ✅ Yes | Must match password |
-| **Mobile Number** | Tel | ❌ No | 10-15 digits, international format |
-| **Role** | Dropdown | ✅ Yes | Student, Faculty, Professional, etc. |
+| **Full Name** | Text |  Yes | 2-100 characters |
+| **Email** | Email |  Yes | Valid email format, unique |
+| **Password** | Password |  Yes | Minimum 6 characters |
+| **Confirm Password** | Password |  Yes | Must match password |
+| **Mobile Number** | Tel |  No | 10-15 digits, international format |
+| **Role** | Dropdown |  Yes | Student, Faculty, Professional, etc. |
 
 **Smart Features:**
 
@@ -327,9 +327,9 @@ The platform is built on a modern three-tier architecture:
 
 | Field | Required | Features |
 |-------|----------|----------|
-| **Email** | ✅ Yes | Lowercase normalization |
-| **Password** | ✅ Yes | Masked input, show/hide toggle |
-| **Remember Me** | ❌ No | 30-day session vs 7-day default |
+| **Email** |  Yes | Lowercase normalization |
+| **Password** |  Yes | Masked input, show/hide toggle |
+| **Remember Me** |  No | 30-day session vs 7-day default |
 
 **Authentication Flow:**
 
@@ -389,10 +389,10 @@ else:
 - Input field for coupon code (uppercase auto-convert)
 - "Apply" button with loading state
 - Validation results:
-  - ✅ "Coupon applied! 30% discount" (green)
-  - ❌ "Invalid coupon code" (red)
-  - ⚠️ "Coupon expired" (orange)
-  - ⚠️ "You've already used this coupon" (orange)
+  -  "Coupon applied! 30% discount" (green)
+  -  "Invalid coupon code" (red)
+  -  "Coupon expired" (orange)
+  -  "You've already used this coupon" (orange)
 - "Remove" button to clear applied coupon
 
 **URL Coupon Auto-Apply:**
@@ -565,10 +565,10 @@ In production, replace simulation buttons with real payment gateway:
 | **Harsha Sri** | Full Stack Engineer | 1+ years | React, Node.js, Python, AWS |
 
 **Values:**
-- 🎯 Quality First - Never compromise on content
-- 🤝 Community Driven - Learn together, grow together
-- 🚀 Innovation - Stay current with latest tech
-- 💡 Accessibility - Education for everyone
+-  Quality First - Never compromise on content
+-  Community Driven - Learn together, grow together
+-  Innovation - Stay current with latest tech
+-  Accessibility - Education for everyone
 
 **Visual Design:**
 - Team member cards with initials avatars
@@ -586,10 +586,10 @@ In production, replace simulation buttons with real payment gateway:
 
 | Field | Required | Max Length | Validation |
 |-------|----------|------------|------------|
-| **Name** | ✅ Yes | 100 chars | 2-100 characters |
-| **Email** | ✅ Yes | 255 chars | Valid email format |
-| **Mobile** | ❌ No | 15 digits | International format |
-| **Query** | ✅ Yes | 1000 chars | 10-1000 characters |
+| **Name** |  Yes | 100 chars | 2-100 characters |
+| **Email** |  Yes | 255 chars | Valid email format |
+| **Mobile** |  No | 15 digits | International format |
+| **Query** |  Yes | 1000 chars | 10-1000 characters |
 
 **Smart Query Validation:**
 - Character counter (live updates)
@@ -632,7 +632,7 @@ In production, replace simulation buttons with real payment gateway:
 
 **Visual Design:**
 - Floating button (bottom-right corner)
-- Purple gradient with robot emoji (🤖)
+- Purple gradient with robot emoji ()
 - Pulse animation to attract attention
 - Minimizes/maximizes with smooth transition
 
@@ -719,7 +719,7 @@ In production, replace simulation buttons with real payment gateway:
 - Title: "Webinar Sales Funnel – Admin Analytics Dashboard"
 - Last updated timestamp
 - Auto-refresh countdown (30 seconds)
-- Settings button (⚙️)
+- Settings button ()
 - Date range selector (dropdown + calendar)
 
 ---
@@ -731,24 +731,24 @@ In production, replace simulation buttons with real payment gateway:
 **Metric Cards (4 cards):**
 
 1. **Total Leads**: Count of all registered users
-   - Icon: 👥
+   - Icon: 
    - Color: Blue gradient
    - Calculation: Total rows in "User Data" sheet
    
 2. **Total Revenue**: Sum of successful payments
-   - Icon: 💰
+   - Icon: 
    - Color: Green gradient
    - Calculation: SUM(paid_amt WHERE payment_status = 'Success')
    - Format: ₹854,144
    
 3. **Conversion Rate**: Percentage of paid users
-   - Icon: 📊
+   - Icon: 
    - Color: Purple gradient
    - Calculation: (Successful Payments / Total Leads) × 100
    - Format: 28.0%
    
 4. **Engagement**: Percentage of active leads
-   - Icon: 🔥
+   - Icon: 
    - Color: Orange gradient
    - Calculation: (Non-unsubscribed / Total Leads) × 100
    - Format: 92.5%
@@ -910,16 +910,16 @@ In production, replace simulation buttons with real payment gateway:
 **Payment Status Colors:**
 - 🟢 **Success**: Green badge (successful payment)
 - 🟡 **Pending**: Yellow badge (not attempted or need time)
-- 🔴 **Failed**: Red badge (payment declined)
+-  **Failed**: Red badge (payment declined)
 
 **Client Status:**
-- ✅ **Subscribed**: Active lead
-- ❌ **Unsubscribed**: Opted out
+-  **Subscribed**: Active lead
+-  **Unsubscribed**: Opted out
 
 **Nurture Level:**
-- 🔥 **Hot**: High engagement, ready to buy
-- 🌡️ **Warm**: Interested, needs nurturing
-- ❄️ **Cold**: Low engagement, re-activation needed
+-  **Hot**: High engagement, ready to buy
+-  **Warm**: Interested, needs nurturing
+-  **Cold**: Low engagement, re-activation needed
 
 ---
 
@@ -963,7 +963,7 @@ In production, replace simulation buttons with real payment gateway:
 **Purpose:** Review and respond to AI-generated query responses
 
 **Trigger:**
-- Ticket icon in header (📧 with badge count)
+- Ticket icon in header ( with badge count)
 - Shows pending queries needing admin review
 
 **Modal Layout:**
@@ -1088,7 +1088,7 @@ In production, replace simulation buttons with real payment gateway:
 **Purpose:** Download data for external analysis
 
 **CSV Export:**
-- **Button**: "📥 Download CSV"
+- **Button**: " Download CSV"
 - **Includes**: All visible columns only
 - **Respects**: Active filters and search
 - **Filename**: `leads_export_YYYY-MM-DD.csv`
@@ -1486,28 +1486,28 @@ In production, replace simulation buttons with real payment gateway:
 ### 8.3 Competitive Advantages
 
 **vs. Manual Process (Google Forms + Email):**
-- ✅ Automated follow-ups (no manual sending)
-- ✅ Payment integration (no PayPal invoice hassles)
-- ✅ Real-time analytics (no spreadsheet formulas)
-- ✅ Professional branding (no Google Forms logo)
+-  Automated follow-ups (no manual sending)
+-  Payment integration (no PayPal invoice hassles)
+-  Real-time analytics (no spreadsheet formulas)
+-  Professional branding (no Google Forms logo)
 
 **vs. All-in-One Platforms (Teachable, Thinkific):**
-- ✅ No monthly fees ($39-$99/month saved)
-- ✅ Full customization (not template-locked)
-- ✅ Data ownership (your Google Sheets)
-- ✅ No transaction fees (2-5% saved)
+-  No monthly fees ($39-$99/month saved)
+-  Full customization (not template-locked)
+-  Data ownership (your Google Sheets)
+-  No transaction fees (2-5% saved)
 
 **vs. Custom Development:**
-- ✅ Faster deployment (1 week vs 3 months)
-- ✅ Lower cost ($500 vs $5,000+)
-- ✅ Easier maintenance (no developer required)
-- ✅ Proven architecture (tested in production)
+-  Faster deployment (1 week vs 3 months)
+-  Lower cost ($500 vs $5,000+)
+-  Easier maintenance (no developer required)
+-  Proven architecture (tested in production)
 
 **vs. WordPress + Plugins:**
-- ✅ Modern tech stack (React vs jQuery)
-- ✅ Better performance (SPA vs page reloads)
-- ✅ No plugin conflicts
-- ✅ Easier scaling (API-first architecture)
+-  Modern tech stack (React vs jQuery)
+-  Better performance (SPA vs page reloads)
+-  No plugin conflicts
+-  Easier scaling (API-first architecture)
 
 ---
 
@@ -1623,11 +1623,11 @@ In production, replace simulation buttons with real payment gateway:
 ### 9.5 Code Quality
 
 **Best Practices:**
-- ✅ ESLint (JavaScript linting)
-- ✅ Prettier (code formatting)
-- ✅ Git workflows (feature branches, pull requests)
-- ✅ Code reviews (2 approvals required)
-- ✅ Documentation (JSDoc comments)
+-  ESLint (JavaScript linting)
+-  Prettier (code formatting)
+-  Git workflows (feature branches, pull requests)
+-  Code reviews (2 approvals required)
+-  Documentation (JSDoc comments)
 
 **Testing:**
 - Unit tests: Jest (frontend), Mocha (backend)
@@ -1785,28 +1785,28 @@ In production, replace simulation buttons with real payment gateway:
 ### 10.5 Roadmap & Future Enhancements
 
 **Q1 2026 (Planned):**
-- ✨ Multi-language support (Hindi, Spanish, French)
-- ✨ Recurring webinar scheduling (weekly/monthly series)
-- ✨ Installment payment plans (EMI options)
-- ✨ Mobile apps (iOS, Android - React Native)
+-  Multi-language support (Hindi, Spanish, French)
+-  Recurring webinar scheduling (weekly/monthly series)
+-  Installment payment plans (EMI options)
+-  Mobile apps (iOS, Android - React Native)
 
 **Q2 2026 (Planned):**
-- ✨ Advanced analytics (predictive revenue, churn analysis)
-- ✨ Referral program (earn rewards for inviting friends)
-- ✨ Live streaming integration (Zoom, YouTube, Vimeo)
-- ✨ Certificate automation (PDF generation, email delivery)
+-  Advanced analytics (predictive revenue, churn analysis)
+-  Referral program (earn rewards for inviting friends)
+-  Live streaming integration (Zoom, YouTube, Vimeo)
+-  Certificate automation (PDF generation, email delivery)
 
 **Q3 2026 (Planned):**
-- ✨ Affiliate dashboard (track commissions, payouts)
-- ✨ SMS notifications (Twilio integration)
-- ✨ Push notifications (browser + mobile)
-- ✨ A/B testing platform (landing page variants)
+-  Affiliate dashboard (track commissions, payouts)
+-  SMS notifications (Twilio integration)
+-  Push notifications (browser + mobile)
+-  A/B testing platform (landing page variants)
 
 **Q4 2026 (Planned):**
-- ✨ Marketplace (sell templates, courses)
-- ✨ White-label solution (rebrand for clients)
-- ✨ API for third-party integrations
-- ✨ Advanced automation (Zapier, IFTTT)
+-  Marketplace (sell templates, courses)
+-  White-label solution (rebrand for clients)
+-  API for third-party integrations
+-  Advanced automation (Zapier, IFTTT)
 
 **Community Requests:**
 - Voice assistant integration (Alexa, Google Assistant)
