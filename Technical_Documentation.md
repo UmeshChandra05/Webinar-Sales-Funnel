@@ -110,89 +110,7 @@ This application was developed for the **Python Full Stack in 5 Days Webinar** p
 
 The application follows a **three-tier architecture** with clear separation of concerns:
 
-```
-
-                     PRESENTATION TIER                            
-                    (React Frontend SPA)                          
-                                                                   
-                
-     Landing          Auth            Payment             
-       Page           Pages            Page               
-                
-                                                                   
-                
-      Admin          Contact        AI Chatbot            
-    Dashboard          Form           Widget              
-                
-
-                             
-                              HTTPS/REST API
-                              (JSON Payloads)
-                             
-
-                      APPLICATION TIER                            
-                  (Node.js + Express Backend)                     
-                                                                   
-     
-                      Core Services                            
-                  
-        Auth        Payment        Admin              
-     Controller    Controller    Controller           
-                  
-                                                               
-                  
-        Lead        Settings       Config             
-     Controller    Controller    Controller           
-                  
-     
-                                                                   
-     
-                    Middleware Layer                           
-    • JWT Verification      • Request Validation              
-    • Rate Limiting         • Error Handling                  
-    • CORS Management       • Security Headers                
-     
-
-                             
-                              HTTP Webhooks
-                              (JSON Payloads)
-                             
-
-                      INTEGRATION TIER                            
-                  (n8n Workflow Automation)                       
-                                                                   
-     
-                    Workflow Orchestration                     
-                                                                
-                  
-        User        Payment         Email             
-     Management    Processing    Automation           
-                  
-                                                                
-                  
-      AI Chat        Coupon        Admin              
-     Processing    Validation      Alerts             
-                  
-     
-
-                             
-                              Google Sheets API
-                              (Read/Write Operations)
-                             
-
-                        DATA TIER                                 
-                   (Google Sheets Storage)                        
-                                                                   
-         
-     User Data          Queries            Admin         
-      (GID: 0)        (GID: Custom)     (GID: Custom)    
-                                                          
-   • Registrations   • Contact Forms    • Settings        
-   • Payments        • AI Chats         • Credentials     
-   • Transactions    • Tickets          • Config          
-         
-
-```
+[Code snippet removed]
 
 ### 2.2 Communication Patterns
 
@@ -211,38 +129,10 @@ The application follows a **three-tier architecture** with clear separation of c
 6. Frontend updates UI based on response
 
 **Example Request:**
-```http
-POST /api/auth/login HTTP/1.1
-Host: api.example.com
-Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-
-{
-  "email": "user@example.com",
-  "password": "securepassword123",
-  "rememberMe": true
-}
-```
+[Code snippet removed]
 
 **Example Response:**
-```http
-HTTP/1.1 200 OK
-Content-Type: application/json
-Set-Cookie: authToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...; HttpOnly; Secure; SameSite=Strict
-
-{
-  "success": true,
-  "message": "Login successful",
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "id": "user_1731672000000",
-    "name": "John Doe",
-    "email": "user@example.com",
-    "role": "Student",
-    "payment_status": "Success"
-  }
-}
-```
+[Code snippet removed]
 
 #### 2.2.2 Backend ↔ n8n Communication
 
@@ -260,22 +150,7 @@ Set-Cookie: authToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...; HttpOnly; Secure;
 7. Backend processes n8n response and returns to frontend
 
 **Example n8n Webhook Call:**
-```javascript
-const response = await axios.post(`${API_BASE_URL}/capture-lead`, {
-  name: "John Doe",
-  email: "john@example.com",
-  password: "$2a$10$hashed_password_here",
-  mobile: "1234567890",
-  role: "Student",
-  source: "Facebook Ads",
-  type: "user_registration",
-  reg_timestamp: "2025-11-17T10:30:00.000Z",
-  ip_address: "192.168.1.1"
-}, {
-  timeout: 10000,
-  headers: { "Content-Type": "application/json" }
-});
-```
+[Code snippet removed]
 
 #### 2.2.3 n8n ↔ Google Sheets Communication
 
@@ -335,195 +210,21 @@ const response = await axios.post(`${API_BASE_URL}/capture-lead`, {
 
 #### 2.4.1 Frontend Components Breakdown
 
-```
-frontend/src/
- components/               # Reusable UI Components
-    AIChatWidget.js      # Floating chatbot (context-aware)
-    Navigation.js        # Header navigation (auth-aware routing)
-    ProtectedRoute.js    # Route guard (authentication + authorization)
-    Toast.js             # Notification system (success/error/warning)
-
- contexts/                 # React Context Providers
-    AuthContext.js       # Global auth state (user, token, helpers)
-
- pages/                    # Route-level Components
-    LandingPage.js       # Public: Hero, features, countdown
-    RegisterPage.js      # Public: User registration form
-    LoginPage.js         # Public: User authentication
-    PaymentPage.js       # Protected: Payment simulation
-    PaymentSuccessPage.js # Protected: Post-payment confirmation
-    PaymentFailedPage.js # Protected: Payment failure handling
-    ThankYouPage.js      # Protected: Post-registration message
-    AboutPage.js         # Public: Webinar information
-    ContactPage.js       # Public: Support contact form
-    AdminLoginPage.js    # Admin: Authentication portal
-    AdminDashboard.js    # Admin: Analytics + lead management
-    AdminSettingsPage.js # Admin: Configuration panel
-    QueryDetailsPage.js  # Admin: Query/ticket management
-    NotFoundPage.js      # Error: 404 handler
-
- services/                 # API Integration Layer
-    constantsService.js  # Settings/constants fetching + caching
-    googleSheetsService.js # Direct Google Sheets data fetching
-
- utils/                    # Helper Functions
-    api.js               # Axios wrapper for backend API calls
-    errorHandler.js      # Centralized error handling logic
-    paymentUtils.js      # Payment status utilities
-
- App.js                    # Root component (routing + auth provider)
- index.js                  # React DOM render entry point
- index.css                 # Global styles + CSS variables
-```
+[Code snippet removed]
 
 #### 2.4.2 Backend Components Breakdown
 
-```
-backend/
- config/                   # Configuration Management
-    constants.js         # App constants + Google Sheets URLs
-
- controllers/              # Business Logic Layer
-    authController.js    # User registration, login, token mgmt
-    paymentController.js # Payment processing, coupon validation
-    adminController.js   # Admin auth, dashboard data
-    leadController.js    # Contact forms, AI chat, query responses
-    settingsController.js # Settings CRUD operations
-    configController.js  # Configuration endpoints
-    webinarController.js # Webinar info endpoints
-
- middleware/               # Request/Response Interceptors
-    axios.js             # Configured axios instance for n8n calls
-
- routes/                   # API Route Definitions
-    api.js               # All API endpoints with validation
-
- server.js                 # Express app initialization
- index.js                  # Legacy entry point
- package.json              # Dependencies + scripts
- .env                      # Environment variables
-```
+[Code snippet removed]
 
 ### 2.5 Data Flow Diagrams
 
 #### 2.5.1 User Registration Flow
 
-```
-                           
- Browser           Backend             n8n             G.Sheets
-                           
-                                                              
-      POST /register                                          
-     >                                      
-                                                              
-                         Validate Email                       
-                                                     
-                                                             
-                        <                             
-                                                              
-                         Hash Password                        
-                                                     
-                                                             
-                        <                             
-                                                              
-                         POST /capture-lead                   
-                        >                   
-                                                              
-                                            Append User Data  
-                                           >
-                                                              
-                                               Success        
-                                           <
-                                                              
-                                            Trigger Email     
-                                                     
-                                                             
-                                           <          
-                                                              
-                              Success                         
-                        <                   
-                                                              
-                         Generate JWT                         
-                                                     
-                                                             
-                        <                             
-                                                              
-         201 Created                                          
-         + JWT Token                                          
-     <                                      
-                                                              
-      Store Token                                             
-                                                     
-                                                             
-     <                                                
-                                                              
-      Navigate to /payment                                     
-                                                     
-                                                             
-     <                                                
-                                                              
-```
+[Code snippet removed]
 
 #### 2.5.2 Payment Processing Flow
 
-```
-                           
- Browser           Backend             n8n             G.Sheets
-                           
-                                                              
-      POST /simulate-payment                                   
-     >                                      
-                                                              
-                         Fetch Settings                       
-                                                     
-                                                             
-                        <                             
-                                                              
-                         Calculate Amounts                    
-                         (reg_fee,                            
-                          discount,                           
-                          payable)                            
-                                                     
-                                                             
-                        <                             
-                                                              
-                         POST /simulate-payment               
-                        >                   
-                                                              
-                                            Update User Data  
-                                            (payment_status,  
-                                             txn_id, amounts) 
-                                           >
-                                                              
-                                               Success        
-                                           <
-                                                              
-                                            Send Confirmation 
-                                            Email             
-                                                     
-                                                             
-                                           <          
-                                                              
-                                            Get WhatsApp Link 
-                                                     
-                                                             
-                                           <          
-                                                              
-                         Success +                            
-                         WhatsApp Link                        
-                        <                   
-                                                              
-      200 OK +                                                
-      Payment Data                                            
-     <                                      
-                                                              
-      Navigate to                                             
-      /payment-success                                        
-                                                     
-                                                             
-     <                                                
-                                                              
-```
+[Code snippet removed]
 
 ### 2.6 Scalability Considerations
 
@@ -683,209 +384,7 @@ backend/
   - Secret: Environment variable `JWT_SECRET`
   - Expiry: 7 days (standard) or 30 days (remember me)
 - **Token Payload**:
-  ```javascript
-  {
-    email: "user@example.com",
-    name: "John Doe",
-    userId: "user_1731672000000",
-    role: "Student",
-    rememberMe: true,
-    iat: 1731672000,
-    exp: 1732276800
-  }
-  ```
-
-**bcryptjs 3.0.2**
-- **Purpose**: Password hashing and comparison
-- **Configuration**:
-  - Salt rounds: 10 (2^10 = 1,024 iterations)
-  - Algorithm: bcrypt (Blowfish cipher-based)
-- **Usage**:
-  ```javascript
-  // Hashing
-  const hashedPassword = await bcrypt.hash(password, 10);
-  
-  // Comparison
-  const isValid = await bcrypt.compare(plainPassword, hashedPassword);
-  ```
-- **Rationale**: Industry-standard, resistant to rainbow table attacks
-
-**Helmet 7.1.0**
-- **Purpose**: Security headers middleware
-- **Headers Set**:
-  - `Content-Security-Policy`: XSS protection
-  - `X-Content-Type-Options`: nosniff
-  - `X-Frame-Options`: DENY (clickjacking protection)
-  - `Strict-Transport-Security`: HTTPS enforcement
-  - `X-XSS-Protection`: 1; mode=block
-- **Rationale**: OWASP Top 10 compliance, production-ready defaults
-
-**CORS 2.8.5**
-- **Purpose**: Cross-Origin Resource Sharing configuration
-- **Configuration**:
-  ```javascript
-  {
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
-    credentials: true,  // Allow cookies
-    optionsSuccessStatus: 200
-  }
-  ```
-- **Rationale**: Secure cross-origin requests, prevents unauthorized access
-
-#### 3.2.3 Input Validation & Processing
-
-**express-validator 7.0.1**
-- **Purpose**: Server-side input validation and sanitization
-- **Features Used**:
-  - Field-level validation (email, length, format)
-  - Custom validators
-  - Sanitization (trim, lowercase, escape)
-  - Error aggregation
-- **Example**:
-  ```javascript
-  body("email")
-    .isEmail().withMessage("Valid email is required")
-    .normalizeEmail()
-  ```
-- **Rationale**: Prevents injection attacks, ensures data integrity
-
-**cookie-parser 1.4.7**
-- **Purpose**: Parse HTTP cookies from request headers
-- **Usage**: Extract `authToken` cookie for authentication
-- **Rationale**: Simplifies cookie handling, secure token storage
-
-#### 3.2.4 HTTP Client
-
-**Axios 1.12.2**
-- **Purpose**: HTTP client for n8n webhook calls
-- **Custom Configuration** (`backend/middleware/axios.js`):
-  ```javascript
-  const axios = require('axios');
-  
-  const instance = axios.create({
-    timeout: 10000,  // 10 second timeout
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  });
-  
-  // Response interceptor for error handling
-  instance.interceptors.response.use(
-    response => response,
-    error => {
-      console.error('Axios error:', error.message);
-      return Promise.reject(error);
-    }
-  );
-  
-  module.exports = instance;
-  ```
-- **Rationale**: Promise-based, interceptors, better error handling than fetch
-
-#### 3.2.5 Rate Limiting & Logging
-
-**express-rate-limit 7.1.5**
-- **Purpose**: Prevent API abuse and DDoS attacks
-- **Configuration**:
-  ```javascript
-  const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,  // 15 minutes
-    max: 100,                   // 100 requests per window
-    message: {
-      error: "Too many requests from this IP, please try again later."
-    }
-  });
-  app.use("/api/", limiter);
-  ```
-- **Rationale**: Protects backend resources, improves stability
-
-**Morgan 1.10.0**
-- **Purpose**: HTTP request logger
-- **Configuration**: `morgan('dev')` in development
-- **Log Format**: `:method :url :status :response-time ms - :res[content-length]`
-- **Example Output**: `POST /api/auth/login 200 245ms - 512`
-- **Rationale**: Debugging, performance monitoring, audit trails
-
-#### 3.2.6 Configuration Management
-
-**dotenv 16.3.1**
-- **Purpose**: Load environment variables from `.env` file
-- **Usage**: `require('dotenv').config()` at app startup
-- **Variables Loaded**:
-  - `JWT_SECRET`: Token signing key
-  - `API_BASE_URL`: n8n webhook base URL
-  - `FRONTEND_URL`: CORS origin
-  - `GOOGLE_SHEET_ID`: Spreadsheet identifier
-  - `PORT`: Server port (default: 5000)
-- **Rationale**: Separates config from code, secure credential management
-
-### 3.3 Development Dependencies
-
-#### 3.3.1 Process Management
-
-**nodemon 3.0.2**
-- **Purpose**: Auto-restart backend on file changes
-- **Configuration**: `nodemon server.js`
-- **Watch Patterns**: `*.js`, `*.json` (excludes `node_modules`)
-- **Rationale**: Improved developer experience, faster iteration
-
-**concurrently 8.2.2**
-- **Purpose**: Run multiple npm scripts simultaneously
-- **Usage**:
-  ```json
-  "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\""
-  ```
-- **Benefit**: Single command to start full stack
-- **Rationale**: Simplified development workflow
-
-### 3.4 External Services & APIs
-
-#### 3.4.1 n8n Workflow Automation
-
-**n8n (Self-hosted or Cloud)**
-- **Version**: Latest stable
-- **Purpose**: Workflow automation and business process management
-- **Integrations Used**:
-  - Google Sheets API (data storage)
-  - HTTP Webhook (backend communication)
-  - Email (SMTP) (notifications)
-  - OpenAI API / Claude API (AI chat)
-- **Workflow Count**: 10+ workflows
-- **Rationale**: Visual workflow builder, extensive integrations, self-hostable
-
-#### 3.4.2 Google Sheets API
-
-**Google Sheets API v4**
-- **Purpose**: Data persistence and retrieval
-- **Authentication**: Service Account or OAuth 2.0
-- **Operations Used**:
-  - `spreadsheets.values.append`: Add new rows (user registration, payment)
-  - `spreadsheets.values.get`: Read data (user login, settings)
-  - `spreadsheets.values.update`: Modify cells (payment status, settings)
-- **Spreadsheet Structure**:
-  - **Sheet 1 (User Data)**: GID 0
-  - **Sheet 2 (Queries)**: Custom GID
-  - **Sheet 3 (Admin)**: Custom GID
-- **Rationale**: Accessible, collaborative, no database setup required
-
-#### 3.4.3 AI/LLM Services (Optional)
-
-**OpenAI API or Claude API**
-- **Purpose**: Natural language processing for AI chatbot
-- **Model Used**: GPT-4 or Claude 3.5 Sonnet (via n8n)
-- **Integration**: n8n AI Chat workflow
-- **Features**:
-  - RAG (Retrieval-Augmented Generation) with FAQ database
-  - Conversation history context
-  - Response caching
-- **Rationale**: Advanced NLP, context-aware responses, scalable
-
-### 3.5 Dependency Management
-
-#### 3.5.1 Version Pinning Strategy
-
-**Frontend Dependencies** (`frontend/package.json`):
-```json
+  [Code snippet removed]json
 {
   "dependencies": {
     "react": "^18.2.0",           // Minor updates allowed
@@ -899,10 +398,7 @@ backend/
     "react-scripts": "^5.0.1"
   }
 }
-```
-
-**Backend Dependencies** (`backend/package.json`):
-```json
+[Code snippet removed]json
 {
   "dependencies": {
     "express": "^4.18.2",         // Minor updates allowed
@@ -921,74 +417,7 @@ backend/
     "nodemon": "^3.0.2"
   }
 }
-```
-
-#### 3.5.2 Security Updates
-
-**Update Schedule**:
-- **Critical Security**: Immediate (within 24 hours)
-- **High Priority**: Weekly
-- **Minor Updates**: Monthly
-- **Major Updates**: Quarterly (with testing)
-
-**Monitoring**:
-- `npm audit` run weekly
-- GitHub Dependabot alerts enabled
-- Security advisories monitored
-
-### 3.6 Browser Compatibility
-
-**Supported Browsers**:
-| Browser | Minimum Version | Notes |
-|---------|----------------|-------|
-| Chrome | 90+ | Full support |
-| Firefox | 88+ | Full support |
-| Safari | 14+ | Full support |
-| Edge | 90+ | Chromium-based |
-| Opera | 76+ | Chromium-based |
-| Mobile Safari | 14+ | iOS devices |
-| Chrome Mobile | 90+ | Android devices |
-
-**Polyfills**: None required (React Scripts handles this)
-
-**Features Used**:
-- ES6+ syntax (transpiled by Babel)
-- Fetch API (native support)
-- CSS Grid and Flexbox
-- Local Storage
-- Session Storage
-- Cookies
-
----
-
-## 4. Module 1: Authentication & User Management
-
-### 4.1 Module Overview
-
-The Authentication & User Management module provides comprehensive user identity management, session handling, and access control. It implements industry-standard security practices including JWT-based authentication, bcrypt password hashing, and role-based access control.
-
-**Module Responsibilities**:
-- User registration with validation and duplicate detection
-- Secure password storage with bcrypt hashing
-- JWT token generation, verification, and refresh
-- Session management with HTTP-only cookies
-- User login and logout operations
-- Token-based authentication for protected routes
-- Admin and regular user separation
-
-**Key Files**:
-- **Backend**: `backend/controllers/authController.js`
-- **Frontend**: `frontend/src/contexts/AuthContext.js`
-- **Frontend**: `frontend/src/pages/RegisterPage.js`
-- **Frontend**: `frontend/src/pages/LoginPage.js`
-- **Frontend**: `frontend/src/components/ProtectedRoute.js`
-- **Utilities**: `frontend/src/utils/api.js`
-
-### 4.2 Authentication Architecture
-
-#### 4.2.1 Authentication Flow Diagram
-
-```
+[Code snippet removed]
 
                    AUTHENTICATION FLOW                         
 
@@ -1050,29 +479,18 @@ The Authentication & User Management module provides comprehensive user identity
                                                        
        <                                        
                                                          
-```
-
-#### 4.2.2 Token Structure
-
-**JWT Token Anatomy**:
-```
+[Code snippet removed]
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVzZXJAZXhhbXBsZS5jb20iLCJuYW1lIjoiSm9obiBEb2UiLCJ1c2VySWQiOiJ1c2VyXzE3MzE2NzIwMDAwMDAiLCJyb2xlIjoiU3R1ZGVudCIsInJlbWVtYmVyTWUiOnRydWUsImlhdCI6MTczMTY3MjAwMCwiZXhwIjoxNzMyMjc2ODAwfQ.signature_hash_here
 
 
      HEADER                              PAYLOAD                                        SIGNATURE    
 
-```
-
-**Decoded Header**:
-```json
+[Code snippet removed]json
 {
   "alg": "HS256",
   "typ": "JWT"
 }
-```
-
-**Decoded Payload**:
-```json
+[Code snippet removed]json
 {
   "email": "user@example.com",
   "name": "John Doe",
@@ -1082,21 +500,13 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVzZXJAZXhhbXBsZS5jb20iLCJuYW1
   "iat": 1731672000,
   "exp": 1732276800
 }
-```
-
-**Signature**:
-```
+[Code snippet removed]
 HMACSHA256(
   base64UrlEncode(header) + "." +
   base64UrlEncode(payload),
   JWT_SECRET
 )
-```
-
-#### 4.2.3 Session Management Strategy
-
-**Cookie Configuration**:
-```javascript
+[Code snippet removed]javascript
 const cookieOptions = {
   httpOnly: true,        // Prevents XSS access via JavaScript
   secure: process.env.NODE_ENV === 'production',  // HTTPS only in prod
@@ -1105,26 +515,7 @@ const cookieOptions = {
     30 * 24 * 60 * 60 * 1000 :  // 30 days
     7 * 24 * 60 * 60 * 1000      // 7 days
 };
-```
-
-**Token Storage Strategy**:
-1. **Primary**: HTTP-only cookie (secure, XSS-proof)
-2. **Secondary**: LocalStorage (quick access, persistence)
-3. **Verification**: Authorization header or cookie (backend checks both)
-
-**Session Expiration Handling**:
-- Frontend checks token expiry before requests
-- Automatic refresh if <24 hours remaining (remember me users)
-- Logout and redirect to login on expired token
-- Clear all storage on explicit logout
-
-### 4.3 User Registration
-
-#### 4.3.1 Registration Process
-
-**Frontend Flow** (`RegisterPage.js`):
-
-```javascript
+[Code snippet removed]javascript
 const handleSubmit = async (e) => {
   e.preventDefault();
   
@@ -1172,11 +563,7 @@ const handleSubmit = async (e) => {
     }
   }
 };
-```
-
-**Backend Processing** (`authController.js`):
-
-```javascript
+[Code snippet removed]javascript
 registerUser: async (req, res) => {
   try {
     const { name, email, password, mobile, role, rememberMe, source } = req.body;
@@ -1261,61 +648,7 @@ registerUser: async (req, res) => {
     });
   }
 }
-```
-
-#### 4.3.2 Registration Validation Rules
-
-**Field Validation**:
-
-| Field | Rules | Error Message |
-|-------|-------|---------------|
-| **Name** | Required, 2-100 chars | "Name must be between 2 and 100 characters" |
-| **Email** | Required, valid email format, unique | "Valid email is required" |
-| **Password** | Required, min 6 chars | "Password must be at least 6 characters long" |
-| **Mobile** | Optional, valid phone number | "Valid mobile number is required" |
-| **Role** | Optional, string | - |
-| **Source** | Optional, string, defaults to "Direct" | - |
-
-**Email Validation Regex**:
-```javascript
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-```
-
-**Email Normalization**:
-```javascript
-email = email.trim().toLowerCase();
-```
-
-#### 4.3.3 Source Attribution
-
-**UTM Parameter Capture**:
-```javascript
-// URL: https://example.com/register?source=FacebookAds
-const source = searchParams.get('source') || 'Direct';
-```
-
-**Common Source Values**:
-- `Direct`: Default (no UTM parameter)
-- `FacebookAds`: Facebook advertising campaigns
-- `GoogleAds`: Google advertising campaigns
-- `LinkedIn`: LinkedIn posts or ads
-- `EmailCampaign`: Email marketing links
-- `OrganicSearch`: SEO traffic
-- `Referral`: Partner/affiliate links
-
-**Analytics Use Case**:
-- Track which marketing channels drive registrations
-- Calculate ROI for each source
-- Optimize marketing spend allocation
-- Admin dashboard shows lead source breakdown
-
-### 4.4 User Login
-
-#### 4.4.1 Login Process
-
-**Frontend Flow** (`LoginPage.js`):
-
-```javascript
+[Code snippet removed]javascript
 const handleLogin = async (e) => {
   e.preventDefault();
   setIsLoading(true);
@@ -1343,11 +676,7 @@ const handleLogin = async (e) => {
     setIsLoading(false);
   }
 };
-```
-
-**Backend Processing** (`authController.js`):
-
-```javascript
+[Code snippet removed]javascript
 loginUser: async (req, res) => {
   try {
     const { email, password, rememberMe } = req.body;
@@ -1450,45 +779,14 @@ loginUser: async (req, res) => {
     });
   }
 }
-```
-
-#### 4.4.2 Password Security
-
-**Hashing Algorithm**: bcrypt
-- **Cost Factor**: 10 (2^10 = 1,024 iterations)
-- **Salt**: Automatically generated per password
-- **Output**: 60-character hash
-
-**Example Hash**:
-```
+[Code snippet removed]
 $2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy
                                
       Cost factor (10)         
      Salt (22 chars)            
    Algorithm version (2a)        
  Identifier ($2a$ = bcrypt)        Hash (31 chars)
-```
-
-**Security Properties**:
-- **Slow by design**: Prevents brute-force attacks
-- **Unique salts**: Prevents rainbow table attacks
-- **Future-proof**: Cost factor adjustable as hardware improves
-- **Industry standard**: OWASP recommended
-
-**Password Comparison**:
-```javascript
-// NEVER do this (timing attack vulnerability):
-// if (hashedPassword === hash(inputPassword)) { ... }
-
-// ALWAYS use bcrypt.compare (constant-time comparison):
-const isValid = await bcrypt.compare(plainPassword, hashedPassword);
-```
-
-#### 4.4.3 Remember Me Functionality
-
-**Implementation**:
-
-```javascript
+[Code snippet removed]javascript
 // Frontend - Checkbox in login form
 <input 
   type="checkbox" 
@@ -1501,18 +799,7 @@ const tokenExpiry = rememberMe ? '30d' : '7d';
 const cookieMaxAge = rememberMe ? 
   30 * 24 * 60 * 60 * 1000 :  // 30 days in milliseconds
   7 * 24 * 60 * 60 * 1000;    // 7 days in milliseconds
-```
-
-**Token Expiry Comparison**:
-
-| Scenario | Token Expiry | Cookie Max-Age | Auto-Refresh |
-|----------|--------------|----------------|--------------|
-| **Standard Login** | 7 days | 7 days | No |
-| **Remember Me** | 30 days | 30 days | Yes (after 6 days) |
-
-**Auto-Refresh Logic** (`AuthContext.js`):
-
-```javascript
+[Code snippet removed]javascript
 useEffect(() => {
   if (!isAuthenticated || !user) return;
   
@@ -1528,17 +815,7 @@ useEffect(() => {
   
   return () => clearInterval(refreshInterval);
 }, [isAuthenticated, user]);
-```
-
-### 4.5 Token Verification & Refresh
-
-#### 4.5.1 Token Verification Middleware
-
-**Purpose**: Protect routes requiring authentication
-
-**Implementation** (`authController.js`):
-
-```javascript
+[Code snippet removed]javascript
 verifyUserToken: async (req, res, next) => {
   try {
     // 1. Extract token from header or cookie
@@ -1590,28 +867,14 @@ verifyUserToken: async (req, res, next) => {
     });
   }
 }
-```
-
-**Usage in Routes**:
-
-```javascript
+[Code snippet removed]javascript
 // Protected route example
 router.get(
   "/auth/verify", 
   authController.verifyUserToken,  // Middleware
   authController.verifyUser        // Route handler
 );
-```
-
-#### 4.5.2 Token Refresh Endpoint
-
-**Purpose**: Renew token before expiry without re-login
-
-**Endpoint**: `POST /api/auth/refresh`
-
-**Implementation**:
-
-```javascript
+[Code snippet removed]javascript
 refreshUserToken: async (req, res) => {
   try {
     // req.user already populated by verifyUserToken middleware
@@ -1653,27 +916,7 @@ refreshUserToken: async (req, res) => {
     });
   }
 }
-```
-
-**Frontend Usage**:
-
-```javascript
-// Check if token is expiring soon
-const tokenExpiry = jwt.decode(token).exp;
-const now = Date.now() / 1000;
-const timeUntilExpiry = tokenExpiry - now;
-
-// Refresh if less than 24 hours remaining
-if (timeUntilExpiry < 86400) {
-  await apiClient.refreshToken(token);
-}
-```
-
-#### 4.5.3 User Data Refresh Strategy
-
-**Smart Refresh Logic**:
-
-```javascript
+[Code snippet removed]javascript
 // AuthContext.js
 const refreshUserData = async (forceRefresh = false) => {
   const storedToken = localStorage.getItem('authToken');
@@ -1697,19 +940,7 @@ const refreshUserData = async (forceRefresh = false) => {
   
   return null;
 };
-```
-
-**Optimization Benefits**:
-- **Reduced API Calls**: ~90% fewer requests for paid users
-- **Faster Page Loads**: Cached data loads instantly
-- **Lower Backend Load**: Reduces n8n webhook calls
-- **Better UX**: No loading spinner for cached data
-
-### 4.6 Logout
-
-**Frontend Implementation** (`AuthContext.js`):
-
-```javascript
+[Code snippet removed]javascript
 const logout = async () => {
   try {
     // 1. Call backend to clear server-side cookies
@@ -1732,11 +963,7 @@ const logout = async () => {
     navigate('/login');
   }
 };
-```
-
-**Backend Implementation** (`authController.js`):
-
-```javascript
+[Code snippet removed]javascript
 logoutUser: async (req, res) => {
   try {
     // Clear the authentication cookie
@@ -1757,13 +984,7 @@ logoutUser: async (req, res) => {
     });
   }
 }
-```
-
-### 4.7 Protected Routes
-
-**Frontend Implementation** (`ProtectedRoute.js`):
-
-```javascript
+[Code snippet removed]javascript
 const ProtectedRoute = ({ children, requireAdmin = false }) => {
   const { isAuthenticated, isLoading, user } = useAuth();
   
@@ -1785,11 +1006,7 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
   // Render protected content
   return children;
 };
-```
-
-**Usage in App.js**:
-
-```javascript
+[Code snippet removed]javascript
 <Routes>
   {/* Public Routes */}
   <Route path="/" element={<LandingPage />} />
@@ -1816,19 +1033,7 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
     } 
   />
 </Routes>
-```
-
-### 4.8 Admin Authentication
-
-**Separation from User Auth**:
-- Separate endpoint: `/api/admin/login`
-- Separate JWT payload structure
-- Separate role verification
-- No "remember me" option (security)
-
-**Admin Login Process**:
-
-```javascript
+[Code snippet removed]javascript
 // Backend - adminController.js
 loginAdmin: async (req, res) => {
   try {
@@ -1889,11 +1094,7 @@ loginAdmin: async (req, res) => {
     });
   }
 }
-```
-
-**Admin Token Verification**:
-
-```javascript
+[Code snippet removed]javascript
 verifyAdminToken: async (req, res, next) => {
   try {
     const token = req.cookies.adminToken || 
@@ -1926,47 +1127,7 @@ verifyAdminToken: async (req, res, next) => {
     });
   }
 }
-```
-
-### 4.9 Security Considerations
-
-#### 4.9.1 Password Storage
-
-**NEVER Store Plain Passwords**:
-```javascript
-//  WRONG - Never do this
-const userData = {
-  password: req.body.password  // Plain text!
-};
-
-//  CORRECT - Always hash
-const hashedPassword = await bcrypt.hash(req.body.password, 10);
-const userData = {
-  password: hashedPassword
-};
-```
-
-**Password Hashing Best Practices**:
-- Use bcrypt (or argon2, scrypt)
-- Never use MD5 or SHA-1 for passwords
-- Use salt rounds ≥ 10 (currently 10)
-- Increase salt rounds as hardware improves
-- Never log or transmit plain passwords
-
-#### 4.9.2 JWT Security
-
-**Token Security Checklist**:
--  Strong secret (min 32 characters, random)
--  HTTPS only in production
--  HTTP-only cookies (XSS protection)
--  SameSite=Strict (CSRF protection)
--  Short expiry times (7-30 days max)
--  No sensitive data in payload (email/name only)
--  Verify signature on every request
--  Rotate secrets periodically
-
-**Token Payload Guidelines**:
-```javascript
+[Code snippet removed]javascript
 //  GOOD - Non-sensitive identifiers
 {
   email: "user@example.com",
@@ -1981,18 +1142,7 @@ const userData = {
   creditCard: "1234-5678-9012", // Never include
   ssn: "123-45-6789"            // Never include
 }
-```
-
-#### 4.9.3 Rate Limiting
-
-**Login Attempt Limiting**:
-- Global: 100 requests per 15 minutes per IP
-- Login specific: Consider adding per-email rate limiting
-- Failed attempts: Implement exponential backoff
-- Admin login: Intentional 1-second delay on failure
-
-**Implementation Recommendations**:
-```javascript
+[Code snippet removed]javascript
 // Add per-email rate limiting
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -2002,12 +1152,7 @@ const loginLimiter = rateLimit({
 });
 
 app.post("/api/auth/login", loginLimiter, authController.loginUser);
-```
-
-#### 4.9.4 HTTPS Enforcement
-
-**Production Configuration**:
-```javascript
+[Code snippet removed]javascript
 // Redirect HTTP to HTTPS
 if (process.env.NODE_ENV === 'production') {
   app.use((req, res, next) => {
@@ -2017,21 +1162,12 @@ if (process.env.NODE_ENV === 'production') {
     next();
   });
 }
-```
-
-**Cookie Secure Flag**:
-```javascript
+[Code snippet removed]javascript
 const cookieOptions = {
   secure: process.env.NODE_ENV === 'production', // HTTPS only in prod
   // ... other options
 };
-```
-
-### 4.10 Error Handling
-
-**Standardized Error Responses**:
-
-```javascript
+[Code snippet removed]javascript
 // 400 Bad Request - Validation Error
 {
   "success": false,
@@ -2071,65 +1207,7 @@ const cookieOptions = {
   "message": "Authentication service temporarily unavailable. Please try again later.",
   "errorCode": "SERVICE_UNAVAILABLE"
 }
-```
-
-### 4.11 Testing Checklist
-
-**Authentication Module Tests**:
-
-- [ ] User registration with valid data
-- [ ] Registration with duplicate email (409 error)
-- [ ] Registration with invalid email format (400 error)
-- [ ] Registration with weak password (400 error)
-- [ ] Login with correct credentials
-- [ ] Login with wrong password (401 error)
-- [ ] Login with non-existent email (404 error)
-- [ ] Token verification with valid token
-- [ ] Token verification with expired token (401 error)
-- [ ] Token verification with tampered token (401 error)
-- [ ] Token refresh before expiry
-- [ ] Token refresh after expiry (should fail)
-- [ ] Remember me functionality (30-day token)
-- [ ] Standard login (7-day token)
-- [ ] Logout clears cookies and local storage
-- [ ] Protected route blocks unauthenticated access
-- [ ] Admin route blocks non-admin access
-- [ ] Password hashing (bcrypt) works correctly
-- [ ] JWT signature verification works
-- [ ] Rate limiting kicks in after threshold
-- [ ] HTTPS redirect in production
-- [ ] Source attribution captured correctly
-
----
-
-## 5. Module 2: Payment Processing System
-
-### 5.1 Module Overview
-
-The Payment Processing System simulates a comprehensive payment flow for webinar registrations. While the current implementation uses a simulation rather than actual payment gateway integration, it maintains full payment lifecycle management including status tracking, coupon validation, discount calculations, and post-payment workflows.
-
-**Module Responsibilities**:
-- Payment simulation with three distinct outcomes
-- Coupon code validation and discount application
-- Payment status tracking across system
-- Transaction data persistence to Google Sheets
-- WhatsApp invite link generation and delivery
-- Payment success/failure handling
-- Payment status verification and updates
-
-**Key Files**:
-- **Backend**: `backend/controllers/paymentController.js`
-- **Frontend**: `frontend/src/pages/PaymentPage.js`
-- **Frontend**: `frontend/src/pages/PaymentSuccessPage.js`
-- **Frontend**: `frontend/src/pages/PaymentFailedPage.js`
-- **Frontend**: `frontend/src/pages/ThankYouPage.js`
-- **Utilities**: `frontend/src/utils/paymentUtils.js`
-
-### 5.2 Payment Flow Architecture
-
-#### 5.2.1 Payment Process Flow
-
-```
+[Code snippet removed]
 
                      PAYMENT PROCESSING FLOW                           
 
@@ -2238,11 +1316,7 @@ The Payment Processing System simulates a comprehensive payment flow for webinar
                 Show link + auto-open option                
        <                                             
                                                               
-```
-
-#### 5.2.2 Payment Status State Machine
-
-```
+[Code snippet removed]
 
                    PAYMENT STATUS STATES                       
 
@@ -2290,28 +1364,13 @@ All states stored in Google Sheets "User Data" tab:
 - payment_timestamp: ISO 8601 datetime
 - amount_paid: Number (after discount)
 - couponcode_used: String | null
-```
-
-### 5.3 Coupon Validation System
-
-#### 5.3.1 Coupon Data Structure
-
-**Storage**: Google Sheets "Admin" tab
-
-**Columns**:
-```
+[Code snippet removed]
 | Coupon Code | Discount (%) | Valid From  | Valid Until  | Max Uses | Current Uses | Status  |
 |-------------|--------------|-------------|--------------|----------|--------------|---------|
 | EARLY50     | 50           | 2024-01-01  | 2024-12-31   | 100      | 23           | Active  |
 | SAVE30      | 30           | 2024-01-01  | 2024-06-30   | 50       | 50           | Expired |
 | VIP25       | 25           | 2024-01-01  | 2025-12-31   | Unlimited| 156          | Active  |
-```
-
-#### 5.3.2 Validation Logic
-
-**Backend Implementation** (`paymentController.js`):
-
-```javascript
+[Code snippet removed]javascript
 validateCoupon: async (req, res) => {
   try {
     const { email, couponCode } = req.body;
@@ -2389,32 +1448,7 @@ validateCoupon: async (req, res) => {
     });
   }
 }
-```
-
-**n8n Workflow Validation Steps**:
-1. Query Google Sheets for coupon code
-2. Check if coupon exists
-3. Verify status is "Active"
-4. Check if within valid date range
-5. Verify max uses not exceeded
-6. Check if user already used this coupon
-7. Return validation result with discount percentage
-
-#### 5.3.3 Coupon Validation Rules
-
-**Validation Checklist**:
-
-| Rule | Check | Error Code |
-|------|-------|------------|
-| **Exists** | Coupon code found in sheet | `COUPON_NOT_FOUND` |
-| **Active** | Status = "Active" | `COUPON_INACTIVE` |
-| **Date Range** | Current date within valid_from to valid_until | `COUPON_EXPIRED` |
-| **Max Uses** | current_uses < max_uses (if not unlimited) | `COUPON_LIMIT_REACHED` |
-| **User Limit** | User hasn't used this coupon before | `COUPON_ALREADY_USED` |
-| **Format** | Alphanumeric, 4-20 characters | `INVALID_FORMAT` |
-
-**Error Messages**:
-```javascript
+[Code snippet removed]javascript
 const errorMessages = {
   COUPON_NOT_FOUND: "This coupon code doesn't exist",
   COUPON_INACTIVE: "This coupon is no longer active",
@@ -2423,17 +1457,7 @@ const errorMessages = {
   COUPON_ALREADY_USED: "You've already used this coupon",
   INVALID_FORMAT: "Invalid coupon code format"
 };
-```
-
-### 5.4 Payment Simulation
-
-#### 5.4.1 Simulation Logic
-
-**Purpose**: Simulate real-world payment gateway behavior for demo/testing
-
-**Backend Implementation** (`paymentController.js`):
-
-```javascript
+[Code snippet removed]javascript
 simulatePayment: async (req, res) => {
   try {
     const { email, name, mobile, amount, couponCode } = req.body;
@@ -2537,12 +1561,7 @@ function getPaymentMessage(status) {
   };
   return messages[status] || "Payment processed";
 }
-```
-
-#### 5.4.2 Payment Outcome Probabilities
-
-**Distribution**:
-```
+[Code snippet removed]
 
               PAYMENT OUTCOME DISTRIBUTION                 
 
@@ -2573,29 +1592,7 @@ Failed (10%)
                  • Navigate to /payment-failed           
                                                          
                 
-```
-
-**Real-World Mapping**:
-- **Success**: Payment gateway approved, funds captured
-- **Need Time**: Bank requires additional verification, pending authorization
-- **Failed**: Insufficient funds, card declined, network error
-
-### 5.5 Payment Pages
-
-#### 5.5.1 Payment Page (`PaymentPage.js`)
-
-**Features**:
-- Load user data from authentication context
-- Display pricing information (₹999 base price)
-- Coupon code input and validation
-- Real-time discount calculation
-- Final price display with discount breakdown
-- Payment initiation button
-- Loading states and error handling
-
-**Key Code Sections**:
-
-```javascript
+[Code snippet removed]javascript
 // Coupon validation
 const handleValidateCoupon = async () => {
   if (!couponCode.trim()) {
@@ -2671,30 +1668,7 @@ const handlePayment = async () => {
     setIsProcessing(false);
   }
 };
-```
-
-**UI Components**:
-- Pricing card with original price
-- Coupon input field with validate button
-- Discount badge (when applied)
-- Final price display (large, prominent)
-- Payment button (disabled during processing)
-- Loading spinner overlay
-- Error/success toast messages
-
-#### 5.5.2 Payment Success Page (`PaymentSuccessPage.js`)
-
-**Features**:
-- Success confirmation message
-- Transaction ID display
-- WhatsApp group invite link
-- Auto-open WhatsApp option
-- Course access instructions
-- Navigation to dashboard/course
-
-**Key Elements**:
-
-```javascript
+[Code snippet removed]javascript
 // Extract WhatsApp link from navigation state
 const location = useLocation();
 const whatsappLink = location.state?.whatsappLink;
@@ -2735,20 +1709,7 @@ useEffect(() => {
     Go to Dashboard
   </button>
 </div>
-```
-
-#### 5.5.3 Payment Failed Page (`PaymentFailedPage.js`)
-
-**Features**:
-- Error message display
-- Failure reason (if available)
-- Retry payment option
-- Contact support link
-- Alternative payment methods
-
-**UI Structure**:
-
-```javascript
+[Code snippet removed]javascript
 <div className="failed-container">
   <ErrorIcon className="error-icon" />
   <h1>Payment Failed</h1>
@@ -2779,22 +1740,7 @@ useEffect(() => {
     </ul>
   </div>
 </div>
-```
-
-#### 5.5.4 Thank You Page (`ThankYouPage.js`)
-
-**Purpose**: Handle "Need Time" payment status (pending verification)
-
-**Features**:
-- Pending status message
-- Expected processing time
-- Email notification confirmation
-- Ticket number/reference
-- Manual follow-up instructions
-
-**UI Content**:
-
-```javascript
+[Code snippet removed]javascript
 <div className="thankyou-container">
   <ClockIcon className="pending-icon" />
   <h1>Thank You for Your Registration!</h1>
@@ -2825,39 +1771,7 @@ useEffect(() => {
     Return to Home
   </button>
 </div>
-```
-
-### 5.6 Google Sheets Data Persistence
-
-#### 5.6.1 Payment Data Schema
-
-**User Data Tab - Payment Columns**:
-
-| Column Name | Data Type | Example | Description |
-|-------------|-----------|---------|-------------|
-| `payment_status` | String | "Success" | Current payment status |
-| `payment_timestamp` | ISO 8601 | "2024-11-17T10:30:00Z" | When payment was processed |
-| `amount_paid` | Number | 699 | Final amount after discount |
-| `original_amount` | Number | 999 | Price before discount |
-| `couponcode_used` | String | "EARLY50" | Coupon code applied (null if none) |
-| `discount_applied` | Number | 30 | Discount percentage (0-100) |
-| `transaction_id` | String | "TXN_1731672000000_ABC123" | Unique transaction identifier |
-| `payment_method` | String | "Simulated" | Payment method used |
-| `whatsapp_invite_sent` | Boolean | TRUE | Whether invite was generated |
-
-**n8n Update Workflow**:
-1. Receive payment data from backend
-2. Find user row by email
-3. Update payment-related columns
-4. Increment coupon usage (if applicable)
-5. Log transaction in separate audit tab
-6. Return success confirmation
-
-#### 5.6.2 Coupon Usage Tracking
-
-**Admin Tab - Coupon Update Logic**:
-
-```javascript
+[Code snippet removed]javascript
 // n8n JavaScript node
 const couponCode = $input.item.json.couponCode;
 const email = $input.item.json.email;
@@ -2880,27 +1794,14 @@ if (couponCode) {
     }
   };
 }
-```
-
-**Coupon History Log** (separate sheet):
-```
+[Code snippet removed]
 | Timestamp           | Email              | Coupon Code | Discount | Amount Saved |
 |---------------------|--------------------|-------------|----------|--------------|
 | 2024-11-17T10:30:00 | user1@example.com  | EARLY50     | 50%      | ₹500         |
 | 2024-11-17T11:45:00 | user2@example.com  | SAVE30      | 30%      | ₹300         |
-```
-
-### 5.7 WhatsApp Integration
-
-#### 5.7.1 Invite Link Generation
-
-**Link Format**:
-```
+[Code snippet removed]
 https://wa.me/?text=ENCODED_MESSAGE
-```
-
-**Message Template**:
-```javascript
+[Code snippet removed]javascript
 const generateWhatsAppMessage = (name, groupLink) => {
   const message = `
  Congratulations ${name}!
@@ -2926,11 +1827,7 @@ See you there!
   
   return encodeURIComponent(message);
 };
-```
-
-**Backend Implementation**:
-
-```javascript
+[Code snippet removed]javascript
 // Generate personalized WhatsApp invite
 if (paymentStatus === "Success") {
   const whatsappGroupUrl = process.env.WHATSAPP_GROUP_URL || 
@@ -2945,13 +1842,7 @@ if (paymentStatus === "Success") {
     whatsappLink = `https://wa.me/${mobile}?text=${message}`;
   }
 }
-```
-
-#### 5.7.2 Auto-Open Functionality
-
-**Frontend Implementation**:
-
-```javascript
+[Code snippet removed]javascript
 // PaymentSuccessPage.js
 const [autoOpen, setAutoOpen] = useState(true);
 
@@ -2965,10 +1856,7 @@ useEffect(() => {
     return () => clearTimeout(timer);
   }
 }, [whatsappLink, autoOpen]);
-```
-
-**User Control**:
-```javascript
+[Code snippet removed]javascript
 <label>
   <input 
     type="checkbox" 
@@ -2977,13 +1865,7 @@ useEffect(() => {
   />
   Auto-open WhatsApp
 </label>
-```
-
-### 5.8 Payment Utilities
-
-#### 5.8.1 Price Formatting (`paymentUtils.js`)
-
-```javascript
+[Code snippet removed]javascript
 /**
  * Format price in Indian Rupee format
  * @param {number} amount - Amount to format
@@ -3024,11 +1906,7 @@ export const isValidCouponFormat = (code) => {
   const regex = /^[A-Z0-9]{4,20}$/;
   return regex.test(code.toUpperCase());
 };
-```
-
-#### 5.8.2 Transaction ID Generation
-
-```javascript
+[Code snippet removed]javascript
 /**
  * Generate unique transaction ID
  * @param {string} prefix - Transaction prefix (default: "TXN")
@@ -3041,11 +1919,7 @@ export const generateTransactionId = (prefix = "TXN") => {
 };
 
 // Example output: "TXN_1731672000000_ABC123XYZ"
-```
-
-#### 5.8.3 Date Formatting
-
-```javascript
+[Code snippet removed]javascript
 /**
  * Format ISO date to readable format
  * @param {string} isoDate - ISO 8601 date string
@@ -3062,14 +1936,7 @@ export const formatPaymentDate = (isoDate) => {
     hour12: true
   });
 };
-```
-
-### 5.9 Error Handling & Edge Cases
-
-#### 5.9.1 Payment Error Scenarios
-
-**Network Failures**:
-```javascript
+[Code snippet removed]javascript
 try {
   const response = await apiClient.simulatePayment(paymentData);
 } catch (error) {
@@ -3081,10 +1948,7 @@ try {
     setError('Payment failed. Please check your connection and retry.');
   }
 }
-```
-
-**Duplicate Payment Prevention**:
-```javascript
+[Code snippet removed]javascript
 // Check if user already has successful payment
 if (user.payment_status === "Success") {
   navigate('/payment-success');
@@ -3098,10 +1962,7 @@ if (user.payment_status === "Success") {
 >
   {isProcessing ? 'Processing...' : 'Proceed to Payment'}
 </button>
-```
-
-**Coupon Validation Failures**:
-```javascript
+[Code snippet removed]javascript
 // Handle specific error codes
 if (error.errorCode === 'COUPON_ALREADY_USED') {
   setError('You have already used this coupon code');
@@ -3117,12 +1978,7 @@ if (error.errorCode === 'COUPON_ALREADY_USED') {
 setCouponApplied(false);
 setDiscount(0);
 setFinalPrice(originalPrice);
-```
-
-#### 5.9.2 Race Condition Handling
-
-**Prevent Double Submission**:
-```javascript
+[Code snippet removed]javascript
 const [isProcessing, setIsProcessing] = useState(false);
 
 const handlePayment = async () => {
@@ -3141,10 +1997,7 @@ const handlePayment = async () => {
     setIsProcessing(false);
   }
 };
-```
-
-**Concurrent Coupon Validation**:
-```javascript
+[Code snippet removed]javascript
 const [validationInProgress, setValidationInProgress] = useState(false);
 
 const handleValidateCoupon = async () => {
@@ -3157,15 +2010,7 @@ const handleValidateCoupon = async () => {
     setValidationInProgress(false);
   }
 };
-```
-
-### 5.10 Integration with Real Payment Gateways
-
-**Future Enhancement Guide**:
-
-#### 5.10.1 Razorpay Integration (Recommended for India)
-
-```javascript
+[Code snippet removed]javascript
 // Install Razorpay SDK
 // npm install razorpay
 
@@ -3218,11 +2063,7 @@ const handleRazorpayPayment = (order) => {
   const rzp = new window.Razorpay(options);
   rzp.open();
 };
-```
-
-#### 5.10.2 Stripe Integration (International)
-
-```javascript
+[Code snippet removed]javascript
 // Install Stripe SDK
 // npm install stripe @stripe/stripe-js
 
@@ -3266,67 +2107,7 @@ const handleStripePayment = async (clientSecret) => {
     handlePaymentSuccess(result.paymentIntent.id);
   }
 };
-```
-
-### 5.11 Testing Checklist
-
-**Payment Module Tests**:
-
-- [ ] Payment page loads with correct pricing
-- [ ] Coupon validation with valid code
-- [ ] Coupon validation with invalid code
-- [ ] Coupon validation with expired code
-- [ ] Coupon validation with used code (duplicate)
-- [ ] Discount calculation accuracy
-- [ ] Final price display after discount
-- [ ] Payment simulation returns Success (60%)
-- [ ] Payment simulation returns Need Time (30%)
-- [ ] Payment simulation returns Failed (10%)
-- [ ] Transaction ID generation is unique
-- [ ] Payment success page displays correctly
-- [ ] WhatsApp link generation works
-- [ ] WhatsApp auto-open functionality
-- [ ] Payment failed page shows retry option
-- [ ] Thank you page for pending payments
-- [ ] Google Sheets updates with payment data
-- [ ] Coupon usage count increments
-- [ ] User can't pay twice (duplicate prevention)
-- [ ] Payment button disables during processing
-- [ ] Error messages display correctly
-- [ ] Network error handling (timeout/offline)
-- [ ] Invalid amount handling (negative/zero)
-- [ ] Missing required fields validation
-- [ ] Payment status persists in localStorage
-- [ ] Navigation redirects based on status
-
----
-
-## 6. Module 3: AI Chat & Customer Support
-
-### 6.1 Module Overview
-
-The AI Chat & Customer Support module provides intelligent conversational assistance to users through a floating chatbot widget. It integrates with n8n workflows and Large Language Models (OpenAI/Claude) to answer user queries, provide information about the webinar, and route complex queries to admin review.
-
-**Module Responsibilities**:
-- Floating AI chat widget on all public pages
-- Real-time conversation with AI assistant
-- Query submission and storage to Google Sheets
-- Context-aware responses using RAG (Retrieval-Augmented Generation)
-- Admin moderation for pending queries
-- Pre-approved response suggestions
-- FAQ database integration
-
-**Key Files**:
-- **Frontend**: `frontend/src/components/AIChatWidget.js`
-- **Backend**: `backend/controllers/leadController.js`
-- **n8n**: Workflow nodes for AI chat processing
-- **Google Sheets**: "Queries" tab for conversation storage
-
-### 6.2 AI Chat Architecture
-
-#### 6.2.1 Chat Flow Diagram
-
-```
+[Code snippet removed]
 
                       AI CHAT CONVERSATION FLOW                      
 
@@ -3413,11 +2194,7 @@ The AI Chat & Customer Support module provides intelligent conversational assist
          15. User can continue conversation                 
          (repeat from step 2)                               
                                                              
-```
-
-#### 6.2.2 Query Status State Machine
-
-```
+[Code snippet removed]
 
                    QUERY STATUS STATES                       
 
@@ -3475,24 +2252,7 @@ STATUS VALUES:
 - "Approved": Admin approved AI response
 - "Rejected": Admin rejected, needs manual response
 - "Resolved": Query fully answered
-```
-
-### 6.3 Chat Widget Implementation
-
-#### 6.3.1 Floating Widget Design (`AIChatWidget.js`)
-
-**Key Features**:
-- Fixed position bottom-right corner
-- Collapsible chat window
-- Smooth animations (slide up/down)
-- Unread message indicator
-- Typing indicator while AI responds
-- Auto-scroll to latest message
-- Mobile-responsive design
-
-**Component Structure**:
-
-```javascript
+[Code snippet removed]javascript
 const AIChatWidget = () => {
   // State management
   const [isOpen, setIsOpen] = useState(false);
@@ -3660,13 +2420,7 @@ const AIChatWidget = () => {
     </>
   );
 };
-```
-
-#### 6.3.2 Chat Widget Styling
-
-**CSS Key Styles**:
-
-```css
+[Code snippet removed]css
 /* Chat Bubble */
 .chat-bubble {
   position: fixed;
@@ -3799,15 +2553,7 @@ const AIChatWidget = () => {
     border-radius: 12px;
   }
 }
-```
-
-### 6.4 Backend AI Chat Processing
-
-#### 6.4.1 Lead Controller - AI Chat Handler
-
-**Implementation** (`leadController.js`):
-
-```javascript
+[Code snippet removed]javascript
 aiChat: async (req, res) => {
   try {
     const { email, query, context } = req.body;
@@ -3895,117 +2641,7 @@ aiChat: async (req, res) => {
     });
   }
 }
-```
-
-### 6.5 n8n AI Workflow
-
-#### 6.5.1 Workflow Architecture
-
-**n8n Workflow Nodes**:
-
-1. **Webhook Trigger** (`/webhook/ai-chat`)
-   - Receives query from backend
-   - Extracts email, query, context
-   
-2. **Validate Input Node** (Function)
-   - Check query length
-   - Sanitize input text
-   - Detect spam/abuse patterns
-
-3. **Retrieve FAQ Context Node** (Google Sheets)
-   - Query FAQ database
-   - Get relevant Q&A pairs
-   - Return top 5 matches by keyword similarity
-
-4. **Build LLM Prompt Node** (Function)
-   ```javascript
-   const userQuery = $input.item.json.query;
-   const faqContext = $('Get FAQ Data').all().map(item => item.json);
-   
-   const prompt = `
-   You are a helpful AI assistant for a webinar sales platform.
-   
-   User Question: ${userQuery}
-   
-   Relevant FAQ Context:
-   ${faqContext.map(faq => `Q: ${faq.question}\nA: ${faq.answer}`).join('\n\n')}
-   
-   Instructions:
-   - Answer the user's question based on the FAQ context provided
-   - If the answer is not in the FAQ, provide a helpful general response
-   - Be friendly, professional, and concise
-   - If you're unsure, suggest contacting support
-   - Format your response in plain text (no markdown)
-   
-   Response:
-   `;
-   
-   return { json: { prompt } };
-   ```
-
-5. **Call OpenAI/Claude API Node** (HTTP Request)
-   ```javascript
-   // OpenAI Configuration
-   {
-     method: "POST",
-     url: "https://api.openai.com/v1/chat/completions",
-     headers: {
-       "Authorization": "Bearer {{$env.OPENAI_API_KEY}}",
-       "Content-Type": "application/json"
-     },
-     body: {
-       model: "gpt-4",
-       messages: [
-         {
-           role: "system",
-           content: "You are a helpful assistant for a webinar platform."
-         },
-         {
-           role: "user",
-           content: "{{$node['Build Prompt'].json.prompt}}"
-         }
-       ],
-       temperature: 0.7,
-       max_tokens: 500
-     }
-   }
-   ```
-
-6. **Extract Response Node** (Function)
-   ```javascript
-   const apiResponse = $input.item.json;
-   const aiResponse = apiResponse.choices[0].message.content;
-   
-   return {
-     json: {
-       response: aiResponse,
-       confidence: apiResponse.choices[0].finish_reason === "stop" ? "high" : "low",
-       tokensUsed: apiResponse.usage.total_tokens
-     }
-   };
-   ```
-
-7. **Store Query Node** (Google Sheets Append)
-   - Append to "Queries" tab
-   - Columns: Timestamp, Email, Query, AI Response, Status, Admin Notes
-
-8. **Return Response Node** (Respond to Webhook)
-   ```javascript
-   return {
-     json: {
-       success: true,
-       response: $node['Extract Response'].json.response,
-       queryId: `QUERY_${Date.now()}`,
-       confidence: $node['Extract Response'].json.confidence
-     }
-   };
-   ```
-
-#### 6.5.2 RAG (Retrieval-Augmented Generation) Implementation
-
-**FAQ Database Structure** (Google Sheets):
-
-```
+[Code snippet removed]
 | Question                                  | Answer                                    | Keywords                    | Category    |
 |-------------------------------------------|-------------------------------------------|-----------------------------|-------------|
 | What is the webinar about?                | The webinar covers advanced sales...      | webinar, topic, about       | General     |
@@ -4013,11 +2649,7 @@ aiChat: async (req, res) => {
 | What payment methods are accepted?        | We accept UPI, credit cards, debit...     | payment, method, accept     | Payment     |
 | When is the webinar scheduled?            | The webinar is scheduled for...           | date, time, when, schedule  | Schedule    |
 | Will I get a recording?                   | Yes, all registered participants...       | recording, replay, access   | Access      |
-```
-
-**Keyword Matching Algorithm** (n8n Function Node):
-
-```javascript
+[Code snippet removed]javascript
 const userQuery = $input.item.json.query.toLowerCase();
 const faqData = $('FAQ Sheet').all();
 
@@ -4050,32 +2682,7 @@ const topFAQs = scoredFAQs
   .filter(faq => faq.score > 0);
 
 return topFAQs.map(faq => ({ json: faq }));
-```
-
-### 6.6 Google Sheets Query Storage
-
-#### 6.6.1 Queries Tab Schema
-
-**Columns**:
-
-| Column Name | Data Type | Example | Description |
-|-------------|-----------|---------|-------------|
-| `timestamp` | ISO 8601 | "2024-11-17T10:30:00Z" | When query was submitted |
-| `email` | String | "user@example.com" | User's email address |
-| `query` | String | "What is the refund policy?" | User's question |
-| `ai_response` | String | "Our refund policy states..." | AI-generated answer |
-| `status` | String | "AI_Answered" | Query status |
-| `confidence` | String | "high" | AI confidence level |
-| `admin_notes` | String | "Approved - good response" | Admin comments |
-| `reviewed_by` | String | "admin@example.com" | Admin who reviewed |
-| `reviewed_at` | ISO 8601 | "2024-11-17T11:00:00Z" | Review timestamp |
-| `query_id` | String | "QUERY_1731672000000" | Unique identifier |
-
-#### 6.6.2 Query Retrieval for Admin Review
-
-**Backend Endpoint** (`/api/admin/queries`):
-
-```javascript
+[Code snippet removed]javascript
 getAllQueries: async (req, res) => {
   try {
     // Verify admin authentication
@@ -4119,15 +2726,7 @@ getAllQueries: async (req, res) => {
     });
   }
 }
-```
-
-### 6.7 Admin Query Moderation
-
-#### 6.7.1 Query Review Interface
-
-**Admin Dashboard - Queries Section**:
-
-```javascript
+[Code snippet removed]javascript
 // QueryManagement.js
 const QueryManagement = () => {
   const [queries, setQueries] = useState([]);
@@ -4228,13 +2827,7 @@ const QueryManagement = () => {
     </div>
   );
 };
-```
-
-#### 6.7.2 Send Custom Response
-
-**Admin Can Override AI Response**:
-
-```javascript
+[Code snippet removed]javascript
 sendCustomResponse: async (req, res) => {
   try {
     const { queryId, customResponse, adminEmail } = req.body;
@@ -4284,13 +2877,7 @@ sendCustomResponse: async (req, res) => {
     });
   }
 }
-```
-
-### 6.8 Conversation Context Management
-
-**Maintaining Context Across Messages**:
-
-```javascript
+[Code snippet removed]javascript
 // Frontend - AIChatWidget.js
 const getConversationContext = () => {
   // Get last 5 messages (10 total including responses)
@@ -4311,11 +2898,7 @@ const response = await apiClient.sendAIQuery({
   query: inputMessage,
   context: getConversationContext()  // <-- Conversation history
 });
-```
-
-**n8n Context Processing**:
-
-```javascript
+[Code snippet removed]javascript
 // Build contextual prompt with conversation history
 const buildContextualPrompt = () => {
   const currentQuery = $input.item.json.query;
@@ -4340,13 +2923,7 @@ const buildContextualPrompt = () => {
   
   return { json: { prompt } };
 };
-```
-
-### 6.9 Error Handling & Fallbacks
-
-#### 6.9.1 AI Service Unavailable
-
-```javascript
+[Code snippet removed]javascript
 // Frontend fallback response
 const fallbackResponse = {
   id: Date.now(),
@@ -4355,13 +2932,7 @@ const fallbackResponse = {
   timestamp: new Date(),
   isFallback: true
 };
-```
-
-#### 6.9.2 Rate Limiting
-
-**Prevent API Abuse**:
-
-```javascript
+[Code snippet removed]javascript
 // Backend rate limiting for AI chat
 const aiChatLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,  // 15 minutes
@@ -4374,11 +2945,7 @@ const aiChatLimiter = rateLimit({
 });
 
 router.post("/leads/ai-chat", aiChatLimiter, leadController.aiChat);
-```
-
-#### 6.9.3 Query Length Validation
-
-```javascript
+[Code snippet removed]javascript
 // Frontend validation
 const MAX_QUERY_LENGTH = 1000;
 
@@ -4390,15 +2957,7 @@ const handleSendMessage = async () => {
   
   // Continue with submission...
 };
-```
-
-### 6.10 Performance Optimization
-
-#### 6.10.1 Caching Frequent Queries
-
-**Redis Cache for Common Questions**:
-
-```javascript
+[Code snippet removed]javascript
 // Cache frequently asked questions
 const getCachedResponse = async (query) => {
   const normalizedQuery = query.toLowerCase().trim();
@@ -4420,11 +2979,7 @@ const setCachedResponse = async (query, response) => {
   // Cache for 1 hour
   await redis.setex(cacheKey, 3600, JSON.stringify(response));
 };
-```
-
-#### 6.10.2 Lazy Loading Chat Widget
-
-```javascript
+[Code snippet removed]javascript
 // Load chat widget only when needed
 const [isChatLoaded, setIsChatLoaded] = useState(false);
 
@@ -4442,23 +2997,7 @@ useEffect(() => {
   const timer = setTimeout(loadChatWidget, 5000);
   return () => clearTimeout(timer);
 }, []);
-```
-
-### 6.11 Analytics & Monitoring
-
-**Track Chat Metrics**:
-
-- Total queries per day
-- Average response time
-- AI confidence scores
-- Query categories (FAQ, Payment, Technical, etc.)
-- User satisfaction (thumbs up/down)
-- Admin approval rate
-- Common query patterns
-
-**Implementation**:
-
-```javascript
+[Code snippet removed]javascript
 // Add rating buttons to bot messages
 const [messageRatings, setMessageRatings] = useState({});
 
@@ -4482,64 +3021,7 @@ const handleRateMessage = (messageId, rating) => {
     
   </button>
 </div>
-```
-
-### 6.12 Testing Checklist
-
-**AI Chat Module Tests**:
-
-- [ ] Chat widget opens and closes correctly
-- [ ] Messages display in correct order (user/bot)
-- [ ] Auto-scroll works for new messages
-- [ ] Typing indicator appears during AI response
-- [ ] Email captured from auth context
-- [ ] AI responds to simple questions
-- [ ] AI handles complex multi-part questions
-- [ ] Conversation context maintained across messages
-- [ ] Error handling for network failures
-- [ ] Rate limiting prevents spam
-- [ ] Query length validation works
-- [ ] FAQ context retrieval from Google Sheets
-- [ ] OpenAI/Claude API integration functional
-- [ ] Query storage to Google Sheets
-- [ ] Admin can view all queries
-- [ ] Admin can filter queries by status
-- [ ] Admin can approve AI responses
-- [ ] Admin can reject and send custom response
-- [ ] Mobile responsive design works
-- [ ] Chat widget performance (no lag)
-- [ ] Caching reduces duplicate API calls
-
----
-
-## 7. Module 4: Admin Dashboard & Analytics
-
-### 7.1 Module Overview
-
-The Admin Dashboard provides comprehensive analytics, lead management, and system monitoring capabilities. It features real-time data visualization, advanced filtering, CSV export functionality, and multi-metric tracking to help administrators make data-driven decisions.
-
-**Module Responsibilities**:
-- Real-time analytics dashboard with multiple chart types
-- Lead management with 18+ data columns
-- Advanced filtering and search capabilities
-- Date range selection for time-based analysis
-- CSV export for external reporting
-- Payment status tracking and statistics
-- Source attribution analytics
-- Query/ticket management system
-- Auto-refresh data every 30 seconds
-
-**Key Files**:
-- **Frontend**: `frontend/src/pages/AdminDashboard.js`
-- **Backend**: `backend/controllers/adminController.js`
-- **Charts**: Chart.js for data visualization
-- **Data Source**: Google Sheets integration via n8n
-
-### 7.2 Dashboard Architecture
-
-#### 7.2.1 Dashboard Layout Structure
-
-```
+[Code snippet removed]
 
                         ADMIN DASHBOARD LAYOUT                            
 
@@ -4607,15 +3089,7 @@ The Admin Dashboard provides comprehensive analytics, lead management, and syste
   FOOTER                                                                  
   Auto-refresh in 28s | Last updated: Nov 17, 2024 10:30:45 AM           
 
-```
-
-### 7.3 Key Metrics Cards
-
-#### 7.3.1 Metrics Calculation
-
-**Backend Implementation** (`adminController.js`):
-
-```javascript
+[Code snippet removed]javascript
 getDashboardMetrics: async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
@@ -4718,13 +3192,7 @@ getDashboardMetrics: async (req, res) => {
     });
   }
 }
-```
-
-#### 7.3.2 Metric Cards Display
-
-**Frontend Component**:
-
-```javascript
+[Code snippet removed]javascript
 const MetricCard = ({ title, value, change, icon, color }) => {
   const isPositive = change >= 0;
   
@@ -4785,15 +3253,7 @@ const MetricCard = ({ title, value, change, icon, color }) => {
     color="orange"
   />
 </div>
-```
-
-### 7.4 Data Visualization with Chart.js
-
-#### 7.4.1 Line Chart - Daily Registrations
-
-**Configuration**:
-
-```javascript
+[Code snippet removed]javascript
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -4871,13 +3331,7 @@ const DailyRegistrationsChart = ({ data }) => {
     </div>
   );
 };
-```
-
-#### 7.4.2 Bar Chart - Payment Status Distribution
-
-**Configuration**:
-
-```javascript
+[Code snippet removed]javascript
 import { Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -4965,13 +3419,7 @@ const PaymentStatusChart = ({ metrics }) => {
     </div>
   );
 };
-```
-
-#### 7.4.3 Donut Chart - Traffic Sources
-
-**Configuration**:
-
-```javascript
+[Code snippet removed]javascript
 import { Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 
@@ -5041,40 +3489,7 @@ const TrafficSourcesChart = ({ sourceBreakdown }) => {
     </div>
   );
 };
-```
-
-### 7.5 Lead Management Table
-
-#### 7.5.1 Table Schema (18 Columns)
-
-**Column Definitions**:
-
-| # | Column Name | Type | Width | Sortable | Filterable | Description |
-|---|-------------|------|-------|----------|------------|-------------|
-| 1 | `reg_timestamp` | Date | 150px |  |  | Registration date & time |
-| 2 | `name` | String | 150px |  |  | User's full name |
-| 3 | `email` | String | 200px |  |  | Email address (unique) |
-| 4 | `mobile` | String | 120px |  |  | Phone number |
-| 5 | `role` | String | 100px |  |  | User role (Student, Professional, etc.) |
-| 6 | `source` | String | 120px |  |  | Traffic source (UTM) |
-| 7 | `payment_status` | String | 120px |  |  | Payment status (Success, Need Time, Failed) |
-| 8 | `amount_paid` | Number | 100px |  |  | Amount paid in ₹ |
-| 9 | `couponcode_used` | String | 120px |  |  | Coupon code applied |
-| 10 | `discount_applied` | Number | 100px |  |  | Discount percentage |
-| 11 | `payment_timestamp` | Date | 150px |  |  | Payment completion time |
-| 12 | `transaction_id` | String | 180px |  |  | Unique transaction ID |
-| 13 | `whatsapp_invite_sent` | Boolean | 80px |  |  | Invite sent status |
-| 14 | `ip_address` | String | 130px |  |  | User's IP address |
-| 15 | `user_agent` | String | 200px |  |  | Browser/device info |
-| 16 | `lead_score` | Number | 80px |  |  | Lead quality score (0-100) |
-| 17 | `last_activity` | Date | 150px |  |  | Last interaction timestamp |
-| 18 | `notes` | String | 200px |  |  | Admin notes |
-
-#### 7.5.2 Table Component Implementation
-
-**React Table Component**:
-
-```javascript
+[Code snippet removed]javascript
 const LeadsTable = ({ leads, onSort, onFilter, onExport }) => {
   const [sortConfig, setSortConfig] = useState({ key: 'reg_timestamp', direction: 'desc' });
   const [filters, setFilters] = useState({});
@@ -5283,13 +3698,7 @@ const LeadsTable = ({ leads, onSort, onFilter, onExport }) => {
     </div>
   );
 };
-```
-
-### 7.6 Advanced Filtering & Search
-
-#### 7.6.1 Multi-Column Search
-
-```javascript
+[Code snippet removed]javascript
 const advancedSearch = (leads, searchConfig) => {
   const {
     searchTerm,
@@ -5350,11 +3759,7 @@ const advancedSearch = (leads, searchConfig) => {
     return true;
   });
 };
-```
-
-#### 7.6.2 Saved Filter Presets
-
-```javascript
+[Code snippet removed]javascript
 const filterPresets = {
   paidUsers: {
     name: "Paid Users",
@@ -5409,13 +3814,7 @@ const filterPresets = {
     </button>
   ))}
 </div>
-```
-
-### 7.7 CSV Export Functionality
-
-#### 7.7.1 Export Implementation
-
-```javascript
+[Code snippet removed]javascript
 const exportToCSV = (leads, filename = 'leads_export.csv') => {
   // Define columns for export
   const columns = [
@@ -5485,13 +3884,7 @@ const exportToCSV = (leads, filename = 'leads_export.csv') => {
 <button onClick={() => exportToCSV(filteredLeads, `leads_${new Date().toISOString().split('T')[0]}.csv`)}>
   <DownloadIcon /> Export to CSV
 </button>
-```
-
-### 7.8 Auto-Refresh Mechanism
-
-#### 7.8.1 Periodic Data Refresh
-
-```javascript
+[Code snippet removed]javascript
 const AdminDashboard = () => {
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
@@ -5562,13 +3955,7 @@ const AdminDashboard = () => {
     </div>
   );
 };
-```
-
-### 7.9 Date Range Filtering
-
-#### 7.9.1 Date Picker Component
-
-```javascript
+[Code snippet removed]javascript
 const DateRangeFilter = ({ onFilterChange }) => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -5656,13 +4043,7 @@ const DateRangeFilter = ({ onFilterChange }) => {
     </div>
   );
 };
-```
-
-### 7.10 Performance Optimization
-
-#### 7.10.1 Virtualized Table for Large Datasets
-
-```javascript
+[Code snippet removed]javascript
 import { FixedSizeList as List } from 'react-window';
 
 const VirtualizedLeadsTable = ({ leads, rowHeight = 50 }) => {
@@ -5692,11 +4073,7 @@ const VirtualizedLeadsTable = ({ leads, rowHeight = 50 }) => {
     </List>
   );
 };
-```
-
-#### 7.10.2 Memoized Calculations
-
-```javascript
+[Code snippet removed]javascript
 // Memoize expensive calculations
 const dashboardStats = useMemo(() => {
   return {
@@ -5711,63 +4088,7 @@ const dashboardStats = useMemo(() => {
 const filteredLeads = useMemo(() => {
   return applyFilters(leads, filterConfig);
 }, [leads, filterConfig]);
-```
-
-### 7.11 Testing Checklist
-
-**Admin Dashboard Module Tests**:
-
-- [ ] Dashboard loads all metrics correctly
-- [ ] Metric cards display accurate data
-- [ ] Line chart renders daily registrations
-- [ ] Bar chart shows payment status distribution
-- [ ] Donut chart displays traffic sources
-- [ ] Leads table displays all 18 columns
-- [ ] Table sorting works for each sortable column
-- [ ] Search filters leads correctly
-- [ ] Column filters apply properly
-- [ ] Date range filtering works
-- [ ] Quick date presets function correctly
-- [ ] CSV export generates valid file
-- [ ] CSV export includes all filtered data
-- [ ] Pagination navigates correctly
-- [ ] Auto-refresh updates data every 30 seconds
-- [ ] Manual refresh button works
-- [ ] Admin authentication required for access
-- [ ] Performance acceptable with 1000+ leads
-- [ ] Mobile responsive design
-- [ ] Error handling for failed API calls
-
----
-
-## 8. Module 5: Configuration & Settings Management
-
-### 8.1 Module Overview
-
-The Configuration & Settings Management module provides centralized application settings that can be dynamically updated by administrators without code changes. Settings are stored in Google Sheets and cached on the frontend for optimal performance.
-
-**Module Responsibilities**:
-- Centralized application configuration storage
-- Admin interface for settings modification
-- Infinite cache strategy with manual invalidation
-- Real-time settings propagation across application
-- Version control for settings changes
-- Settings audit log
-
-**Key Files**:
-- **Frontend**: `frontend/src/services/constantsService.js`
-- **Frontend**: `frontend/src/pages/AdminSettingsPage.js`
-- **Backend**: `backend/controllers/settingsController.js`
-- **Backend**: `backend/config/constants.js`
-- **Storage**: Google Sheets "Admin" tab
-
-### 8.2 Settings Architecture
-
-#### 8.2.1 Settings Data Model
-
-**Google Sheets Schema** (Admin Tab - Settings Section):
-
-```
+[Code snippet removed]
 | Setting Key                  | Value                                    | Type    | Category    | Description                          | Last Modified       |
 |------------------------------|------------------------------------------|---------|-------------|--------------------------------------|---------------------|
 | webinar_price                | 999                                      | number  | Payment     | Base webinar registration price      | 2024-11-17 10:00:00 |
@@ -5785,30 +4106,7 @@ The Configuration & Settings Management module provides centralized application 
 | announcement_banner          | Limited seats! Register now              | string  | UI          | Homepage announcement text           | 2024-11-16 17:00:00 |
 | facebook_pixel_id            | 123456789012345                          | string  | Analytics   | Facebook Pixel ID                    | 2024-10-15 10:30:00 |
 | google_analytics_id          | G-XXXXXXXXXX                             | string  | Analytics   | Google Analytics measurement ID      | 2024-10-15 10:30:00 |
-```
-
-#### 8.2.2 Settings Categories
-
-**Category Breakdown**:
-
-| Category | Settings Count | Update Frequency | Examples |
-|----------|----------------|------------------|----------|
-| **General** | 8 | Low (monthly) | Webinar title, date, duration, venue |
-| **Payment** | 5 | Low (quarterly) | Base price, currency, tax rate, max discount |
-| **Support** | 4 | Low (rarely) | Email, phone, business hours, help URL |
-| **Features** | 6 | Medium (weekly) | Enable/disable toggles for major features |
-| **UI** | 7 | High (daily) | Banners, colors, countdown dates, messages |
-| **Integration** | 8 | Low (rarely) | API keys, webhook URLs, third-party IDs |
-| **Analytics** | 5 | Low (rarely) | Tracking IDs, conversion pixels |
-| **System** | 4 | Low (rarely) | Maintenance mode, rate limits, cache TTL |
-
-### 8.3 Constants Service (Frontend)
-
-#### 8.3.1 Service Implementation
-
-**File**: `frontend/src/services/constantsService.js`
-
-```javascript
+[Code snippet removed]javascript
 class ConstantsService {
   constructor() {
     this.cache = null;
@@ -5956,13 +4254,7 @@ class ConstantsService {
 // Export singleton instance
 const constantsService = new ConstantsService();
 export default constantsService;
-```
-
-#### 8.3.2 Usage in Components
-
-**Example 1: Payment Page**
-
-```javascript
+[Code snippet removed]javascript
 import constantsService from '../services/constantsService';
 
 const PaymentPage = () => {
@@ -5994,11 +4286,7 @@ const PaymentPage = () => {
     </div>
   );
 };
-```
-
-**Example 2: Landing Page with Subscription**
-
-```javascript
+[Code snippet removed]javascript
 const LandingPage = () => {
   const [settings, setSettings] = useState({});
   
@@ -6030,15 +4318,7 @@ const LandingPage = () => {
     </div>
   );
 };
-```
-
-### 8.4 Admin Settings Page
-
-#### 8.4.1 Settings Management Interface
-
-**File**: `frontend/src/pages/AdminSettingsPage.js`
-
-```javascript
+[Code snippet removed]javascript
 const AdminSettingsPage = () => {
   const [settings, setSettings] = useState({});
   const [editedSettings, setEditedSettings] = useState({});
@@ -6178,11 +4458,7 @@ const AdminSettingsPage = () => {
     </div>
   );
 };
-```
-
-#### 8.4.2 Setting Field Component
-
-```javascript
+[Code snippet removed]javascript
 const SettingField = ({ setting, value, onChange }) => {
   const renderInput = () => {
     switch (setting.type) {
@@ -6277,15 +4553,7 @@ const SettingField = ({ setting, value, onChange }) => {
     </div>
   );
 };
-```
-
-### 8.5 Backend Settings Controller
-
-#### 8.5.1 Get Settings Endpoint
-
-**File**: `backend/controllers/settingsController.js`
-
-```javascript
+[Code snippet removed]javascript
 getSettings: async (req, res) => {
   try {
     // Forward to n8n to fetch from Google Sheets
@@ -6324,11 +4592,7 @@ getSettings: async (req, res) => {
     });
   }
 }
-```
-
-#### 8.5.2 Update Settings Endpoint
-
-```javascript
+[Code snippet removed]javascript
 updateSettings: async (req, res) => {
   try {
     // Verify admin authentication
@@ -6387,11 +4651,7 @@ updateSettings: async (req, res) => {
     });
   }
 }
-```
-
-### 8.6 Settings Metadata Schema
-
-```javascript
+[Code snippet removed]javascript
 // settingsMetadata.js
 export const settingsMetadata = {
   // General Settings
@@ -6496,13 +4756,7 @@ export const settingsMetadata = {
     description: ' Enable to show maintenance page to all users'
   }
 };
-```
-
-### 8.7 Cache Invalidation Strategy
-
-**Frontend Auto-Refresh After Admin Update**:
-
-```javascript
+[Code snippet removed]javascript
 // After admin saves settings
 const handleSaveSettings = async () => {
   const response = await apiClient.updateSettings(newSettings);
@@ -6530,67 +4784,7 @@ useEffect(() => {
   window.addEventListener('storage', handleStorageChange);
   return () => window.removeEventListener('storage', handleStorageChange);
 }, []);
-```
-
-### 8.8 Testing Checklist
-
-**Configuration Module Tests**:
-
-- [ ] Settings load from Google Sheets correctly
-- [ ] Settings cache persists across page reloads
-- [ ] Admin can view all settings categories
-- [ ] Admin can edit string settings
-- [ ] Admin can edit number settings
-- [ ] Admin can toggle boolean settings
-- [ ] Admin can update date/time settings
-- [ ] Save button updates backend and Google Sheets
-- [ ] Cache refresh propagates changes immediately
-- [ ] Multiple components use same cached settings
-- [ ] Default values used when API fails
-- [ ] Settings listeners get notified of changes
-- [ ] Type conversion works (string to number/boolean)
-- [ ] Validation prevents invalid values
-- [ ] Unsaved changes warning displays correctly
-- [ ] Reset button discards changes
-- [ ] Cross-tab updates work via localStorage
-- [ ] Admin authentication required for updates
-
----
-
-## 9. Module 6: n8n Workflow Integration
-
-### 9.1 Module Overview
-
-The n8n Workflow Integration module orchestrates all business process automation using the n8n workflow engine. It connects the backend API with Google Sheets for data persistence and integrates external services like OpenAI/Claude for AI capabilities.
-
-**Module Responsibilities**:
-- 10+ automated workflows for core operations
-- Google Sheets CRUD operations
-- External API integrations (OpenAI, WhatsApp, Email)
-- Error handling and retry logic
-- Webhook endpoint management
-- Data transformation and validation
-
-**Key Workflows**:
-1. **capture-lead**: Store user registration data
-2. **user-login**: Authenticate users and return data
-3. **simulate-payment**: Process payment and update status
-4. **validate-coupon**: Verify coupon codes
-5. **contact-form**: Handle contact form submissions
-6. **ai-chat**: Process AI chatbot queries
-7. **send-response**: Send admin responses to users
-8. **admin-auth**: Validate admin credentials
-9. **get-settings**: Retrieve application settings
-10. **post-settings**: Update application settings
-
-**Key File**:
-- **n8n Workflow**: `n8n/WebinarSalesFunnel_Workflow.json`
-
-### 9.2 n8n Workflow Architecture
-
-#### 9.2.1 Overall Workflow Structure
-
-```
+[Code snippet removed]
 
                     n8n WORKFLOW ARCHITECTURE                      
 
@@ -6640,18 +4834,7 @@ The n8n Workflow Integration module orchestrates all business process automation
                    Respond to Webhook   
                    (Return to backend)  
                  
-```
-
-### 9.3 Workflow Details
-
-#### 9.3.1 Workflow 1: capture-lead
-
-**Purpose**: Store new user registration data in Google Sheets
-
-**Endpoint**: `POST /webhook/capture-lead`
-
-**Input**:
-```json
+[Code snippet removed]json
 {
   "name": "John Doe",
   "email": "john@example.com",
@@ -6664,114 +4847,14 @@ The n8n Workflow Integration module orchestrates all business process automation
   "ip_address": "192.168.1.1",
   "user_agent": "Mozilla/5.0..."
 }
-```
-
-**Workflow Steps**:
-
-1. **Webhook Trigger** - Receive registration data
-2. **Validate Email** (Function Node)
-   ```javascript
-   const email = $input.item.json.email.toLowerCase().trim();
-   
-   // Check if email already exists
-   const existingUsers = $('Check Existing').all();
-   const duplicate = existingUsers.some(user => 
-     user.json.email === email
-   );
-   
-   if (duplicate) {
-     return {
-       json: {
-         success: false,
-         message: "Email already registered",
-         errorCode: "EMAIL_EXISTS"
-       }
-     };
-   }
-   
-   return { json: { ...item.json, validated: true } };
-   ```
-
-3. **Query Existing Users** (Google Sheets - Read)
-   - Sheet: "User Data"
-   - Range: "A:Z"
-   - Filter by email column
-
-4. **Append New User** (Google Sheets - Append)
-   - Sheet: "User Data"
-   - Data: Registration payload
-
-5. **Return Response**
-   ```json
-   {
-     "success": true,
-     "message": "User registered successfully",
-     "userId": "user_1731672000000"
-   }
-   ```
-
-#### 9.3.2 Workflow 2: user-login
-
-**Purpose**: Authenticate user and return user data
-
-**Endpoint**: `POST /webhook/user-login`
-
-**Input**:
-```json
+[Code snippet removed]json
 {
   "email": "john@example.com",
   "action": "user_login",
   "timestamp": "2024-11-17T10:35:00Z",
   "ip_address": "192.168.1.1"
 }
-```
-
-**Workflow Steps**:
-
-1. **Webhook Trigger**
-2. **Lookup User** (Google Sheets - Lookup)
-   - Sheet: "User Data"
-   - Lookup Column: "email"
-   - Return all columns
-
-3. **Check If Found** (IF Node)
-   - Condition: User exists?
-   - True → Continue
-   - False → Return error
-
-4. **Format User Data** (Function Node)
-   ```javascript
-   const user = $input.item.json;
-   
-   return {
-     json: {
-       success: true,
-       user: {
-         id: user.user_id,
-         name: user.name,
-         email: user.email,
-         mobile: user.mobile,
-         role: user.role,
-         password: user.password,  // Backend will verify
-         payment_status: user.payment_status || null,
-         amount_paid: user.amount_paid || null,
-         couponcode_given: user.couponcode_used || null,
-         reg_timestamp: user.reg_timestamp
-       }
-     }
-   };
-   ```
-
-5. **Return Response**
-
-#### 9.3.3 Workflow 3: simulate-payment
-
-**Purpose**: Update payment status in Google Sheets
-
-**Endpoint**: `POST /webhook/simulate-payment`
-
-**Input**:
-```json
+[Code snippet removed]json
 {
   "email": "john@example.com",
   "paymentStatus": "Success",
@@ -6780,262 +4863,21 @@ The n8n Workflow Integration module orchestrates all business process automation
   "transactionId": "TXN_1731672000000_ABC123",
   "paymentTimestamp": "2024-11-17T10:40:00Z"
 }
-```
-
-**Workflow Steps**:
-
-1. **Webhook Trigger**
-2. **Find User Row** (Google Sheets - Lookup)
-3. **Update Payment Fields** (Google Sheets - Update)
-   - Columns to update:
-     - payment_status
-     - amount_paid
-     - couponcode_used
-     - payment_timestamp
-     - transaction_id
-
-4. **Increment Coupon Usage** (IF coupon used)
-   - Switch to "Admin" tab
-   - Find coupon row
-   - Increment current_uses
-
-5. **Return Success**
-   ```json
-   {
-     "success": true,
-     "message": "Payment status updated"
-   }
-   ```
-
-#### 9.3.4 Workflow 4: validate-coupon
-
-**Purpose**: Verify coupon code validity
-
-**Endpoint**: `POST /webhook/validate-coupon`
-
-**Input**:
-```json
+[Code snippet removed]json
 {
   "email": "john@example.com",
   "couponCode": "SAVE30",
   "action": "validate_coupon",
   "timestamp": "2024-11-17T10:38:00Z"
 }
-```
-
-**Workflow Steps**:
-
-1. **Webhook Trigger**
-2. **Lookup Coupon** (Google Sheets - Admin Tab)
-   - Find row where coupon_code matches
-
-3. **Validate Coupon** (Function Node)
-   ```javascript
-   const coupon = $input.item.json;
-   const email = $('Webhook').item.json.email;
-   
-   // Check if coupon exists
-   if (!coupon.coupon_code) {
-     return {
-       json: {
-         valid: false,
-         message: "Coupon code not found",
-         errorCode: "COUPON_NOT_FOUND"
-       }
-     };
-   }
-   
-   // Check if active
-   if (coupon.status !== "Active") {
-     return {
-       json: {
-         valid: false,
-         message: "This coupon is no longer active",
-         errorCode: "COUPON_INACTIVE"
-       }
-     };
-   }
-   
-   // Check date range
-   const now = new Date();
-   const validFrom = new Date(coupon.valid_from);
-   const validUntil = new Date(coupon.valid_until);
-   
-   if (now < validFrom || now > validUntil) {
-     return {
-       json: {
-         valid: false,
-         message: "Coupon has expired",
-         errorCode: "COUPON_EXPIRED"
-       }
-     };
-   }
-   
-   // Check usage limit
-   if (coupon.max_uses !== "Unlimited") {
-     const maxUses = parseInt(coupon.max_uses);
-     const currentUses = parseInt(coupon.current_uses);
-     
-     if (currentUses >= maxUses) {
-       return {
-         json: {
-           valid: false,
-           message: "Coupon usage limit reached",
-           errorCode: "COUPON_LIMIT_REACHED"
-         }
-       };
-     }
-   }
-   
-   // Check if user already used this coupon
-   const userHistory = $('User Coupon History').all();
-   const alreadyUsed = userHistory.some(record => 
-     record.json.email === email && 
-     record.json.coupon_code === coupon.coupon_code
-   );
-   
-   if (alreadyUsed) {
-     return {
-       json: {
-         valid: false,
-         message: "You have already used this coupon",
-         errorCode: "COUPON_ALREADY_USED"
-       }
-     };
-   }
-   
-   // Coupon is valid
-   return {
-     json: {
-       valid: true,
-       discount: parseInt(coupon.discount_percent),
-       message: "Coupon is valid"
-     }
-   };
-   ```
-
-4. **Return Validation Result**
-
-#### 9.3.5 Workflow 5: ai-chat
-
-**Purpose**: Process AI chatbot queries with RAG
-
-**Endpoint**: `POST /webhook/ai-chat`
-
-**Input**:
-```json
+[Code snippet removed]json
 {
   "email": "john@example.com",
   "query": "What is the refund policy?",
   "context": "Previous conversation history...",
   "timestamp": "2024-11-17T10:42:00Z"
 }
-```
-
-**Workflow Steps**:
-
-1. **Webhook Trigger**
-2. **Retrieve FAQ Context** (Google Sheets - FAQ Tab)
-   - Get all FAQ entries
-   - Filter by keyword matching
-
-3. **Build Prompt** (Function Node)
-   ```javascript
-   const userQuery = $input.item.json.query;
-   const context = $input.item.json.context || "";
-   const faqs = $('Get FAQ').all();
-   
-   const faqContext = faqs
-     .map(faq => `Q: ${faq.json.question}\nA: ${faq.json.answer}`)
-     .join('\n\n');
-   
-   const prompt = `
-   You are a helpful AI assistant for a webinar platform.
-   
-   ${context ? `Previous Conversation:\n${context}\n` : ''}
-   
-   User Question: ${userQuery}
-   
-   Relevant FAQ Information:
-   ${faqContext}
-   
-   Instructions:
-   - Answer based on the FAQ information provided
-   - Be concise and friendly
-   - If unsure, suggest contacting support
-   
-   Answer:
-   `;
-   
-   return { json: { prompt } };
-   ```
-
-4. **Call OpenAI API** (HTTP Request)
-   - URL: `https://api.openai.com/v1/chat/completions`
-   - Method: POST
-   - Headers: Authorization with API key
-   - Body:
-     ```json
-     {
-       "model": "gpt-4",
-       "messages": [
-         {"role": "system", "content": "You are a helpful assistant."},
-         {"role": "user", "content": "{{$node['Build Prompt'].json.prompt}}"}
-       ],
-       "temperature": 0.7,
-       "max_tokens": 500
-     }
-     ```
-
-5. **Extract Response** (Function Node)
-   ```javascript
-   const apiResponse = $input.item.json;
-   const aiResponse = apiResponse.choices[0].message.content;
-   
-   return {
-     json: {
-       response: aiResponse,
-       confidence: apiResponse.choices[0].finish_reason === "stop" ? "high" : "low",
-       tokensUsed: apiResponse.usage.total_tokens
-     }
-   };
-   ```
-
-6. **Store Query** (Google Sheets - Queries Tab)
-   - Append: email, query, ai_response, timestamp, status
-
-7. **Return AI Response**
-   ```json
-   {
-     "success": true,
-     "response": "Our refund policy allows...",
-     "queryId": "QUERY_1731672000000",
-     "confidence": "high"
-   }
-   ```
-
-### 9.4 Google Sheets Integration
-
-#### 9.4.1 Sheet Structure
-
-**User Data Tab**:
-- Columns: name, email, password, mobile, role, source, reg_timestamp, payment_status, amount_paid, couponcode_used, payment_timestamp, transaction_id, ip_address, user_agent
-
-**Admin Tab** (Multiple sections):
-- Coupons Section: coupon_code, discount_percent, valid_from, valid_until, max_uses, current_uses, status
-- Settings Section: setting_key, value, type, category, description, last_modified
-- Admin Credentials: username, password_hash
-
-**Queries Tab**:
-- Columns: timestamp, email, query, ai_response, status, confidence, admin_notes, reviewed_by, reviewed_at, query_id
-
-**FAQ Tab**:
-- Columns: question, answer, keywords, category, priority
-
-#### 9.4.2 Common n8n Google Sheets Operations
-
-**Append Row**:
-```json
+[Code snippet removed]json
 {
   "operation": "append",
   "sheetName": "User Data",
@@ -7048,20 +4890,14 @@ The n8n Workflow Integration module orchestrates all business process automation
     "password": "={{$json.password}}"
   }
 }
-```
-
-**Lookup Row**:
-```json
+[Code snippet removed]json
 {
   "operation": "lookup",
   "sheetName": "User Data",
   "lookupColumn": "email",
   "lookupValue": "={{$json.email}}"
 }
-```
-
-**Update Row**:
-```json
+[Code snippet removed]json
 {
   "operation": "update",
   "sheetName": "User Data",
@@ -7072,13 +4908,7 @@ The n8n Workflow Integration module orchestrates all business process automation
     "amount_paid": "={{$json.amount}}"
   }
 }
-```
-
-### 9.5 Error Handling in n8n
-
-#### 9.5.1 Try-Catch Pattern
-
-```javascript
+[Code snippet removed]javascript
 // Function Node - Error Handling Wrapper
 try {
   const result = performOperation();
@@ -7102,24 +4932,7 @@ try {
     }
   };
 }
-```
-
-#### 9.5.2 Retry Logic
-
-**HTTP Request Node Configuration**:
-- Enable "Continue on Fail": Yes
-- Retry on Fail: Yes
-- Max Retries: 3
-- Retry Interval: 2000ms (exponential backoff)
-
-### 9.6 Webhook Security
-
-**IP Whitelisting**:
-- Only accept requests from backend server IP
-- Configure in n8n webhook settings
-
-**API Key Authentication** (Optional Enhancement):
-```javascript
+[Code snippet removed]javascript
 // Function Node - Verify API Key
 const apiKey = $input.item.json.headers['x-api-key'];
 const expectedKey = $env.API_SECRET_KEY;
@@ -7135,67 +4948,7 @@ if (apiKey !== expectedKey) {
 }
 
 // Continue processing...
-```
-
-### 9.7 Testing Checklist
-
-**n8n Workflow Tests**:
-
-- [ ] capture-lead workflow stores data correctly
-- [ ] Duplicate email detection works
-- [ ] user-login returns correct user data
-- [ ] user-login handles non-existent email
-- [ ] simulate-payment updates payment status
-- [ ] Coupon usage counter increments
-- [ ] validate-coupon checks all validation rules
-- [ ] Expired coupons are rejected
-- [ ] ai-chat retrieves FAQ context
-- [ ] OpenAI API integration works
-- [ ] AI responses stored in Queries tab
-- [ ] get-settings returns all settings
-- [ ] post-settings updates Google Sheets
-- [ ] Error handling returns proper error codes
-- [ ] Retry logic works on network failures
-- [ ] Webhook authentication prevents unauthorized access
-- [ ] Google Sheets operations handle large datasets
-- [ ] Concurrent requests don't cause conflicts
-
----
-
-## 10. Data Models & Schema
-
-### 10.1 User Data Model
-
-**Google Sheets Table**: User Data
-
-| Field Name | Data Type | Constraints | Default | Description |
-|------------|-----------|-------------|---------|-------------|
-| `name` | String(100) | Required, Not Empty | - | User's full name |
-| `email` | String(255) | Required, Unique, Email Format | - | User's email address (Primary Key) |
-| `password` | String(60) | Required, bcrypt hash | - | Hashed password (bcrypt with salt) |
-| `mobile` | String(15) | Optional | "NA" | Phone number with country code |
-| `role` | String(50) | Optional | "" | User role (Student, Professional, etc.) |
-| `source` | String(50) | Optional | "Direct" | Traffic source (UTM parameter) |
-| `reg_timestamp` | ISO 8601 DateTime | Required, Auto | Current timestamp | Registration date and time |
-| `payment_status` | Enum | Optional | null | "Success", "Need Time", "Failed", or null |
-| `amount_paid` | Decimal(10,2) | Optional | null | Amount paid after discount |
-| `couponcode_used` | String(20) | Optional | null | Coupon code applied at checkout |
-| `discount_applied` | Integer(0-100) | Optional | null | Discount percentage |
-| `payment_timestamp` | ISO 8601 DateTime | Optional | null | When payment was completed |
-| `transaction_id` | String(50) | Optional, Unique | null | Unique transaction identifier |
-| `whatsapp_invite_sent` | Boolean | Optional | false | Whether WhatsApp invite was sent |
-| `ip_address` | String(45) | Optional | - | User's IP address (IPv4/IPv6) |
-| `user_agent` | String(500) | Optional | - | Browser/device user agent string |
-| `lead_score` | Integer(0-100) | Optional | 0 | Lead quality score |
-| `last_activity` | ISO 8601 DateTime | Auto-update | Current timestamp | Last interaction timestamp |
-| `notes` | Text | Optional | "" | Admin notes about the user |
-
-**Indexes**:
-- Primary: `email` (unique)
-- Secondary: `payment_status`, `source`, `reg_timestamp`
-
-**Sample Record**:
-```json
+[Code snippet removed]json
 {
   "name": "John Doe",
   "email": "john.doe@example.com",
@@ -7217,27 +4970,7 @@ if (apiKey !== expectedKey) {
   "last_activity": "2024-11-17T10:35:12Z",
   "notes": "High-value customer, provided positive feedback"
 }
-```
-
-### 10.2 Coupon Data Model
-
-**Google Sheets Table**: Admin (Coupons Section)
-
-| Field Name | Data Type | Constraints | Default | Description |
-|------------|-----------|-------------|---------|-------------|
-| `coupon_code` | String(20) | Required, Unique, Uppercase | - | Coupon identifier (e.g., "SAVE30") |
-| `discount_percent` | Integer(0-100) | Required | - | Discount percentage |
-| `valid_from` | Date | Required | - | Start date of validity |
-| `valid_until` | Date | Required | - | End date of validity |
-| `max_uses` | Integer or "Unlimited" | Required | "Unlimited" | Maximum number of uses |
-| `current_uses` | Integer | Auto-increment | 0 | Current usage count |
-| `status` | Enum | Required | "Active" | "Active" or "Inactive" |
-| `description` | Text | Optional | "" | Internal description |
-| `created_by` | String(50) | Optional | "admin" | Admin who created the coupon |
-| `created_at` | ISO 8601 DateTime | Auto | Current timestamp | Creation timestamp |
-
-**Sample Record**:
-```json
+[Code snippet removed]json
 {
   "coupon_code": "SAVE30",
   "discount_percent": 30,
@@ -7250,37 +4983,7 @@ if (apiKey !== expectedKey) {
   "created_by": "admin@example.com",
   "created_at": "2024-01-01T00:00:00Z"
 }
-```
-
-### 10.3 Query Data Model
-
-**Google Sheets Table**: Queries
-
-| Field Name | Data Type | Constraints | Default | Description |
-|------------|-----------|-------------|---------|-------------|
-| `query_id` | String(50) | Required, Unique | Auto-generated | Unique query identifier |
-| `timestamp` | ISO 8601 DateTime | Required, Auto | Current timestamp | When query was submitted |
-| `email` | String(255) | Required | - | User's email address |
-| `query` | Text(1000) | Required | - | User's question/message |
-| `ai_response` | Text | Optional | - | AI-generated answer |
-| `status` | Enum | Required | "New" | Query status (see state machine) |
-| `confidence` | Enum | Optional | null | "high", "medium", "low", or null |
-| `admin_notes` | Text | Optional | "" | Admin comments |
-| `reviewed_by` | String(255) | Optional | null | Admin email who reviewed |
-| `reviewed_at` | ISO 8601 DateTime | Optional | null | Review timestamp |
-| `custom_response` | Text | Optional | null | Admin's custom response |
-| `response_sent` | Boolean | Optional | false | Whether response was sent to user |
-
-**Status Values**:
-- `New`: Just submitted
-- `AI_Answered`: Auto-replied by AI
-- `Pending`: Awaiting admin review
-- `Approved`: Admin approved AI response
-- `Rejected`: Admin rejected, needs manual response
-- `Resolved`: Query fully answered
-
-**Sample Record**:
-```json
+[Code snippet removed]json
 {
   "query_id": "QUERY_1731672945",
   "timestamp": "2024-11-17T10:42:25Z",
@@ -7295,27 +4998,7 @@ if (apiKey !== expectedKey) {
   "custom_response": null,
   "response_sent": true
 }
-```
-
-### 10.4 Settings Data Model
-
-**Google Sheets Table**: Admin (Settings Section)
-
-| Field Name | Data Type | Constraints | Default | Description |
-|------------|-----------|-------------|---------|-------------|
-| `setting_key` | String(100) | Required, Unique | - | Setting identifier (e.g., "webinar_price") |
-| `value` | String(500) | Required | - | Setting value (stored as string, parsed by type) |
-| `type` | Enum | Required | "string" | "string", "number", "boolean", "date" |
-| `category` | Enum | Required | "General" | Setting category for grouping |
-| `description` | Text | Optional | "" | Human-readable description |
-| `last_modified` | ISO 8601 DateTime | Auto-update | Current timestamp | Last modification time |
-| `modified_by` | String(255) | Optional | "system" | Admin who last modified |
-
-**Categories**:
-- General, Payment, Support, Features, UI, Integration, Analytics, System
-
-**Sample Record**:
-```json
+[Code snippet removed]json
 {
   "setting_key": "webinar_price",
   "value": "999",
@@ -7325,11 +5008,7 @@ if (apiKey !== expectedKey) {
   "last_modified": "2024-11-10T14:30:00Z",
   "modified_by": "admin@example.com"
 }
-```
-
-### 10.5 Entity Relationships
-
-```
+[Code snippet removed]
        
     User               Coupon    
                                  
@@ -7357,25 +5036,7 @@ if (apiKey !== expectedKey) {
  type                
  category            
 
-```
-
-**Relationships**:
-1. User → Coupon: One user can use one coupon (stored in `couponcode_used`)
-2. User → Query: One user can submit many queries (email as foreign key)
-3. Settings: Standalone, no direct relationships
-
----
-
-## 11. API Reference
-
-### 11.1 Authentication Endpoints
-
-#### POST `/api/auth/register`
-
-Register new user account.
-
-**Request**:
-```json
+[Code snippet removed]json
 {
   "name": "John Doe",
   "email": "john@example.com",
@@ -7385,10 +5046,7 @@ Register new user account.
   "source": "FacebookAds",
   "rememberMe": true
 }
-```
-
-**Response (201)**:
-```json
+[Code snippet removed]json
 {
   "success": true,
   "message": "Registration successful",
@@ -7402,30 +5060,13 @@ Register new user account.
     "payment_status": null
   }
 }
-```
-
-**Error Responses**:
-- `409`: Email already exists
-- `400`: Validation error (missing/invalid fields)
-- `503`: Service unavailable (n8n down)
-
----
-
-#### POST `/api/auth/login`
-
-Login to existing account.
-
-**Request**:
-```json
+[Code snippet removed]json
 {
   "email": "john@example.com",
   "password": "SecurePass123",
   "rememberMe": true
 }
-```
-
-**Response (200)**:
-```json
+[Code snippet removed]json
 {
   "success": true,
   "message": "Login successful",
@@ -7440,26 +5081,9 @@ Login to existing account.
     "couponCode": "SAVE30"
   }
 }
-```
-
-**Error Responses**:
-- `401`: Invalid credentials
-- `400`: Validation error
-- `503`: Service unavailable
-
----
-
-#### GET `/api/auth/verify`
-
-Verify JWT token validity.
-
-**Headers**:
-```
+[Code snippet removed]
 Authorization: Bearer <token>
-```
-
-**Response (200)**:
-```json
+[Code snippet removed]json
 {
   "success": true,
   "valid": true,
@@ -7470,25 +5094,9 @@ Authorization: Bearer <token>
     "role": "Student"
   }
 }
-```
-
-**Error Responses**:
-- `401`: Invalid or expired token
-- `400`: Missing authorization header
-
----
-
-#### POST `/api/auth/refresh`
-
-Refresh JWT token before expiry.
-
-**Headers**:
-```
+[Code snippet removed]
 Authorization: Bearer <token>
-```
-
-**Response (200)**:
-```json
+[Code snippet removed]json
 {
   "success": true,
   "message": "Token refreshed successfully",
@@ -7499,38 +5107,17 @@ Authorization: Bearer <token>
     "name": "John Doe"
   }
 }
-```
-
----
-
-#### POST `/api/auth/logout`
-
-Logout and clear session.
-
-**Response (200)**:
-```json
+[Code snippet removed]json
 {
   "success": true,
   "message": "Logout successful"
 }
-```
-
-### 11.2 Payment Endpoints
-
-#### POST `/api/payment/validate-coupon`
-
-Validate coupon code.
-
-**Request**:
-```json
+[Code snippet removed]json
 {
   "email": "john@example.com",
   "couponCode": "SAVE30"
 }
-```
-
-**Response (200)**:
-```json
+[Code snippet removed]json
 {
   "success": true,
   "valid": true,
@@ -7541,29 +5128,7 @@ Validate coupon code.
   "finalPrice": 699,
   "message": "Coupon applied! You save ₹300"
 }
-```
-
-**Error Responses**:
-- `400`: Coupon not found / expired / limit reached / already used
-- `400`: Validation error (missing fields)
-- `503`: Service unavailable
-
-**Validation Rules**:
-1. Coupon code exists
-2. Status is "Active"
-3. Current date within valid_from and valid_until
-4. current_uses < max_uses (if not unlimited)
-5. User hasn't used this coupon before
-6. Coupon not blacklisted
-
----
-
-#### POST `/api/payment/simulate-payment`
-
-Simulate payment processing.
-
-**Request**:
-```json
+[Code snippet removed]json
 {
   "email": "john@example.com",
   "name": "John Doe",
@@ -7571,10 +5136,7 @@ Simulate payment processing.
   "amount": 699,
   "couponCode": "SAVE30"
 }
-```
-
-**Response (200)**:
-```json
+[Code snippet removed]json
 {
   "success": true,
   "paymentStatus": "Success",
@@ -7585,34 +5147,13 @@ Simulate payment processing.
   "whatsappLink": "https://wa.me/?text=...",
   "message": "Payment successful! Your registration is confirmed."
 }
-```
-
-**Payment Status Distribution**:
-- `Success`: 60% probability
-- `Need Time`: 30% probability
-- `Failed`: 10% probability
-
-**Error Responses**:
-- `400`: Validation error
-- `503`: Service unavailable
-
-### 11.3 AI Chat Endpoints
-
-#### POST `/api/leads/ai-chat`
-
-Submit AI chatbot query.
-
-**Request**:
-```json
+[Code snippet removed]json
 {
   "email": "john@example.com",
   "query": "What is the webinar duration?",
   "context": "User: Hello\\nAssistant: Hi! How can I help?"
 }
-```
-
-**Response (200)**:
-```json
+[Code snippet removed]json
 {
   "success": true,
   "response": "The webinar is 120 minutes long, which includes a 15-minute Q&A session at the end.",
@@ -7623,60 +5164,25 @@ Submit AI chatbot query.
     "sources": ["FAQ Database"]
   }
 }
-```
-
-**Error Responses**:
-- `400`: Validation error (missing fields)
-- `429`: Rate limit exceeded (20 queries per 15 min)
-- `503`: AI service unavailable
-
----
-
-#### POST `/api/leads/contact`
-
-Submit contact form.
-
-**Request**:
-```json
+[Code snippet removed]json
 {
   "name": "John Doe",
   "email": "john@example.com",
   "mobile": "9876543210",
   "message": "I have a question about pricing."
 }
-```
-
-**Response (201)**:
-```json
+[Code snippet removed]json
 {
   "success": true,
   "message": "Your message has been received. We'll get back to you soon!",
   "ticketId": "TICKET_1731672000"
 }
-```
-
-**Error Responses**:
-- `400`: Validation error
-- `503`: Service unavailable
-
-### 11.4 Admin Endpoints
-
-**Note**: All admin endpoints require authentication with admin JWT token.
-
-#### POST `/api/admin/login`
-
-Admin authentication.
-
-**Request**:
-```json
+[Code snippet removed]json
 {
   "username": "admin",
   "password": "AdminPass123"
 }
-```
-
-**Response (200)**:
-```json
+[Code snippet removed]json
 {
   "success": true,
   "message": "Login successful",
@@ -7686,29 +5192,9 @@ Admin authentication.
     "role": "admin"
   }
 }
-```
-
-**Error Responses**:
-- `401`: Invalid credentials (1 second delay for security)
-- `400`: Validation error
-
----
-
-#### GET `/api/admin/dashboard`
-
-Get dashboard metrics.
-
-**Headers**:
-```
+[Code snippet removed]
 Authorization: Bearer <admin_token>
-```
-
-**Query Params**:
-- `startDate` (optional): ISO 8601 date
-- `endDate` (optional): ISO 8601 date
-
-**Response (200)**:
-```json
+[Code snippet removed]json
 {
   "success": true,
   "metrics": {
@@ -7733,33 +5219,9 @@ Authorization: Bearer <admin_token>
   },
   "timestamp": "2024-11-17T10:45:00Z"
 }
-```
-
-**Error Responses**:
-- `401`: Unauthorized (invalid/missing token)
-- `403`: Forbidden (non-admin user)
-
----
-
-#### GET `/api/admin/leads`
-
-Get all leads with filtering.
-
-**Headers**:
-```
+[Code snippet removed]
 Authorization: Bearer <admin_token>
-```
-
-**Query Params**:
-- `status` (optional): Filter by payment status
-- `source` (optional): Filter by traffic source
-- `startDate` (optional): Filter from date
-- `endDate` (optional): Filter to date
-- `page` (optional): Page number (default: 1)
-- `limit` (optional): Items per page (default: 50, max: 200)
-
-**Response (200)**:
-```json
+[Code snippet removed]json
 {
   "success": true,
   "leads": [
@@ -7783,31 +5245,9 @@ Authorization: Bearer <admin_token>
   "limit": 50,
   "totalPages": 25
 }
-```
-
-**Error Responses**:
-- `401`: Unauthorized
-- `403`: Forbidden
-
----
-
-#### GET `/api/admin/queries`
-
-Get AI chat queries for moderation.
-
-**Headers**:
-```
+[Code snippet removed]
 Authorization: Bearer <admin_token>
-```
-
-**Query Params**:
-- `status` (optional): Filter by query status
-- `email` (optional): Filter by user email
-- `page` (optional): Page number
-- `limit` (optional): Items per page
-
-**Response (200)**:
-```json
+[Code snippet removed]json
 {
   "success": true,
   "queries": [
@@ -7827,20 +5267,7 @@ Authorization: Bearer <admin_token>
   "page": 1,
   "totalPages": 1
 }
-```
-
-**Error Responses**:
-- `401`: Unauthorized
-- `403`: Forbidden
-
-### 11.5 Configuration Endpoints
-
-#### GET `/api/config/get-settings`
-
-Get all application settings.
-
-**Response (200)**:
-```json
+[Code snippet removed]json
 {
   "success": true,
   "settings": {
@@ -7856,24 +5283,9 @@ Get all application settings.
   },
   "timestamp": "2024-11-17T10:45:00Z"
 }
-```
-
-**Error Responses**:
-- `503`: Service unavailable
-
----
-
-#### POST `/api/config/post-settings`
-
-Update application settings (Admin only).
-
-**Headers**:
-```
+[Code snippet removed]
 Authorization: Bearer <admin_token>
-```
-
-**Request**:
-```json
+[Code snippet removed]json
 {
   "settings": {
     "webinar_price": 1099,
@@ -7881,116 +5293,37 @@ Authorization: Bearer <admin_token>
     "enable_ai_chat": true
   }
 }
-```
-
-**Response (200)**:
-```json
+[Code snippet removed]json
 {
   "success": true,
   "message": "Settings updated successfully",
   "updated": ["webinar_price", "announcement_banner", "enable_ai_chat"],
   "timestamp": "2024-11-17T10:50:00Z"
 }
-```
-
-**Error Responses**:
-- `401`: Unauthorized
-- `403`: Forbidden (non-admin user)
-- `400`: Validation error (invalid setting keys/values)
-- `503`: Service unavailable
-
-### 11.6 Rate Limiting
-
-**Global Rate Limits**:
-- General API: 100 requests per 15 minutes per IP
-- Authentication: 5 login attempts per 15 minutes per email
-- AI Chat: 20 queries per 15 minutes per user
-- Payment: 10 attempts per hour per user
-
-**Rate Limit Headers**:
-```
+[Code snippet removed]
 X-RateLimit-Limit: 100
 X-RateLimit-Remaining: 95
 X-RateLimit-Reset: 1731672900
-```
-
-**Rate Limit Exceeded Response (429)**:
-```json
+[Code snippet removed]json
 {
   "success": false,
   "message": "Too many requests, please try again later.",
   "retryAfter": 900
 }
-```
-
----
-
-## 12. Security Architecture
-
-### 12.1 Authentication & Authorization
-
-#### 12.1.1 JWT Security
-
-**Token Configuration**:
-- Algorithm: HS256 (HMAC with SHA-256)
-- Secret: Minimum 32 characters, stored in environment variable
-- Expiry: 7 days (standard), 30 days (remember me)
-- Payload: Non-sensitive data only (email, name, userId, role)
-
-**Best Practices Implemented**:
- Tokens signed with strong secret  
- Short expiry times (7-30 days max)  
- HTTP-only cookies for token storage  
- Signature verification on every request  
- No sensitive data in JWT payload  
- Separate admin tokens  
-
-#### 12.1.2 Password Security
-
-**bcrypt Configuration**:
-- Algorithm: bcrypt
-- Salt Rounds: 10 (2^10 = 1,024 iterations)
-- Auto-generated salt per password
-- Output: 60-character hash
-
-**Implementation**:
-```javascript
+[Code snippet removed]javascript
 // Hashing
 const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
 // Verification (constant-time comparison)
 const isValid = await bcrypt.compare(plainPassword, hashedPassword);
-```
-
-**Security Properties**:
-- Slow by design (prevents brute-force)
-- Unique salts (prevents rainbow tables)
-- Future-proof (adjustable cost factor)
-- OWASP recommended
-
-#### 12.1.3 Session Management
-
-**Cookie Security**:
-```javascript
+[Code snippet removed]javascript
 const cookieOptions = {
   httpOnly: true,        // JavaScript cannot access (XSS protection)
   secure: true,          // HTTPS only in production
   sameSite: 'strict',    // CSRF protection
   maxAge: 30 * 24 * 60 * 60 * 1000  // 30 days
 };
-```
-
-**Token Storage Strategy**:
-1. **Primary**: HTTP-only cookie (XSS-proof)
-2. **Secondary**: LocalStorage (quick access, persistence)
-3. **Verification**: Both methods checked on backend
-
-### 12.2 API Security
-
-#### 12.2.1 Rate Limiting
-
-**Global Rate Limit**:
-```javascript
+[Code snippet removed]javascript
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,  // 15 minutes
   max: 100,                   // 100 requests per window
@@ -8000,18 +5333,7 @@ const limiter = rateLimit({
 });
 
 app.use('/api/', limiter);
-```
-
-**Endpoint-Specific Limits**:
-- Authentication: 5 login attempts per 15 minutes per email
-- AI Chat: 20 queries per 15 minutes per user
-- Payment: 10 attempts per hour per user
-- Admin: 100 requests per 15 minutes per IP
-
-#### 12.2.2 Input Validation
-
-**express-validator Rules**:
-```javascript
+[Code snippet removed]javascript
 // Registration validation
 [
   body('name').trim().isLength({ min: 2, max: 100 }),
@@ -8027,17 +5349,7 @@ app.use('/api/', limiter);
   body('amount').isFloat({ min: 0 }),
   body('couponCode').optional().isAlphanumeric().isLength({ min: 4, max: 20 })
 ]
-```
-
-**Sanitization**:
-- Trim whitespace
-- Convert to lowercase (emails)
-- Remove special characters (where appropriate)
-- Escape HTML entities
-
-#### 12.2.3 CORS Configuration
-
-```javascript
+[Code snippet removed]javascript
 const corsOptions = {
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true,
@@ -8047,21 +5359,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-```
-
-### 12.3 Data Protection
-
-#### 12.3.1 Sensitive Data Handling
-
-**Never Log or Expose**:
-- Passwords (plain or hashed)
-- JWT secrets
-- API keys
-- Credit card information
-- Social Security Numbers
-
-**Data Masking**:
-```javascript
+[Code snippet removed]javascript
 // Mask email in logs
 const maskEmail = (email) => {
   const [name, domain] = email.split('@');
@@ -8072,12 +5370,7 @@ const maskEmail = (email) => {
 const maskMobile = (mobile) => {
   return mobile.slice(0, 3) + '****' + mobile.slice(-2);
 };
-```
-
-#### 12.3.2 HTTPS Enforcement
-
-**Production Middleware**:
-```javascript
+[Code snippet removed]javascript
 if (process.env.NODE_ENV === 'production') {
   // Redirect HTTP to HTTPS
   app.use((req, res, next) => {
@@ -8096,12 +5389,7 @@ if (process.env.NODE_ENV === 'production') {
     next();
   });
 }
-```
-
-### 12.4 Security Headers (Helmet.js)
-
-**Configuration**:
-```javascript
+[Code snippet removed]javascript
 const helmet = require('helmet');
 
 app.use(helmet({
@@ -8127,45 +5415,7 @@ app.use(helmet({
   frameguard: { action: 'deny' },
   xssFilter: true
 }));
-```
-
-**Headers Set**:
-- `Content-Security-Policy`: Prevent XSS attacks
-- `Strict-Transport-Security`: Force HTTPS
-- `X-Content-Type-Options`: Prevent MIME sniffing
-- `X-Frame-Options`: Prevent clickjacking
-- `X-XSS-Protection`: Browser XSS filter
-
-### 12.5 Vulnerability Prevention
-
-#### 12.5.1 SQL Injection
-
-**Status**:  Not Applicable (No SQL database)
-- Using Google Sheets as data store
-- n8n handles all sheet operations
-- No direct SQL queries
-
-#### 12.5.2 XSS (Cross-Site Scripting)
-
-**Prevention Measures**:
- HTTP-only cookies (tokens not accessible via JavaScript)  
- Content Security Policy headers  
- Input sanitization on backend  
- Output encoding in React (automatic)  
- No `dangerouslySetInnerHTML` usage  
-
-#### 12.5.3 CSRF (Cross-Site Request Forgery)
-
-**Prevention Measures**:
- SameSite cookie attribute (strict)  
- Origin header verification  
- CORS configuration  
- JWT tokens in Authorization header  
-
-#### 12.5.4 Timing Attacks
-
-**Prevention**:
-```javascript
+[Code snippet removed]javascript
 // Use bcrypt.compare (constant-time comparison)
 const isValid = await bcrypt.compare(password, hashedPassword);
 
@@ -8174,302 +5424,21 @@ if (!validCredentials) {
   await new Promise(resolve => setTimeout(resolve, 1000));
   return res.status(401).json({ success: false });
 }
-```
-
-### 12.6 Third-Party Security
-
-#### 12.6.1 Dependency Management
-
-**Best Practices**:
-- Regular `npm audit` checks
-- Keep dependencies updated
-- Use exact versions in production
-- Review security advisories
-
-**Audit Command**:
-```bash
+[Code snippet removed]bash
 npm audit
 npm audit fix
-```
-
-#### 12.6.2 Environment Variables
-
-**Sensitive Variables**:
-```env
+[Code snippet removed]env
 # Never commit these!
 JWT_SECRET=your_super_secret_key_min_32_chars
 OPENAI_API_KEY=sk-...
 N8N_WEBHOOK_BASE_URL=https://n8n.example.com/webhook
 GOOGLE_SHEETS_API_KEY=...
 ADMIN_PASSWORD_HASH=$2a$10$...
-```
-
-**Security**:
-- Store in `.env` file
-- Add `.env` to `.gitignore`
-- Use separate `.env` files for dev/staging/prod
-- Rotate secrets regularly
-
-### 12.7 Security Checklist
-
-**Application Security**:
-- [x] JWT tokens with strong secret
-- [x] bcrypt password hashing (10 rounds)
-- [x] HTTP-only cookies
-- [x] HTTPS in production
-- [x] Rate limiting on all endpoints
-- [x] Input validation and sanitization
-- [x] CORS configuration
-- [x] Helmet security headers
-- [x] XSS prevention measures
-- [x] CSRF protection
-- [x] No sensitive data in logs
-- [x] Environment variables for secrets
-- [x] Regular dependency audits
-
-**Deployment Security**:
-- [ ] SSL/TLS certificates installed
-- [ ] Firewall rules configured
-- [ ] Database access restricted
-- [ ] Server hardening completed
-- [ ] Backup encryption enabled
-- [ ] Monitoring and alerting setup
-
----
-
-## 13. Deployment & Infrastructure
-
-### 13.1 Development Environment
-
-**Prerequisites**:
-- Node.js 16+ (LTS recommended)
-- npm 7+ or yarn 1.22+
-- Git
-- Modern browser (Chrome, Firefox, Edge)
-- Code editor (VS Code recommended)
-
-**Setup Steps**:
-
-1. **Clone Repository**:
-   ```bash
-   git clone https://github.com/yourusername/webinar-sales-funnel.git
-   cd webinar-sales-funnel
-   ```
-
-2. **Install Dependencies**:
-   ```bash
-   # Root dependencies
-   npm install
-   
-   # Backend dependencies
-   cd backend
-   npm install
-   
-   # Frontend dependencies
-   cd ../frontend
-   npm install
-   ```
-
-3. **Environment Configuration**:
-   ```bash
-   # Backend .env
-   cd backend
-   cp .env.example .env
-   # Edit .env with your credentials
-   
-   # Frontend .env
-   cd ../frontend
-   cp .env.example .env
-   # Edit .env with API URL
-   ```
-
-4. **Start Development Servers**:
-   ```bash
-   # From root directory (concurrent mode)
-   npm run dev
-   
-   # Or separately
-   # Terminal 1 - Backend
-   cd backend
-   npm run dev
-   
-   # Terminal 2 - Frontend
-   cd frontend
-   npm start
-   ```
-
-5. **Access Application**:
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:5000
-
-### 13.2 Production Deployment
-
-#### 13.2.1 Backend Deployment (Node.js)
-
-**Option 1: Traditional VPS (Ubuntu/CentOS)**
-
-1. **Server Setup**:
-   ```bash
-   # Update system
-   sudo apt update && sudo apt upgrade -y
-   
-   # Install Node.js 16+
-   curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
-   sudo apt install -y nodejs
-   
-   # Install PM2 (process manager)
-   sudo npm install -g pm2
-   ```
-
-2. **Deploy Application**:
-   ```bash
-   # Clone repository
-   cd /var/www
-   git clone https://github.com/yourusername/webinar-sales-funnel.git
-   cd webinar-sales-funnel/backend
-   
-   # Install dependencies (production only)
-   npm ci --only=production
-   
-   # Configure environment
-   nano .env
-   # Set NODE_ENV=production and other variables
-   
-   # Start with PM2
-   pm2 start server.js --name "webinar-backend"
-   pm2 save
-   pm2 startup
-   ```
-
-3. **Nginx Reverse Proxy**:
-   ```nginx
-   server {
-       listen 80;
-       server_name api.yourdomain.com;
-       
-       location / {
-           proxy_pass http://localhost:5000;
-           proxy_http_version 1.1;
-           proxy_set_header Upgrade $http_upgrade;
-           proxy_set_header Connection 'upgrade';
-           proxy_set_header Host $host;
-           proxy_set_header X-Real-IP $remote_addr;
-           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-           proxy_set_header X-Forwarded-Proto $scheme;
-           proxy_cache_bypass $http_upgrade;
-       }
-   }
-   ```
-
-4. **SSL Certificate (Let's Encrypt)**:
-   ```bash
-   sudo apt install certbot python3-certbot-nginx -y
-   sudo certbot --nginx -d api.yourdomain.com
-   ```
-
-**Option 2: Heroku**
-
-1. **Create Heroku App**:
-   ```bash
-   heroku create webinar-backend
-   ```
-
-2. **Configure Environment**:
-   ```bash
-   heroku config:set NODE_ENV=production
-   heroku config:set JWT_SECRET=your_secret_key
-   heroku config:set N8N_WEBHOOK_BASE_URL=your_n8n_url
-   ```
-
-3. **Deploy**:
-   ```bash
-   git subtree push --prefix backend heroku main
-   # Or
-   cd backend
-   git push heroku main
-   ```
-
-**Option 3: DigitalOcean App Platform**
-
-1. Connect GitHub repository
-2. Select `backend` directory as source
-3. Configure environment variables in dashboard
-4. Deploy automatically on git push
-
-#### 13.2.2 Frontend Deployment (React)
-
-**Build for Production**:
-```bash
+[Code snippet removed]bash
 cd frontend
 npm run build
 # Creates optimized build in 'build/' directory
-```
-
-**Option 1: Vercel (Recommended)**
-
-1. **Install Vercel CLI**:
-   ```bash
-   npm install -g vercel
-   ```
-
-2. **Deploy**:
-   ```bash
-   cd frontend
-   vercel --prod
-   ```
-
-3. **Configure**:
-   - Set `REACT_APP_API_URL` environment variable in Vercel dashboard
-   - Configure custom domain
-   - SSL automatically provisioned
-
-**Option 2: Netlify**
-
-1. Connect GitHub repository
-2. Build command: `cd frontend && npm run build`
-3. Publish directory: `frontend/build`
-4. Environment variables in dashboard
-5. Deploy on git push
-
-**Option 3: Traditional Hosting (Apache/Nginx)**
-
-1. **Build and Upload**:
-   ```bash
-   npm run build
-   scp -r build/* user@server:/var/www/html/
-   ```
-
-2. **Nginx Configuration**:
-   ```nginx
-   server {
-       listen 80;
-       server_name yourdomain.com;
-       root /var/www/html;
-       index index.html;
-       
-       location / {
-           try_files $uri $uri/ /index.html;
-       }
-       
-       # Cache static assets
-       location /static/ {
-           expires 1y;
-           add_header Cache-Control "public, immutable";
-       }
-   }
-   ```
-
-#### 13.2.3 n8n Deployment
-
-**Option 1: n8n Cloud (Easiest)**
-- Sign up at https://n8n.io
-- Import workflow JSON
-- Configure Google Sheets credentials
-- Get webhook URLs
-
-**Option 2: Self-Hosted (Docker)**
-
-```yaml
+[Code snippet removed]yaml
 # docker-compose.yml
 version: '3'
 services:
@@ -8491,10 +5460,7 @@ services:
 
 # Start n8n
 # docker-compose up -d
-```
-
-**Nginx Reverse Proxy for n8n**:
-```nginx
+[Code snippet removed]nginx
 server {
     listen 80;
     server_name n8n.yourdomain.com;
@@ -8508,12 +5474,7 @@ server {
         proxy_cache off;
     }
 }
-```
-
-### 13.3 Environment Variables
-
-**Backend `.env`**:
-```env
+[Code snippet removed]env
 # Server
 NODE_ENV=production
 PORT=5000
@@ -8530,31 +5491,14 @@ FRONTEND_URL=https://yourdomain.com
 # Optional: External APIs
 OPENAI_API_KEY=sk-...
 WHATSAPP_API_KEY=...
-```
-
-**Frontend `.env`**:
-```env
+[Code snippet removed]env
 # API Configuration
 REACT_APP_API_URL=https://api.yourdomain.com
 
 # Optional: Analytics
 REACT_APP_GA_ID=G-XXXXXXXXXX
 REACT_APP_FB_PIXEL_ID=123456789012345
-```
-
-### 13.4 Performance Optimization
-
-#### 13.4.1 Frontend Optimization
-
-**Build Optimization**:
-- Code splitting (React.lazy)
-- Tree shaking (automatic with webpack)
-- Asset minification
-- Image optimization
-- Lazy loading for components
-
-**Caching Strategy**:
-```javascript
+[Code snippet removed]javascript
 // Service Worker for offline support
 // Create 'public/service-worker.js'
 self.addEventListener('install', (event) => {
@@ -8569,23 +5513,10 @@ self.addEventListener('install', (event) => {
     })
   );
 });
-```
-
-**CDN Configuration**:
-- Serve static assets from CDN
-- Use CDN for Chart.js, React (production)
-- Configure proper cache headers
-
-#### 13.4.2 Backend Optimization
-
-**Response Compression**:
-```javascript
+[Code snippet removed]javascript
 const compression = require('compression');
 app.use(compression());
-```
-
-**Connection Pooling** (if using database):
-```javascript
+[Code snippet removed]javascript
 // For future database integration
 const pool = mysql.createPool({
   connectionLimit: 10,
@@ -8594,10 +5525,7 @@ const pool = mysql.createPool({
   password: 'password',
   database: 'dbname'
 });
-```
-
-**Caching Frequently Accessed Data**:
-```javascript
+[Code snippet removed]javascript
 // Redis cache for settings
 const redis = require('redis');
 const client = redis.createClient();
@@ -8614,14 +5542,7 @@ const getCachedSettings = async () => {
   
   return settings;
 };
-```
-
-### 13.5 Monitoring & Logging
-
-#### 13.5.1 Application Monitoring
-
-**PM2 Monitoring**:
-```bash
+[Code snippet removed]bash
 # Monitor processes
 pm2 monit
 
@@ -8630,10 +5551,7 @@ pm2 logs webinar-backend
 
 # Performance metrics
 pm2 status
-```
-
-**Winston Logger Configuration**:
-```javascript
+[Code snippet removed]javascript
 const winston = require('winston');
 
 const logger = winston.createLogger({
@@ -8650,12 +5568,7 @@ if (process.env.NODE_ENV !== 'production') {
     format: winston.format.simple()
   }));
 }
-```
-
-#### 13.5.2 Error Tracking
-
-**Sentry Integration** (Recommended):
-```javascript
+[Code snippet removed]javascript
 // Backend
 const Sentry = require('@sentry/node');
 
@@ -8674,133 +5587,31 @@ Sentry.init({
   dsn: process.env.REACT_APP_SENTRY_DSN,
   environment: process.env.NODE_ENV
 });
-```
-
-### 13.6 Backup & Disaster Recovery
-
-**Google Sheets Backup**:
-```bash
+[Code snippet removed]bash
 # Manual export via Google Sheets API
 # Or use Google Takeout for complete backup
 # Schedule weekly backups
 
 # Automated backup script
 0 0 * * 0 /path/to/backup-script.sh
-```
-
-**Database Backup** (Future Enhancement):
-```bash
+[Code snippet removed]bash
 # MongoDB backup
 mongodump --out=/backup/$(date +%Y%m%d)
 
 # PostgreSQL backup
 pg_dump dbname > /backup/dbname_$(date +%Y%m%d).sql
-```
-
----
-
-## 14. Appendices
-
-### Appendix A: Glossary
-
-**Technical Terms**:
-
-- **bcrypt**: Password hashing function designed to be slow and computationally expensive
-- **CORS**: Cross-Origin Resource Sharing - mechanism allowing restricted resources on a web page
-- **CSRF**: Cross-Site Request Forgery - type of malicious exploit of a website
-- **JWT**: JSON Web Token - compact, URL-safe means of representing claims between two parties
-- **n8n**: Open-source workflow automation tool
-- **RAG**: Retrieval-Augmented Generation - AI technique combining retrieval with generation
-- **SameSite**: Cookie attribute preventing CSRF attacks
-- **XSS**: Cross-Site Scripting - security vulnerability allowing attackers to inject malicious scripts
-
-**Business Terms**:
-
-- **AOV**: Average Order Value - average amount spent per transaction
-- **Conversion Rate**: Percentage of users completing desired action
-- **Lead Score**: Numerical value representing lead quality
-- **UTM Parameters**: Tracking codes added to URLs for attribution
-
-### Appendix B: Common Issues & Solutions
-
-**Issue 1: CORS Errors**
-
-*Symptom*: "Access to fetch at 'http://localhost:5000' from origin 'http://localhost:3000' has been blocked by CORS policy"
-
-*Solution*:
-```javascript
+[Code snippet removed]javascript
 // Backend server.js
 const cors = require('cors');
 app.use(cors({
   origin: 'http://localhost:3000',
   credentials: true
 }));
-```
-
-**Issue 2: JWT Token Expired**
-
-*Symptom*: "TokenExpiredError: jwt expired"
-
-*Solution*:
-- Implement token refresh mechanism
-- Check token expiry before making requests
-- Clear localStorage and re-login
-
-**Issue 3: n8n Webhook Not Responding**
-
-*Symptom*: Timeout errors when calling n8n
-
-*Solution*:
-- Verify n8n is running
-- Check webhook URL in backend config
-- Test webhook directly with Postman
-- Check n8n execution logs
-
-**Issue 4: Chart.js Not Rendering**
-
-*Symptom*: Charts show blank/empty canvas
-
-*Solution*:
-```javascript
+[Code snippet removed]javascript
 // Register Chart.js components
 import { Chart as ChartJS } from 'chart.js/auto';
 ChartJS.register(/* components */);
-```
-
-**Issue 5: Build Fails on Production**
-
-*Symptom*: "npm run build" fails with errors
-
-*Solution*:
-- Clear npm cache: `npm cache clean --force`
-- Delete node_modules and package-lock.json
-- Reinstall: `npm install`
-- Check for missing dependencies
-
-### Appendix C: API Error Codes
-
-| Code | Status | Message | Cause |
-|------|--------|---------|-------|
-| `EMAIL_EXISTS` | 409 | Email already registered | Duplicate registration |
-| `INVALID_CREDENTIALS` | 401 | Invalid email or password | Wrong login credentials |
-| `TOKEN_EXPIRED` | 401 | Access token has expired | JWT token expired |
-| `INVALID_TOKEN` | 401 | Invalid access token | Malformed or tampered JWT |
-| `COUPON_NOT_FOUND` | 400 | Coupon code not found | Invalid coupon code |
-| `COUPON_EXPIRED` | 400 | Coupon has expired | Coupon past valid date |
-| `COUPON_LIMIT_REACHED` | 400 | Coupon usage limit reached | Max uses exceeded |
-| `COUPON_ALREADY_USED` | 400 | You have already used this coupon | User used coupon before |
-| `SERVICE_UNAVAILABLE` | 503 | Service temporarily unavailable | n8n/API down |
-| `RATE_LIMIT_EXCEEDED` | 429 | Too many requests | Rate limit hit |
-| `VALIDATION_ERROR` | 400 | Validation failed | Invalid input data |
-| `UNAUTHORIZED` | 401 | Authentication required | Missing/invalid token |
-| `FORBIDDEN` | 403 | Insufficient permissions | Non-admin accessing admin route |
-| `NOT_FOUND` | 404 | Resource not found | Endpoint doesn't exist |
-| `INTERNAL_ERROR` | 500 | Internal server error | Unexpected server error |
-
-### Appendix D: Useful Commands
-
-**Development**:
-```bash
+[Code snippet removed]bash
 # Start concurrent dev servers (from root)
 npm run dev
 
@@ -8818,10 +5629,7 @@ npm audit
 
 # Update dependencies
 npm update
-```
-
-**Production**:
-```bash
+[Code snippet removed]bash
 # Build frontend for production
 cd frontend && npm run build
 
@@ -8843,10 +5651,7 @@ pm2 save
 
 # Setup PM2 startup script
 pm2 startup
-```
-
-**Database Operations** (Google Sheets):
-```bash
+[Code snippet removed]bash
 # Export sheet to CSV (manual)
 # File > Download > CSV
 

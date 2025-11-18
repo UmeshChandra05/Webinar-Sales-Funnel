@@ -1,6 +1,6 @@
 # Webinar Sales Funnel Workflow - Complete Documentation
 
-##  Table of Contents
+## 📋 Table of Contents
 - [Overview](#overview)
 - [Architecture](#architecture)
 - [Workflow Modules](#workflow-modules)
@@ -69,7 +69,6 @@ User Registration → Validation → Database Storage → Email Confirmation
 - `name`, `email`, `mobile`, `role`
 - `payment_status`: "Pending"
 - `nurturing`: "L0 - Not Started"
-- `couponcode_given`: (auto-generated based on role)
 
 **Response**:
 ```json
@@ -127,7 +126,7 @@ User Registration → Validation → Database Storage → Email Confirmation
 - Continues with urgency emails if payment still pending
 
 **Email Sequence**:
-- **Nurture1**: "Your Python Full Stack Webinar Spot is Waiting! "
+- **Nurture1**: "Your Python Full Stack Webinar Spot is Waiting! 🚀"
 - **Send a message**: "Do you want to continue your registration?"
 - **Urgency Email**: "⏰Final Call: Secure Your Python Webinar Spot Now!"
 
@@ -179,7 +178,7 @@ new_payable_amt = payable_amt - discount_amt
 ```json
 {
   "success": true,
-  "discount": 150,
+  "discount_percentage": 30,
   "message": "30% discount applied successfully!"
 }
 ```
@@ -312,7 +311,7 @@ if (category !== "Other") {
 ```
 Created → AI categorizes → Auto-resolves or escalates
 Pending → Admin reviews → Sends response
-Closed → 20-second wait → Final confirmation email
+Closed → 1 - Day wait → Final confirmation email
 ```
 
 **Ticket ID Format**: `TCKT-YYMMDD-XXXX` (e.g., TCKT-250114-4821)
@@ -522,7 +521,7 @@ Closed → 20-second wait → Final confirmation email
 - **Content**: Reservation confirmation, urgency message
 
 ### 5. Nurture Level 1
-- **Subject**: Your Python Full Stack Webinar Spot is Waiting! 
+- **Subject**: Your Python Full Stack Webinar Spot is Waiting! 🚀
 - **Content**: Reminder, benefits, call-to-action
 
 ### 6. Nurture Level 2
@@ -530,7 +529,7 @@ Closed → 20-second wait → Final confirmation email
 - **Content**: Continuation prompt, support offer
 
 ### 7. Discount Offer
-- **Subject**: We've Reserved Your Spot – Get {X}% Off Now! 
+- **Subject**: We've Reserved Your Spot – Get {X}% Off Now! 🎉
 - **Content**: Personalized discount code, urgency
 
 ### 8. Urgency Email
@@ -685,6 +684,6 @@ For issues or questions about this workflow:
 
 ---
 
-**Version**: 1.0  
-**Last Updated**: January 2025  
+**Version**: 2.1  
+**Last Updated**: November 2025  
 **Maintained By**: Webinar Sales Funnel Team
