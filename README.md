@@ -1181,16 +1181,6 @@ Use GitHub Issues to report bugs or request features. Include:
 
 ---
 
-## 📞 Support
-
-For questions, issues, or feature requests:
-
-- **Email**: webinar@pystack.com
-- **GitHub Issues**: [https://github.com/your-username/webinar-sales-funnel/issues](https://github.com/your-username/webinar-sales-funnel/issues)
-- **Discord**: https://discord.gg/your-community (if available)
-
----
-
 ## 🎓 About the Webinar
 
 **Python Full Stack in 5 Days** is an intensive webinar program designed to teach complete full-stack development using Python, Flask, and React. Topics covered:
@@ -1233,7 +1223,6 @@ Planned features for future releases:
 - [ ] Social media sharing features
 - [ ] A/B testing framework
 - [ ] Advanced lead scoring
-- [ ] Predictive analytics with ML
 
 ---
 

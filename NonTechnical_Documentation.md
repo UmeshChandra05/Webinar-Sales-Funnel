@@ -1,9 +1,8 @@
-# Python Full Stack Webinar Sales Funnel Platform
+# Webinar Sales Funnel Platform
 ## User Documentation & Feature Guide
 
 **Version:** 1.0.0  
 **Last Updated:** November 17, 2025  
-**Status:** Production Ready
 
 ---
 
@@ -208,15 +207,6 @@ The platform is built on a modern three-tier architecture:
 - Retry payment option available
 - Alternative payment methods suggested
 - Support contact information displayed
-
-### 4.4 Post-Payment Experience
-
-**Successful Payment:**
-1. Welcome email with webinar details
-2. Calendar invite (.ics file)
-3. Access to recordings (after live session)
-4. WhatsApp community invitation
-5. Certificate of completion (post-webinar)
 
 ---
 
@@ -452,22 +442,9 @@ In production, replace simulation buttons with real payment gateway:
    - Payment details
    - Webinar schedule
    - Access instructions
-   
-3. **Calendar Invite**: Add to calendar
-   - .ics file download
-   - Google Calendar link
-   - Outlook integration
-
-**Access Information:**
-- Webinar date and time (with timezone)
-- Meeting link (Zoom, Google Meet, etc.)
-- Recording access details
-- Certificate requirements
 
 **Support Options:**
 - Contact email
-- FAQ link
-- WhatsApp support number
 - Live chat widget
 
 ---
@@ -556,13 +533,10 @@ In production, replace simulation buttons with real payment gateway:
 
 **Expert Team:**
 4 instructors with specializations:
-
-| Name | Role | Experience | Specialties |
-|------|------|------------|-------------|
-| **Rajesh** | Manager | 10+ years | Docker, Kubernetes, CI/CD, Cloud |
-| **Suneel** | Manager | 10+ years | Docker, Flutter, CI/CD, DevOps |
-| **Umesh Chandra** | Lead Python Developer | 1+ years | Django, Flask, PostgreSQL |
-| **Harsha Sri** | Full Stack Engineer | 1+ years | React, Node.js, Python, AWS |
+- Name
+- Role
+- Experience
+- Specialties
 
 **Values:**
 -  Quality First - Never compromise on content
@@ -607,16 +581,15 @@ In production, replace simulation buttons with real payment gateway:
 **FAQ Accordion:**
 10 frequently asked questions with expandable answers:
 
-1. **Pricing**: ₹4,999 INR one-time payment
-2. **Frequency**: One-time special event
-3. **Payment Methods**: UPI, Net Banking, Cards, Wallets
-4. **Certificate**: Digital certificate after completion
-5. **Recording Access**: Lifetime access within 24 hours
-6. **Prerequisites**: No prior experience required
-7. **Topics**: Python, Django, databases, frontend, APIs, deployment
-8. **Refund Policy**: 7-day money-back guarantee
-9. **Support**: Discord community + 30 days email support
-10. **Duration**: 3-4 hours with Q&A
+1. **Frequency**: One-time special event
+2. **Payment Methods**: UPI, Net Banking, Cards, Wallets
+3. **Certificate**: Digital certificate after completion
+4. **Recording Access**: Lifetime access within 24 hours
+5. **Prerequisites**: No prior experience required
+6. **Topics**: Python, Django, databases, frontend, APIs, deployment
+7. **Refund Policy**: 7-day money-back guarantee
+8. **Support**: Discord community + 30 days email support
+9. **Duration**: 3-4 hours with Q&A
 
 **User Experience:**
 - Click question to expand answer
@@ -917,9 +890,14 @@ In production, replace simulation buttons with real payment gateway:
 -  **Unsubscribed**: Opted out
 
 **Nurture Level:**
--  **Hot**: High engagement, ready to buy
--  **Warm**: Interested, needs nurturing
--  **Cold**: Low engagement, re-activation needed
+- L0 - Not Started
+- L1 - Remainder Sent
+- L2 - Value & Validation
+- L3 - Coupon Sent
+- L4 - Urgency Triggered
+- L5 - Closed
+- NI - Feedback Requested
+- CL - No Response
 
 ---
 
@@ -1169,7 +1147,6 @@ In production, replace simulation buttons with real payment gateway:
   1. Lookup user by email in sheet
   2. If found: Return user data
   3. If not found: Return error
-  4. Log login attempt
 
 **3. Payment Processing (simulate-payment)**
 - Trigger: User completes payment
@@ -1190,24 +1167,18 @@ In production, replace simulation buttons with real payment gateway:
 - Actions:
   1. Lookup coupon in "Admin" sheet
   2. Validate:
-     - Coupon exists
-     - Status is "Active"
-     - Current date within valid_from and valid_until
-     - Usage count < max_uses (if limited)
-     - User hasn't used it before
+     - Coupon exists & assigned to User
   3. If valid: Return discount percentage
   4. If invalid: Return error message
-  5. On successful payment: Increment current_uses
 
 **5. AI Chat (ai-chat)**
 - Trigger: User sends chat message
 - Actions:
-  1. Retrieve FAQ context from sheet
-  2. Send query + context to OpenAI/Claude API
-  3. Receive AI-generated response
-  4. Save query & response to "Queries" sheet
-  5. Set status to "Pending Approval"
-  6. Return response to user
+  1. Send query + context to OpenAI/Claude API
+  2. Receive AI-generated response
+  3. Save query & response to "Queries" sheet
+  4. Set status to "Pending Approval"
+  5. Return response to user
 
 **6. Contact Form (contact-form)**
 - Trigger: User submits contact form
@@ -1223,7 +1194,6 @@ In production, replace simulation buttons with real payment gateway:
   1. Update query status to "Resolved"
   2. Send email to user with response
   3. Log resolution timestamp
-  4. Optionally: Send satisfaction survey after 24 hours
 
 **8. Admin Authentication (admin-auth)**
 - Trigger: Admin login attempt
@@ -1248,13 +1218,6 @@ In production, replace simulation buttons with real payment gateway:
   2. Update "Admin" sheet
   3. Clear settings cache
   4. Return updated settings
-
-**Benefits:**
-- Visual workflow editor (drag-and-drop)
-- 300+ integrations (email, SMS, Slack, etc.)
-- Error handling and retries
-- Execution logs for debugging
-- Scheduled workflows (cron jobs)
 
 ---
 
@@ -1307,26 +1270,7 @@ In production, replace simulation buttons with real payment gateway:
   - Limited seats message
   - Testimonials
 
-**5. Pre-Webinar Reminder**
-- **Trigger**: 24 hours before webinar
-- **Subject**: "Your Webinar Starts Tomorrow!"
-- **Content**:
-  - Meeting link
-  - Time and timezone
-  - Preparation checklist
-  - Technical requirements
-
-**6. Post-Webinar Follow-Up**
-- **Trigger**: 2 hours after webinar
-- **Subject**: "Thank You for Attending + Recording Access"
-- **Content**:
-  - Recording link
-  - Slides and resources
-  - Certificate download
-  - Feedback survey
-  - Next steps
-
-**7. Query Response**
+**5. Query Response**
 - **Trigger**: Admin sends response
 - **Subject**: "Re: [Original Query Subject]"
 - **Content**:
@@ -1335,11 +1279,17 @@ In production, replace simulation buttons with real payment gateway:
   - Additional resources
   - Follow-up option
 
-**Configuration:**
-- SMTP server (Gmail, SendGrid, AWS SES)
-- From address: "webinar@pystack.com"
-- Reply-to: "support@pystack.com"
-- Templates with variables ({{name}}, {{amount}})
+**6. Coupon Code**
+- **Trigger**: Workflow
+- **Subject**: "We’ve Reserved Your Spot – Get X % Off Now"
+- **Content**:
+  - Coupon Code & Payment Remainder
+
+**7. Remainder Mail**
+- **Trigger**: Workflow
+- **Subject**: "Final Call: Secure Your Python Webinar Spot Now!"
+- **Content**:
+  - Coupon Code & Payment Remainder
 
 ---
 
@@ -1358,17 +1308,6 @@ In production, replace simulation buttons with real payment gateway:
 - Included in payment confirmation email
 - Displayed on payment success page
 - Sent via SMS (optional)
-
-**Group Structure:**
-- **Pre-Webinar**: Networking, introductions, preparation
-- **During Webinar**: Live chat, Q&A, resource sharing
-- **Post-Webinar**: Community support, project showcase, job board
-
-**Automation:**
-- Auto-add users via API (if using Business API)
-- Welcome message on join
-- Rules and guidelines pinned
-- Scheduled posts (reminders, tips)
 
 **Benefits:**
 - High engagement rates (> email)
@@ -1405,12 +1344,6 @@ In production, replace simulation buttons with real payment gateway:
 - **Pipedrive**: Sales pipeline management
 - **Zoho CRM**: Affordable, all-in-one suite
 
-**Communication:**
-- **Slack**: Team notifications, alerts
-- **Discord**: Community building (alternative to WhatsApp)
-- **Telegram**: Bot integration, channels
-- **Twilio**: SMS notifications, voice calls
-
 ---
 
 ## 8. Benefits & Value Proposition
@@ -1440,12 +1373,6 @@ In production, replace simulation buttons with real payment gateway:
 - Marketing attribution (track ROI per source)
 - A/B testing insights (compare registration copy)
 - Predictive analytics (forecast revenue)
-
-**Scalability:**
-- Handles 10x traffic spikes without infrastructure changes
-- Horizontal scaling (add more servers)
-- CDN for global reach (low latency worldwide)
-- Database migration path (upgrade to PostgreSQL/MongoDB later)
 
 ---
 
@@ -1580,12 +1507,6 @@ In production, replace simulation buttons with real payment gateway:
 - Automatic failover (backup servers)
 - Database backups (daily snapshots)
 
-**Disaster Recovery:**
-- RTO (Recovery Time Objective): < 1 hour
-- RPO (Recovery Point Objective): < 24 hours
-- Backup restoration procedures documented
-- Regular testing (quarterly drills)
-
 ---
 
 ### 9.4 Scalability
@@ -1609,37 +1530,6 @@ In production, replace simulation buttons with real payment gateway:
 - Separate read/write operations
 - Migrate to PostgreSQL/MongoDB
 - Microservices architecture
-
-**Growth Projections:**
-| Timeframe | Users | Load | Infra Cost |
-|-----------|-------|------|------------|
-| Current | 5,000 | Low | $50/month |
-| 6 months | 20,000 | Medium | $150/month |
-| 1 year | 100,000 | High | $500/month |
-| 2 years | 500,000 | Very High | $2,000/month |
-
----
-
-### 9.5 Code Quality
-
-**Best Practices:**
--  ESLint (JavaScript linting)
--  Prettier (code formatting)
--  Git workflows (feature branches, pull requests)
--  Code reviews (2 approvals required)
--  Documentation (JSDoc comments)
-
-**Testing:**
-- Unit tests: Jest (frontend), Mocha (backend)
-- Integration tests: Supertest (API endpoints)
-- E2E tests: Cypress (user flows)
-- Test coverage: > 80% target
-
-**CI/CD:**
-- GitHub Actions (automated builds)
-- Automatic testing on PRs
-- Staging environment (preview branches)
-- Production deployment (main branch only)
 
 ---
 
@@ -1697,29 +1587,7 @@ In production, replace simulation buttons with real payment gateway:
 
 ---
 
-### 10.2 Documentation
-
-**Technical Documentation:**
-- **API Reference**: `API_Documentation.md` (all endpoints)
-- **Deployment Guide**: `DEPLOYMENT.md` (production setup)
-- **Architecture**: `TECHNICAL_DOCUMENTATION.md` (system design)
-- **Workflow Guide**: `n8n/README.md` (n8n setup)
-
-**Non-Technical Documentation:**
-- **User Guide**: This document (`USER_DOCUMENTATION.md`)
-- **Admin Manual**: Section 6 of this document
-- **FAQ**: Contact page (embedded in app)
-- **Video Tutorials**: YouTube channel (link)
-
-**Code Documentation:**
-- **Inline Comments**: JSDoc format
-- **README Files**: In each major folder
-- **Change Log**: `CHANGELOG.md` (version history)
-- **Contributing**: `CONTRIBUTING.md` (for developers)
-
----
-
-### 10.3 Troubleshooting
+### 10.2 Troubleshooting
 
 **Common Issues:**
 
@@ -1755,73 +1623,6 @@ In production, replace simulation buttons with real payment gateway:
 
 ---
 
-### 10.4 Contact & Support
-
-**Technical Support:**
-- **Email**: dev@pystack.com
-- **Response Time**: 24-48 hours (business days)
-- **Severity Levels**:
-  - Critical (app down): 2 hours
-  - High (major feature broken): 8 hours
-  - Medium (minor bug): 48 hours
-  - Low (enhancement request): 7 days
-
-**Community Support:**
-- **Discord**: https://discord.gg/your-community
-- **GitHub Issues**: https://github.com/your-repo/issues
-- **Stack Overflow**: Tag `webinar-sales-funnel`
-
-**Business Inquiries:**
-- **Sales**: sales@pystack.com
-- **Partnerships**: partners@pystack.com
-- **Customization**: enterprise@pystack.com
-
-**Office Hours:**
-- **Live Chat**: Monday-Friday, 9 AM - 6 PM IST
-- **Phone Support**: +91-XXXXXXXXXX (premium customers)
-
----
-
-### 10.5 Roadmap & Future Enhancements
-
-**Q1 2026 (Planned):**
--  Multi-language support (Hindi, Spanish, French)
--  Recurring webinar scheduling (weekly/monthly series)
--  Installment payment plans (EMI options)
--  Mobile apps (iOS, Android - React Native)
-
-**Q2 2026 (Planned):**
--  Advanced analytics (predictive revenue, churn analysis)
--  Referral program (earn rewards for inviting friends)
--  Live streaming integration (Zoom, YouTube, Vimeo)
--  Certificate automation (PDF generation, email delivery)
-
-**Q3 2026 (Planned):**
--  Affiliate dashboard (track commissions, payouts)
--  SMS notifications (Twilio integration)
--  Push notifications (browser + mobile)
--  A/B testing platform (landing page variants)
-
-**Q4 2026 (Planned):**
--  Marketplace (sell templates, courses)
--  White-label solution (rebrand for clients)
--  API for third-party integrations
--  Advanced automation (Zapier, IFTTT)
-
-**Community Requests:**
-- Voice assistant integration (Alexa, Google Assistant)
-- Gamification (badges, leaderboards, achievements)
-- Social login (Google, Facebook, LinkedIn)
-- Calendar integration (Outlook, Apple Calendar)
-
-**Contribution:**
-- Open-source roadmap (GitHub Projects)
-- Vote on features (ProductBoard)
-- Submit ideas (GitHub Discussions)
-- Contribute code (Pull Requests welcome)
-
----
-
 ## Appendix
 
 ### A. Glossary
@@ -1845,12 +1646,6 @@ In production, replace simulation buttons with real payment gateway:
 
 ### B. Credits & Acknowledgments
 
-**Development Team:**
-- Rajesh (Manager - Infrastructure & DevOps)
-- Suneel (Manager - Mobile & CI/CD)
-- Umesh Chandra (Lead Python Developer - Backend)
-- Harsha Sri (Full Stack Engineer - Frontend)
-
 **Technologies Used:**
 - React 18.2.0 (Meta)
 - Node.js 16+ (OpenJS Foundation)
@@ -1864,28 +1659,12 @@ In production, replace simulation buttons with real payment gateway:
 - OpenAI GPT-4 (OpenAI)
 - Vercel (hosting - Vercel Inc.)
 
-### C. License
-
-**Copyright © 2025 Python Full Stack Academy. All rights reserved.**
-
-This software and documentation are proprietary and confidential. Unauthorized copying, distribution, or use is strictly prohibited.
-
-**Usage Rights:**
-- Internal use within licensed organization
-- Cannot redistribute or resell
-- Cannot remove branding without enterprise license
-
-**Support & Updates:**
-- 1 year of free updates included
-- Priority support for first 6 months
-- Community support (Discord) always available
-
 ---
 
 **Document Version:** 1.0.0  
 **Last Updated:** November 17, 2025  
-**Total Pages:** 48  
-**Word Count:** ~18,500 words
+**Total Pages:** 27 
+**Word Count:** ~6,000 words
 
 ---
 
